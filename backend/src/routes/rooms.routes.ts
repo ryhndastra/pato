@@ -1,7 +1,17 @@
 import { Router } from "express";
-import { createRoomHandler, joinRoomHandler } from "../controllers/rooms.controller.js";
+import {
+  createRoomHandler,
+  getRoomHandler,
+  joinRoomHandler,
+  myRoomsHandler,
+} from "../controllers/rooms.controller.js";
+import { requireAuth } from "../middleware/auth.js";
+import { joinLimiter } from "../middleware/rateLimit.js";
 
 export const roomsRouter = Router();
 
 roomsRouter.post("/", createRoomHandler);
-roomsRouter.post("/:code/join", joinRoomHandler);
+// route statis /mine wajib di atas /:code, kalau tidak /mine ketangkep sebagai code dinamis.
+roomsRouter.get("/mine", requireAuth, myRoomsHandler);
+roomsRouter.post("/:code/join", joinLimiter, joinRoomHandler);
+roomsRouter.get("/:code", getRoomHandler);

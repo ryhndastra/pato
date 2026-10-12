@@ -1,7 +1,13 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { env } from "../config.js";
-import { createRoom, joinRoom, RoomNotFoundError } from "../services/rooms.service.js";
+import {
+  createRoom,
+  getRoomByCode,
+  joinRoom,
+  listMyRooms,
+  RoomNotFoundError,
+} from "../services/rooms.service.js";
 
 const createRoomSchema = z.object({
   title: z.string().trim().min(3).max(150),
@@ -64,7 +70,7 @@ export async function createRoomHandler(req: Request, res: Response) {
     room_code: room.roomCode,
     status: room.status,
     host_token: room.hostToken,
-    share_url: `${env.frontendUrl}/r/${room.roomCode}`,
+    share_url: `${env.frontendUrl}/room/${room.roomCode}`,
     subtotal: room.subtotal,
     grand_total: room.grandTotal,
   });
@@ -83,7 +89,7 @@ export async function joinRoomHandler(req: Request, res: Response) {
   }
 
   try {
-    const result = await joinRoom(String(req.params.code), {
+    const result = await joinRoom(String(req.params.code).toUpperCase(), {
       guestToken: parsed.data.guest_token,
       displayName: parsed.data.display_name,
     });
@@ -101,4 +107,51 @@ export async function joinRoomHandler(req: Request, res: Response) {
     }
     throw error;
   }
+}
+
+export async function getRoomHandler(req: Request, res: Response) {
+  const roomCode = String(req.params.code).toUpperCase();
+
+  try {
+    const room = await getRoomByCode(roomCode);
+    res.json({
+      room_code: room.roomCode,
+      title: room.title,
+      status: room.status,
+      subtotal: room.subtotal,
+      tax_amount: room.taxAmount,
+      service_amount: room.serviceAmount,
+      discount_amount: room.discountAmount,
+      grand_total: room.grandTotal,
+      bank_name: room.bankName,
+      bank_account_no: room.bankAccountNo,
+      bank_account_name: room.bankAccountName,
+      items: room.items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        unit_price: item.unitPrice,
+        quantity: item.quantity,
+        is_shared: item.isShared,
+      })),
+    });
+  } catch (error) {
+    if (error instanceof RoomNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+}
+
+export async function myRoomsHandler(req: Request, res: Response) {
+  const rooms = await listMyRooms(req.userId!);
+  res.json({
+    rooms: rooms.map((room) => ({
+      room_code: room.roomCode,
+      title: room.title,
+      status: room.status,
+      grand_total: room.grandTotal,
+      created_at: room.createdAt,
+    })),
+  });
 }

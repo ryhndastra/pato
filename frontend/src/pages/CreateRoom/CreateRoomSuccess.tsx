@@ -68,7 +68,7 @@ export function CreateRoomSuccess({ roomCode, shareUrl, title }: CreateRoomSucce
 
           <button
             type="button"
-            onClick={() => navigate("/", { replace: true })}
+            onClick={() => navigate("/dashboard", { replace: true })}
             className="h-[52px] w-full text-[15px] font-semibold text-ink-soft"
           >
             Kembali ke Beranda

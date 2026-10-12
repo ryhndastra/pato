@@ -24,3 +24,12 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
 
   next();
 }
+
+/** Rejects with 401 unless a valid Bearer token was present. */
+export function requireAuth(req: Request, res: Response, next: NextFunction) {
+  if (!req.userId) {
+    res.status(401).json({ error: "Kamu harus login dulu." });
+    return;
+  }
+  next();
+}

@@ -3,6 +3,7 @@ import cors from "cors";
 import express, { type NextFunction, type Request, type Response } from "express";
 import { env } from "./config.js";
 import { optionalAuth } from "./middleware/auth.js";
+import { authLimiter, joinLimiter } from "./middleware/rateLimit.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { roomsRouter } from "./routes/rooms.routes.js";
 
@@ -16,7 +17,7 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-app.use("/api/auth", authRouter);
+app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/rooms", roomsRouter);
 
 // Express 5 forwards rejected async handlers here automatically.

@@ -24,14 +24,32 @@ function toPatoUser(raw: SessionResponse["user"]): PatoUser {
   };
 }
 
-function readStored<T>(key: string): T | null {
-  const stored = localStorage.getItem(key);
-  return stored ? (JSON.parse(stored) as T) : null;
+function readStoredUser(): PatoUser | null {
+  try {
+    const stored = localStorage.getItem(USER_KEY);
+    return stored ? (JSON.parse(stored) as PatoUser) : null;
+  } catch {
+    localStorage.removeItem(USER_KEY);
+    return null;
+  }
+}
+
+function readStoredToken(): string | null {
+  try {
+    const stored = localStorage.getItem(TOKEN_KEY);
+    if (!stored) return null;
+    if (stored.startsWith('"') && stored.endsWith('"')) {
+      return JSON.parse(stored) as string;
+    }
+    return stored;
+  } catch {
+    return localStorage.getItem(TOKEN_KEY);
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => readStored(TOKEN_KEY));
-  const [user, setUser] = useState<PatoUser | null>(() => readStored(USER_KEY));
+  const [token, setToken] = useState<string | null>(() => readStoredToken());
+  const [user, setUser] = useState<PatoUser | null>(() => readStoredUser());
 
   function persistSession(session: SessionResponse) {
     const nextUser = toPatoUser(session.user);

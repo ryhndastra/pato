@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { ArrowLeft } from "@phosphor-icons/react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "../../auth/useAuth";
 import { apiPost, ApiError } from "../../lib/api";
 import { digitsOnly, formatIDR } from "../../lib/format";
@@ -16,10 +16,13 @@ interface CreateRoomResponse {
 
 export function CreateRoom() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, token } = useAuth();
 
-  const [title, setTitle] = useState("");
-  const [hostName, setHostName] = useState(user?.name ?? "");
+  const [title, setTitle] = useState(() => searchParams.get("event") ?? "");
+  const [hostName, setHostName] = useState(
+    () => searchParams.get("host") ?? user?.name ?? "",
+  );
   const [bankName, setBankName] = useState("");
   const [bankAccountNo, setBankAccountNo] = useState("");
   const [bankAccountName, setBankAccountName] = useState("");

@@ -2,6 +2,21 @@ const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
 export class ApiError extends Error {}
 
+async function handleResponse<T>(res: Response): Promise<T> {
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new ApiError(data?.error ?? "Terjadi kesalahan, coba lagi.");
+  }
+  return data as T;
+}
+
+export async function apiGet<T>(path: string, token?: string | null): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  return handleResponse<T>(res);
+}
+
 export async function apiPost<T>(
   path: string,
   body: unknown,
@@ -15,12 +30,5 @@ export async function apiPost<T>(
     },
     body: JSON.stringify(body),
   });
-
-  const data = await res.json().catch(() => null);
-
-  if (!res.ok) {
-    throw new ApiError(data?.error ?? "Terjadi kesalahan, coba lagi.");
-  }
-
-  return data as T;
+  return handleResponse<T>(res);
 }
