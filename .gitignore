@@ -1,0 +1,13 @@
+.direnv/
+node_modules/
+dist/
+bin/
+.DS_Store
+*.log
+.env
+backend/storage/receipts/*
+!backend/storage/receipts/.gitkeep
+backend/storage/proofs/*
+!backend/storage/proofs/.gitkeep
+backend/storage/qris/*
+!backend/storage/qris/.gitkeep
