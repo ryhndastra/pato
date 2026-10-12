@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   /* Brand Cobalt & Electric Blue (Matched to official PaTo logo) */
   --pato-blue-50: #eff6ff;
@@ -66,14 +68,58 @@
   --spring-duration: 160ms;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
+/*
+ * Thin alias layer: every Tailwind utility below just points back at the
+ * variables above. Repaint the palette in :root and every `bg-canvas`,
+ * `text-ink`, `border-hairline`, etc. updates with it - no Tailwind config
+ * file to keep in sync.
+ */
+@theme {
+  --color-shell: var(--bg-shell);
+  --color-canvas: var(--bg-canvas);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-haze: var(--bg-subtle);
+  --color-tint: var(--bg-accent-soft);
+
+  --color-hairline: var(--border-subtle);
+  --color-hairline-strong: var(--border-strong);
+  --color-focus: var(--border-focus);
+  --color-danger-border: var(--border-error);
+
+  --color-ink: var(--text-primary);
+  --color-ink-soft: var(--text-secondary);
+  --color-ink-muted: var(--text-muted);
+
+  --color-brand: var(--pato-blue-600);
+  --color-brand-soft: var(--pato-blue-400);
+
+  --color-success: var(--pato-emerald);
+  --color-success-bg: var(--pato-emerald-bg);
+  --color-warning: var(--pato-amber);
+  --color-danger: var(--pato-rose);
+  --color-danger-bg: var(--pato-rose-bg);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --animate-fade-up: home-fade-up 480ms var(--spring-curve) both;
+  --animate-fade-up-fast: home-fade-up 320ms var(--spring-curve) both;
 }
 
-html, body {
+@keyframes home-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+html,
+body {
   min-height: 100%;
   background-color: var(--bg-canvas);
   color: var(--text-primary);
@@ -81,80 +127,19 @@ html, body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button {
-  font-family: inherit;
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: inherit;
   touch-action: manipulation;
-  transition: transform var(--spring-duration) var(--spring-curve), background-color var(--spring-duration) ease, border-color var(--spring-duration) ease, box-shadow var(--spring-duration) ease;
+  transition: transform var(--spring-duration) var(--spring-curve),
+    background-color var(--spring-duration) ease,
+    border-color var(--spring-duration) ease,
+    box-shadow var(--spring-duration) ease;
 }
 
 button:active {
   transform: scale(0.98);
-}
-
-input, select, textarea {
-  font-family: inherit;
-  color: inherit;
-}
-
-.font-mono {
-  font-family: var(--font-mono);
-  font-feature-settings: "tnum";
-}
-
-/* Mobile shell layout container - Phone Mockup on Desktop */
-.mobile-shell-viewport {
-  min-height: 100vh;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #eef2f6;
-  padding: 24px 16px;
-}
-
-.mobile-shell-frame {
-  width: 100%;
-  max-width: 390px;
-  min-height: 780px;
-  max-height: 844px;
-  background-color: var(--bg-shell);
-  border-radius: 40px;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 25px 60px -12px rgba(37, 99, 235, 0.18), 0 10px 20px -5px rgba(0, 0, 0, 0.06);
-}
-
-@media (max-width: 440px) {
-  .mobile-shell-viewport {
-    padding: 0;
-    background-color: var(--bg-shell);
-  }
-
-  .mobile-shell-frame {
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
-    max-height: none;
-    min-height: 100dvh;
-  }
-}
-
-/* Base card surface */
-.card-white {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
 }
 
 /* Scrollbar */
