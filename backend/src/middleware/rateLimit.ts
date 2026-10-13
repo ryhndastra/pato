@@ -18,3 +18,12 @@ export const joinLimiter = rateLimit({
   legacyHeaders: false,
   message: MESSAGE,
 });
+
+// Klaim/unklaim bisa di-toggle cepat oleh tamu sambil mikir porsi, jadi limitnya lebih longgar.
+export const claimLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 90,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: MESSAGE,
+});

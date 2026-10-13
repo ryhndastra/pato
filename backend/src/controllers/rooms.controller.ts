@@ -2,11 +2,29 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import { env } from "../config.js";
 import {
+  claimItem,
+  closeRoom,
   createRoom,
+  deleteRoom,
+  ForbiddenError,
   getRoomByCode,
+  InvalidJoinError,
+  ItemNotFoundError,
   joinRoom,
   listMyRooms,
+  lockRoom,
+  MemberNotFoundError,
+  OverclaimError,
+  rejectPayment,
+  RoomLockedError,
   RoomNotFoundError,
+  splitUnclaimedItems,
+  submitPaymentProof,
+  unclaimItem,
+  unlockRoom,
+  verifyPayment,
+  getRoomEvents,
+  postChatMessage,
 } from "../services/rooms.service.js";
 
 const createRoomSchema = z.object({
@@ -15,6 +33,8 @@ const createRoomSchema = z.object({
   bank_name: z.string().trim().max(50).optional(),
   bank_account_no: z.string().trim().max(50).optional(),
   bank_account_name: z.string().trim().max(100).optional(),
+  qris_image_url: z.string().optional(),
+  receipt_image_url: z.string().optional(),
   items: z
     .array(
       z.object({
@@ -43,6 +63,8 @@ export async function createRoomHandler(req: Request, res: Response) {
     bank_name,
     bank_account_no,
     bank_account_name,
+    qris_image_url,
+    receipt_image_url,
     items,
     tax_amount,
     service_amount,
@@ -56,6 +78,8 @@ export async function createRoomHandler(req: Request, res: Response) {
     bankName: bank_name,
     bankAccountNo: bank_account_no,
     bankAccountName: bank_account_name,
+    qrisImageUrl: qris_image_url,
+    receiptImageUrl: receipt_image_url,
     items: items.map((item) => ({
       name: item.name,
       unitPrice: item.unit_price,
@@ -78,7 +102,7 @@ export async function createRoomHandler(req: Request, res: Response) {
 
 const joinRoomSchema = z.object({
   guest_token: z.string().uuid(),
-  display_name: z.string().trim().min(1).max(60),
+  display_name: z.string().trim().max(60).default(""),
 });
 
 export async function joinRoomHandler(req: Request, res: Response) {
@@ -89,10 +113,14 @@ export async function joinRoomHandler(req: Request, res: Response) {
   }
 
   try {
-    const result = await joinRoom(String(req.params.code).toUpperCase(), {
-      guestToken: parsed.data.guest_token,
-      displayName: parsed.data.display_name,
-    });
+    const result = await joinRoom(
+      String(req.params.code).toUpperCase(),
+      {
+        guestToken: parsed.data.guest_token,
+        displayName: parsed.data.display_name,
+      },
+      req.userId,
+    );
 
     res.json({
       member_id: result.memberId,
@@ -103,6 +131,10 @@ export async function joinRoomHandler(req: Request, res: Response) {
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
       res.status(404).json({ error: error.message });
+      return;
+    }
+    if (error instanceof InvalidJoinError) {
+      res.status(400).json({ error: error.message });
       return;
     }
     throw error;
@@ -118,6 +150,7 @@ export async function getRoomHandler(req: Request, res: Response) {
       room_code: room.roomCode,
       title: room.title,
       status: room.status,
+      host_user_id: room.hostUserId,
       subtotal: room.subtotal,
       tax_amount: room.taxAmount,
       service_amount: room.serviceAmount,
@@ -126,17 +159,125 @@ export async function getRoomHandler(req: Request, res: Response) {
       bank_name: room.bankName,
       bank_account_no: room.bankAccountNo,
       bank_account_name: room.bankAccountName,
+      qris_image_url: room.qrisImageUrl,
+      receipt_image_url: room.receiptImageUrl,
       items: room.items.map((item) => ({
         id: item.id,
         name: item.name,
         unit_price: item.unitPrice,
         quantity: item.quantity,
         is_shared: item.isShared,
+        claimed_quantity: item.claimedQuantity,
+        claimed_by_member_ids: item.claimedByMemberIds,
+        claims: item.claims.map((c) => ({
+          member_id: c.memberId,
+          portion_quantity: c.portionQuantity,
+        })),
+      })),
+      members: room.members.map((member) => ({
+        id: member.id,
+        user_id: member.userId,
+        display_name: member.displayName,
+        is_host: member.isHost,
+        subtotal_share: member.subtotalShare,
+        share_amount: member.shareAmount,
+        claimed_item_ids: member.claimedItemIds,
+        payment_status: member.paymentStatus,
+        proof_image_url: member.proofImageUrl,
+        rejection_reason: member.rejectionReason,
       })),
     });
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
       res.status(404).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+}
+
+const claimSchema = z.object({
+  guest_token: z.string().uuid(),
+});
+
+function handleClaimError(error: unknown, res: Response) {
+  if (error instanceof RoomNotFoundError) {
+    res.status(404).json({ error: error.message });
+    return;
+  }
+  if (error instanceof MemberNotFoundError) {
+    res.status(403).json({ error: error.message });
+    return;
+  }
+  if (error instanceof ItemNotFoundError) {
+    res.status(404).json({ error: error.message });
+    return;
+  }
+  if (error instanceof RoomLockedError) {
+    res.status(409).json({ error: error.message });
+    return;
+  }
+  if (error instanceof OverclaimError) {
+    res.status(409).json({ error: error.message });
+    return;
+  }
+  throw error;
+}
+
+export async function claimItemHandler(req: Request, res: Response) {
+  const parsed = claimSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Data gak valid.", details: parsed.error.flatten() });
+    return;
+  }
+
+  try {
+    await claimItem(
+      String(req.params.code).toUpperCase(),
+      String(req.params.itemId),
+      parsed.data.guest_token,
+    );
+    res.status(204).end();
+  } catch (error) {
+    handleClaimError(error, res);
+  }
+}
+
+export async function unclaimItemHandler(req: Request, res: Response) {
+  const parsed = claimSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Data gak valid.", details: parsed.error.flatten() });
+    return;
+  }
+
+  try {
+    await unclaimItem(
+      String(req.params.code).toUpperCase(),
+      String(req.params.itemId),
+      parsed.data.guest_token,
+    );
+    res.status(204).end();
+  } catch (error) {
+    handleClaimError(error, res);
+  }
+}
+
+export async function lockRoomHandler(req: Request, res: Response) {
+  const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
+  try {
+    const result = await lockRoom(
+      String(req.params.code).toUpperCase(),
+      req.userId,
+      guestToken,
+    );
+    res.json({ status: result.status });
+  } catch (error) {
+    if (error instanceof RoomNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    if (error instanceof ForbiddenError) {
+      res.status(403).json({ error: error.message });
       return;
     }
     throw error;
@@ -154,4 +295,243 @@ export async function myRoomsHandler(req: Request, res: Response) {
       created_at: room.createdAt,
     })),
   });
+}
+
+export async function deleteRoomHandler(req: Request, res: Response) {
+  const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
+  try {
+    await deleteRoom(
+      String(req.params.code).toUpperCase(),
+      req.userId,
+      guestToken,
+    );
+    res.status(204).end();
+  } catch (error) {
+    if (error instanceof RoomNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    if (error instanceof ForbiddenError) {
+      res.status(403).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+}
+
+export async function unlockRoomHandler(req: Request, res: Response) {
+  const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
+  try {
+    const result = await unlockRoom(
+      String(req.params.code).toUpperCase(),
+      req.userId,
+      guestToken,
+    );
+    res.json({ status: result.status });
+  } catch (error) {
+    if (error instanceof RoomNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    if (error instanceof ForbiddenError) {
+      res.status(403).json({ error: error.message });
+      return;
+    }
+    if (error instanceof RoomLockedError) {
+      res.status(409).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+}
+
+export async function closeRoomHandler(req: Request, res: Response) {
+  const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
+  try {
+    const result = await closeRoom(
+      String(req.params.code).toUpperCase(),
+      req.userId,
+      guestToken,
+    );
+    res.json({ status: result.status });
+  } catch (error) {
+    if (error instanceof RoomNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    if (error instanceof ForbiddenError) {
+      res.status(403).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+}
+
+export async function splitUnclaimedHandler(req: Request, res: Response) {
+  const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
+  try {
+    await splitUnclaimedItems(
+      String(req.params.code).toUpperCase(),
+      req.userId,
+      guestToken,
+    );
+    res.json({ success: true });
+  } catch (error) {
+    if (error instanceof RoomNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    if (error instanceof ForbiddenError) {
+      res.status(403).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+}
+
+const proofSchema = z.object({
+  guest_token: z.string().uuid(),
+  proof_image_url: z.string().min(1),
+});
+
+export async function submitPaymentProofHandler(req: Request, res: Response) {
+  const parsed = proofSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Data gak valid.", details: parsed.error.flatten() });
+    return;
+  }
+
+  try {
+    await submitPaymentProof(
+      String(req.params.code).toUpperCase(),
+      parsed.data.guest_token,
+      parsed.data.proof_image_url,
+    );
+    res.json({ success: true });
+  } catch (error) {
+    if (error instanceof RoomNotFoundError || error instanceof MemberNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+}
+
+export async function verifyPaymentHandler(req: Request, res: Response) {
+  const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
+  try {
+    await verifyPayment(
+      String(req.params.code).toUpperCase(),
+      String(req.params.memberId),
+      req.userId,
+      guestToken,
+    );
+    res.json({ success: true });
+  } catch (error) {
+    if (error instanceof RoomNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    if (error instanceof ForbiddenError) {
+      res.status(403).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+}
+
+const rejectSchema = z.object({
+  reason: z.string().trim().min(1).max(255),
+  guest_token: z.string().optional(),
+});
+
+export async function rejectPaymentHandler(req: Request, res: Response) {
+  const parsed = rejectSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Alasan penolakan harus diisi." });
+    return;
+  }
+
+  const guestToken = parsed.data.guest_token;
+  try {
+    await rejectPayment(
+      String(req.params.code).toUpperCase(),
+      String(req.params.memberId),
+      parsed.data.reason,
+      req.userId,
+      guestToken,
+    );
+    res.json({ success: true });
+  } catch (error) {
+    if (error instanceof RoomNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    if (error instanceof ForbiddenError) {
+      res.status(403).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+}
+
+export async function getRoomEventsHandler(req: Request, res: Response) {
+  const roomCode = String(req.params.code).toUpperCase();
+  try {
+    const events = await getRoomEvents(roomCode);
+    res.json(
+      events.map((e) => ({
+        id: e.id,
+        member_id: e.member_id,
+        display_name: e.display_name,
+        event_type: e.event_type,
+        sender_type: e.sender_type,
+        message: e.message,
+        created_at: e.created_at,
+      })),
+    );
+  } catch (error) {
+    if (error instanceof RoomNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+}
+
+const chatSchema = z.object({
+  guest_token: z.string().uuid(),
+  message: z.string().trim().min(1).max(500),
+});
+
+export async function postChatHandler(req: Request, res: Response) {
+  const roomCode = String(req.params.code).toUpperCase();
+  const parsed = chatSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Pesan tidak valid." });
+    return;
+  }
+
+  try {
+    const event = await postChatMessage(roomCode, parsed.data.guest_token, parsed.data.message);
+    res.json({
+      id: event.id,
+      member_id: event.member_id,
+      display_name: event.display_name,
+      event_type: event.event_type,
+      sender_type: event.sender_type,
+      message: event.message,
+      created_at: event.created_at,
+    });
+  } catch (error) {
+    if (error instanceof RoomNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    if (error instanceof MemberNotFoundError) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
 }

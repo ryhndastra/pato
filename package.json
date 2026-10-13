@@ -1,11 +1,19 @@
 {
   "name": "pato-monorepo",
   "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "scripts": {
+    "build": "npm --workspace=backend run build && npm --workspace=frontend run build",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "build:frontend": "cd frontend && npm run build",
     "build:backend": "cd backend && npm run build",
     "migrate:backend": "cd backend && npm run migrate"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
   }
 }

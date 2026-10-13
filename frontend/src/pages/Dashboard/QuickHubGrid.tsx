@@ -3,13 +3,12 @@ import {
   Coffee,
   Cake,
   Compass,
-  Calculator,
+  Receipt,
   WhatsappLogo,
-  HandHeart,
+  ClockCounterClockwise,
   Ticket,
 } from "@phosphor-icons/react";
 import { useNavigate } from "react-router";
-
 interface QuickHubGridProps {
   onOpenNudge: () => void;
   onToggleJoin: () => void;
@@ -65,20 +64,20 @@ export function QuickHubGrid({
       onClick: onOpenNudge,
     },
     {
-      key: "calc",
-      label: "Kalkulator",
-      icon: Calculator,
+      key: "receipt",
+      label: "Scan Struk",
+      icon: Receipt,
       color: "text-indigo-600",
       bg: "bg-indigo-50/80",
       onClick: () => navigate("/create"),
     },
     {
-      key: "social",
-      label: "Donasi 20%",
-      icon: HandHeart,
+      key: "history",
+      label: "Riwayat Meja",
+      icon: ClockCounterClockwise,
       color: "text-rose-600",
       bg: "bg-rose-50/80",
-      onClick: () => window.open("https://pato.app/donasi", "_blank", "noopener,noreferrer"),
+      onClick: () => navigate("/history"),
     },
     {
       key: "code",

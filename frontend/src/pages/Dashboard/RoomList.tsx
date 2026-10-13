@@ -12,6 +12,7 @@ interface RoomListProps {
   statusFilter: "ALL" | RoomStatus;
   onOpenNudge: (data: NudgeInitialData) => void;
   onResetFilters: () => void;
+  onDeleted: (roomCode: string) => void;
 }
 
 export function RoomList({
@@ -21,6 +22,7 @@ export function RoomList({
   statusFilter,
   onOpenNudge,
   onResetFilters,
+  onDeleted,
 }: RoomListProps) {
   const navigate = useNavigate();
 
@@ -99,11 +101,30 @@ export function RoomList({
 
   // Filtered rooms
   const filtered = rooms.filter((room) => {
-    const matchesStatus = statusFilter === "ALL" || room.status === statusFilter;
-    const matchesSearch = room.title
-      .toLowerCase()
-      .includes(searchQuery.trim().toLowerCase());
-    return matchesStatus && matchesSearch;
+    const query = searchQuery.trim().toLowerCase();
+    if (query) {
+      const cleanQuery = query.replace(/[^a-z0-9]/gi, "").toLowerCase();
+      const cleanCode = room.room_code.replace(/[^a-z0-9]/gi, "").toLowerCase();
+      const words = query.split(/\s+/).filter(Boolean);
+
+      // Multi-word title match
+      const matchesTitle = words.every((w) => room.title.toLowerCase().includes(w));
+
+      // Code match (exact, substring, or stripped of punctuation)
+      const matchesCode =
+        room.room_code.toLowerCase().includes(query) ||
+        (cleanQuery.length >= 2 && cleanCode.includes(cleanQuery));
+
+      // Status label alias match
+      const matchesStatus =
+        (query.includes("selesai") || query.includes("lunas")) && room.status === "CLOSED" ||
+        query.includes("klaim") && room.status === "CLAIMING" ||
+        query.includes("kunci") && room.status === "LOCKED" ||
+        query.includes("draft") && room.status === "DRAFT";
+
+      return matchesTitle || matchesCode || matchesStatus;
+    }
+    return statusFilter === "ALL" || room.status === statusFilter;
   });
 
   // Empty state when search or filter returns no results
@@ -133,7 +154,12 @@ export function RoomList({
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
       {filtered.map((room) => (
-        <RoomCard key={room.room_code} room={room} onOpenNudge={onOpenNudge} />
+        <RoomCard
+          key={room.room_code}
+          room={room}
+          onOpenNudge={onOpenNudge}
+          onDeleted={onDeleted}
+        />
       ))}
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiGet, ApiError } from "../../lib/api";
 import type { MyRoom } from "./roomStatus";
 
@@ -22,5 +22,10 @@ export function useMyRooms(token: string | null) {
     };
   }, [token]);
 
-  return { rooms, error };
+  /** Dipanggil setelah delete room sukses, biar list langsung update tanpa refetch. */
+  const removeRoom = useCallback((roomCode: string) => {
+    setRooms((prev) => (prev ? prev.filter((r) => r.room_code !== roomCode) : prev));
+  }, []);
+
+  return { rooms, error, removeRoom };
 }

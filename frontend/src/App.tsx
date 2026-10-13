@@ -6,6 +6,7 @@ import { Landing } from "./pages/Landing/Landing";
 import { Login } from "./pages/Login/Login";
 import { CreateRoom } from "./pages/CreateRoom/CreateRoom";
 import { Dashboard } from "./pages/Dashboard/Dashboard";
+import { History } from "./pages/History/History";
 import { Profile } from "./pages/Profile/Profile";
 import { RoomJoin } from "./pages/RoomJoin/RoomJoin";
 
@@ -37,6 +38,7 @@ function App() {
         }
       >
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/history" element={<History />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
     </Routes>

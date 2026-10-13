@@ -1,12 +1,17 @@
+import { useState } from "react";
 import {
   CalendarBlank,
   ArrowUpRight,
   Copy,
   CheckCircle,
+  CircleNotch,
+  Trash,
   WhatsappLogo,
 } from "@phosphor-icons/react";
 import { useNavigate } from "react-router";
+import { useAuth } from "../../auth/useAuth";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
+import { apiDelete, ApiError } from "../../lib/api";
 import { formatIDR } from "../../lib/format";
 import { STATUS_STYLE, formatRoomDate, type MyRoom } from "./roomStatus";
 import type { NudgeInitialData } from "./WhatsAppNudgeModal";
@@ -14,14 +19,35 @@ import type { NudgeInitialData } from "./WhatsAppNudgeModal";
 interface RoomCardProps {
   room: MyRoom;
   onOpenNudge: (data: NudgeInitialData) => void;
+  onDeleted: (roomCode: string) => void;
 }
 
-export function RoomCard({ room, onOpenNudge }: RoomCardProps) {
+export function RoomCard({ room, onOpenNudge, onDeleted }: RoomCardProps) {
   const navigate = useNavigate();
+  const { token } = useAuth();
   const { copied, copy } = useCopyToClipboard();
   const status = STATUS_STYLE[room.status];
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const shareUrl = `${window.location.origin}/room/${room.room_code}`;
+
+  async function handleDelete() {
+    const confirmed = window.confirm(
+      `Hapus meja "${room.title}" (${room.room_code})? Semua klaim dan data pembayaran di dalamnya ikut terhapus permanen, tidak bisa dibalikin.`,
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await apiDelete(`/api/rooms/${room.room_code}`, undefined, token);
+      onDeleted(room.room_code);
+    } catch (err) {
+      setDeleteError(err instanceof ApiError ? err.message : "Gagal menghapus room.");
+      setDeleting(false);
+    }
+  }
 
   return (
     <div className="group/card rounded-[1.75rem] bg-slate-200/50 p-1 ring-1 ring-black/5 transition-all duration-300 hover:bg-blue-100/70 hover:shadow-md sm:rounded-[2rem] sm:p-1.5">
@@ -113,6 +139,21 @@ export function RoomCard({ room, onOpenNudge }: RoomCardProps) {
                 <Copy size={15} weight="bold" />
               )}
             </button>
+
+            {/* Delete button */}
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              title="Hapus meja"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-600/20 transition-all hover:bg-rose-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {deleting ? (
+                <CircleNotch size={15} weight="bold" className="animate-spin" />
+              ) : (
+                <Trash size={15} weight="bold" />
+              )}
+            </button>
           </div>
 
           {/* Open room button */}
@@ -127,6 +168,10 @@ export function RoomCard({ room, onOpenNudge }: RoomCardProps) {
             </span>
           </button>
         </div>
+
+        {deleteError && (
+          <p className="mt-2 text-[11px] font-semibold text-rose-600">{deleteError}</p>
+        )}
       </div>
     </div>
   );

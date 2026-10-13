@@ -1,4 +1,10 @@
-import { House, Plus, UserCircle, CaretDown, SignOut } from "@phosphor-icons/react";
+import {
+  House,
+  Plus,
+  UserCircle,
+  CaretDown,
+  SignOut,
+} from "@phosphor-icons/react";
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import wordmark from "../assets/pato-withtext.png";
@@ -6,7 +12,7 @@ import { useAuth } from "../auth/useAuth";
 
 const NAV_LINK_CLASS = ({ isActive }: { isActive: boolean }) =>
   `flex flex-col items-center gap-1 text-[11px] font-semibold transition-colors ${
-    isActive ? "text-brand" : "text-ink-muted hover:text-ink"
+    isActive ? "text-blue-600 font-bold" : "text-ink-muted hover:text-ink"
   }`;
 
 const DESKTOP_LINK_CLASS = ({ isActive }: { isActive: boolean }) =>
