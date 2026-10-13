@@ -64,7 +64,7 @@ export function DashboardHero({
   return (
     <div className="relative w-full">
       {/* Curved gradient header */}
-      <div className="relative overflow-hidden rounded-b-[44px] bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500 px-5 pt-12 pb-24 sm:rounded-b-[56px] sm:px-8 sm:pt-16 sm:pb-32 lg:rounded-b-[68px] lg:px-12 lg:pt-20 lg:pb-38">
+      <div className="relative overflow-hidden rounded-b-[44px] bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500 px-5 pt-[calc(max(env(safe-area-inset-top,0px),0px)+2.75rem)] pb-24 sm:rounded-b-[56px] sm:px-8 sm:pt-16 sm:pb-32 lg:rounded-b-[68px] lg:px-12 lg:pt-20 lg:pb-38">
         {/* Ambient glow orbs */}
         <div className="pointer-events-none absolute -top-16 -right-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-16 left-10 h-72 w-72 rounded-full bg-white/10 blur-3xl" />

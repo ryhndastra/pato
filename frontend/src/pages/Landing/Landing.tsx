@@ -68,25 +68,27 @@ export function Landing() {
   return (
     <div className="flex min-h-dvh w-full flex-col bg-shell text-ink selection:bg-brand selection:text-white">
       {/* Navbar */}
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-hairline/60 bg-shell/90 px-4 backdrop-blur-md lg:mx-auto lg:h-[72px] lg:w-full lg:max-w-[1120px] lg:px-8">
-        <img src={wordmark} alt="PaTo" className="block h-[32px] w-auto lg:h-[42px]" />
+      <header className="sticky top-0 z-40 flex w-full flex-col justify-center border-b border-hairline/60 bg-shell/95 px-4 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 backdrop-blur-md lg:mx-auto lg:h-[72px] lg:max-w-[1120px] lg:px-8 lg:pt-0 lg:pb-0">
+        <div className="flex h-12 w-full items-center justify-between">
+          <img src={wordmark} alt="PaTo" className="block h-[30px] w-auto lg:h-[40px]" />
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => navigate("/login")}
-            className="inline-flex h-10 items-center justify-center rounded-full px-3.5 text-xs font-bold text-ink-soft transition-colors hover:text-ink active:bg-haze sm:px-4"
-          >
-            Masuk
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/login?mode=register")}
-            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-brand px-3.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md active:scale-[0.98] sm:px-4"
-          >
-            <Plus size={16} weight="bold" />
-            <span className="hidden min-[380px]:inline">Buka Meja Baru</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate("/login")}
+              className="inline-flex h-10 items-center justify-center rounded-full px-3.5 text-xs font-bold text-ink-soft transition-colors hover:text-ink active:bg-haze sm:px-4"
+            >
+              Masuk
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/login?mode=register")}
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-brand px-3.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md active:scale-[0.98] sm:px-4"
+            >
+              <Plus size={16} weight="bold" />
+              <span className="hidden min-[380px]:inline">Buka Meja Baru</span>
+            </button>
+          </div>
         </div>
       </header>
 

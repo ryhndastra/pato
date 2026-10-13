@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { pool } from "./db.js";
 
-const sqlDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "sql");
+const sqlDir = path.join(process.cwd(), "sql");
 
 async function main() {
   await pool.query(`

@@ -17,7 +17,7 @@ let scriptPromise: Promise<void> | null = null;
 function loadScript(): Promise<void> {
   if (!scriptPromise) {
     scriptPromise = new Promise((resolve, reject) => {
-      if (window.google) {
+      if (window.google?.accounts?.id) {
         resolve();
         return;
       }
@@ -25,6 +25,10 @@ function loadScript(): Promise<void> {
         `script[src="${SCRIPT_SRC}"]`,
       );
       if (existing) {
+        if (window.google?.accounts?.id) {
+          resolve();
+          return;
+        }
         existing.addEventListener("load", () => resolve());
         existing.addEventListener("error", () =>
           reject(new Error("Gagal memuat skrip Google")),
@@ -68,6 +72,21 @@ export function useGoogleButton(
     let cancelled = false;
     const container = containerRef.current;
 
+    const render = () => {
+      if (cancelled || !container || !window.google?.accounts?.id) return;
+      const width = Math.max(240, Math.min(container.offsetWidth || 320, 380));
+      container.innerHTML = "";
+      window.google.accounts.id.renderButton(container, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        shape,
+        logo_alignment: "left",
+        text,
+        width: String(width),
+      });
+    };
+
     loadScript()
       .then(() => {
         if (cancelled) return;
@@ -75,18 +94,14 @@ export function useGoogleButton(
           client_id: CLIENT_ID,
           callback: (response) => callbackRef.current(response.credential),
         });
-        window.google?.accounts.id.renderButton(container, {
-          type: "standard",
-          theme: "outline",
-          size: "large",
-          shape,
-          logo_alignment: "left",
-          text,
-          width: String(Math.min(container.offsetWidth || 360, 400)),
-        });
+        render();
+        // If container width wasn't computed yet (animation or drawer open), retry
+        if (container.offsetWidth === 0) {
+          setTimeout(render, 120);
+        }
       })
       .catch((err: unknown) => {
-        console.error(err);
+        console.error("GSI load script error:", err);
       });
 
     return () => {

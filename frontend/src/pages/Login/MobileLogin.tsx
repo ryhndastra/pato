@@ -33,7 +33,7 @@ export function MobileLogin({
   return (
     <div className="flex min-h-dvh w-full flex-col justify-between overflow-x-hidden overflow-y-auto bg-white text-ink selection:bg-brand selection:text-white">
       {/* Header and illustration */}
-      <div className="flex w-full flex-1 shrink-0 flex-col items-center justify-between px-5 pt-4 pb-4 sm:px-8">
+      <div className="flex w-full flex-1 shrink-0 flex-col items-center justify-between px-5 pt-[max(env(safe-area-inset-top,0px),1rem)] pb-4 sm:px-8">
         {/* Navigation bar */}
         <div className="flex w-full max-w-[420px] items-center justify-between">
           <button

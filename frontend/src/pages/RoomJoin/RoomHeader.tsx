@@ -50,7 +50,7 @@ export function RoomHeader({
 
   return (
     <header className="sticky top-0 z-30 w-full bg-blue-600 shadow-xs">
-      <div className="mx-auto max-w-2xl px-4 py-3 sm:px-6">
+      <div className="mx-auto max-w-2xl px-4 pt-[max(env(safe-area-inset-top,0px),0.75rem)] pb-3 sm:px-6">
         {/* Top App Bar Navigation Row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">

@@ -163,3 +163,21 @@ button:active {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
 }
+
+/* Safe area insets for iOS PWA and notch devices */
+.pt-safe {
+  padding-top: max(env(safe-area-inset-top, 0px), 0px);
+}
+
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+}
+
+.pl-safe {
+  padding-left: max(env(safe-area-inset-left, 0px), 0px);
+}
+
+.pr-safe {
+  padding-right: max(env(safe-area-inset-right, 0px), 0px);
+}
+

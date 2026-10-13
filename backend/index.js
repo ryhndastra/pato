@@ -1,2 +1,1 @@
-export { default } from "./dist/index.js";
-
+module.exports = require("./app.cjs");

@@ -84,7 +84,8 @@ export async function loginWithGoogle(idToken: string): Promise<AuthUser> {
       audience: env.googleClientId,
     });
     payload = ticket.getPayload();
-  } catch {
+  } catch (err) {
+    console.error("Google token verification error:", err);
     throw new GoogleTokenError("Token Google tidak valid.");
   }
 
