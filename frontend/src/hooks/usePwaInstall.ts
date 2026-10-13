@@ -55,3 +55,4 @@ export function usePwaInstall() {
 
   return { isInstallable, isInstalled, install };
 }
+
