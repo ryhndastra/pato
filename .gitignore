@@ -5,6 +5,7 @@ bin/
 .DS_Store
 *.log
 .env
+.env.docker
 backend/storage/receipts/*
 !backend/storage/receipts/.gitkeep
 backend/storage/proofs/*

@@ -1,9 +1,28 @@
-version: '3.8'
-
 services:
 
   # ──────────────────────────────────────────────
-  # 1. BACKEND API (Express + TypeScript + Node 22)
+  # 1. DATABASE POSTGRESQL (Lokal Container)
+  # ──────────────────────────────────────────────
+  db_pato:
+    image: postgres:16-alpine
+    container_name: pato_postgres
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      POSTGRES_USER: ${DB_USER:-pato_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-pato_secret_db_2026}
+      POSTGRES_DB: ${DB_NAME:-pato_db}
+    volumes:
+      - pato_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-pato_user} -d ${DB_NAME:-pato_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────────────────────────────────────
+  # 2. BACKEND API (Express + TypeScript + Node 22)
   # ──────────────────────────────────────────────
   backend_pato:
     build:
@@ -16,9 +35,15 @@ services:
     environment:
       - PORT=4000
       - NODE_ENV=production
-    ports:
-      # Bind ke localhost agar tidak terbuka langsung ke internet publik
-      - "127.0.0.1:4000:4000"
+      # Otomatis terkoneksi ke container db_pato di atas
+      - DATABASE_URL=postgresql://${DB_USER:-pato_user}:${DB_PASSWORD:-pato_secret_db_2026}@db_pato:5432/${DB_NAME:-pato_db}
+      - FRONTEND_URL=${FRONTEND_URL:-https://pato.ryhndastra.site}
+      - JWT_SECRET=${JWT_SECRET:-16ca4840a273f7b53b98d67d61a95d2249add6df37e34b8aefa2249409819b8f3d97600b47e0a9134f624b28ef528516}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-719565988722-k5ggk4uck65skvn506bhilpi4gv90uc2.apps.googleusercontent.com}
+      - CORS_ORIGIN=*
+    depends_on:
+      db_pato:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4000/api/health"]
       interval: 10s
@@ -27,7 +52,7 @@ services:
       start_period: 15s
 
   # ──────────────────────────────────────────────
-  # 2. WEB SERVER - Frontend React & Nginx Proxy
+  # 3. WEB SERVER - Frontend React & Nginx Proxy
   # ──────────────────────────────────────────────
   web_pato:
     build:
@@ -38,35 +63,11 @@ services:
     container_name: pato_web
     restart: unless-stopped
     ports:
-      # Port HTTP lokal yang di-expose ke host (default: 80).
-      # Sambungkan Cloudflare Tunnel (cloudflared) ke port ini!
-      - "127.0.0.1:${APP_PORT:-80}:80"
+      # Port yang diarahkan oleh Cloudflare Tunnel (cloudflared)
+      - "127.0.0.1:${APP_PORT:-8200}:80"
     depends_on:
       backend_pato:
         condition: service_healthy
 
-  # ──────────────────────────────────────────────
-  # 3. DATABASE POSTGRESQL (Opsional jika tidak memakai Supabase)
-  # ──────────────────────────────────────────────
-  postgres_pato:
-    image: postgres:16-alpine
-    container_name: pato_postgres
-    restart: unless-stopped
-    profiles:
-      - local-db # Hanya dijalankan jika menambahkan flag: --profile local-db
-    environment:
-      POSTGRES_USER: ${LOCAL_DB_USER:-pato_user}
-      POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD:-pato_password}
-      POSTGRES_DB: ${LOCAL_DB_NAME:-pato_db}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "127.0.0.1:5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${LOCAL_DB_USER:-pato_user} -d ${LOCAL_DB_NAME:-pato_db}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
 volumes:
-  postgres_data:
+  pato_pg_data:
