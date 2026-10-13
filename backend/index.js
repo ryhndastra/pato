@@ -1,1 +1,1 @@
-module.exports = require("./app.cjs");
+export { default } from "./dist/app.js";
