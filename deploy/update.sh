@@ -1,17 +1,13 @@
 #!/usr/bin/env bash
 set -e
 
-echo "🚀 [1/4] Mengambil kode terbaru dari Git..."
+echo "🚀 [1/3] Mengambil kode terbaru dari Git..."
 git pull origin main
 
-echo "📦 [2/4] Menginstall dependencies dan build frontend & backend..."
-npm install
-npm run build
+echo "🐳 [2/3] Membuild dan merestart container Docker..."
+docker compose up -d --build
 
-echo "🗄️ [3/4] Menjalankan migrasi database..."
-npm --workspace=backend run migrate
+echo "🧹 [3/3] Membersihkan image lama yang tidak terpakai..."
+docker image prune -f
 
-echo "🔄 [4/4] Merestart service backend..."
-pm2 restart pato-backend || pm2 start ecosystem.config.cjs
-
-echo "✨ Deploy/Update selesai! PaTo aktif berjalan."
+echo "✨ PaTo berhasil di-update dan aktif berjalan di Docker!"

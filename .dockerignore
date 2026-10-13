@@ -1,0 +1,14 @@
+node_modules
+.git
+.direnv
+storage
+backend/node_modules
+frontend/node_modules
+dist
+backend/dist
+frontend/dist
+.env
+backend/.env
+.DS_Store
+*.log
+
