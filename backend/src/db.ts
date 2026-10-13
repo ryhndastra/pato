@@ -9,8 +9,14 @@ import pg from "pg";
 // 2. connectionTimeoutMillis - gagal cepat (5 detik) daripada hang lama.
 dns.setDefaultResultOrder("ipv4first");
 
+const isSupabaseOrCloud =
+  Boolean(process.env.VERCEL) ||
+  process.env.NODE_ENV === "production" ||
+  Boolean(process.env.DATABASE_URL?.includes("supabase"));
+
 export const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: isSupabaseOrCloud ? { rejectUnauthorized: false } : undefined,
   connectionTimeoutMillis: 5000,
   idleTimeoutMillis: 300000,
   min: process.env.DB_POOL_MIN ? Number(process.env.DB_POOL_MIN) : (process.env.VERCEL ? 0 : 2),

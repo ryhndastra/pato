@@ -37,7 +37,10 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authLimiter, authRouter);
+app.use("/auth", authLimiter, authRouter);
+
 app.use("/api/rooms", roomsRouter);
+app.use("/rooms", roomsRouter);
 
 // Express 5 forwards rejected async handlers here automatically.
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
