@@ -14,7 +14,7 @@
     "backend": {
       "root": "backend",
       "framework": "express",
-      "entrypoint": "app.cjs"
+      "buildCommand": "npm run build"
     }
   },
   "rewrites": [

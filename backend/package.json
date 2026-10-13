@@ -3,11 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "app.js",
+  "main": "dist/app.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "esbuild src/app.ts --bundle --platform=node --target=node20 --format=esm --external:pg-native --outfile=app.js && cp app.js index.js",
-    "start": "node index.js",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
     "migrate": "tsx src/migrate.ts"
   },
   "dependencies": {

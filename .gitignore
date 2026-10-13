@@ -1,6 +1,6 @@
 .direnv/
 node_modules/
-dist/
+frontend/dist/
 bin/
 .DS_Store
 *.log
