@@ -1,0 +1,64 @@
+{
+  "name": "PaTo - Pay Together",
+  "short_name": "PaTo",
+  "description": "Platform Split Bill Akurat, Transparan, dan Proporsional",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090e1a",
+  "theme_color": "#2563eb",
+  "categories": ["finance", "utilities", "social"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/pato-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pato-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pato-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Buat Meja Baru",
+      "short_name": "Buat Meja",
+      "description": "Buat meja split-bill patungan baru",
+      "url": "/create",
+      "icons": [
+        {
+          "src": "/pato-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Riwayat Patungan",
+      "short_name": "Riwayat",
+      "description": "Lihat arsip dan riwayat meja patungan",
+      "url": "/history",
+      "icons": [
+        {
+          "src": "/pato-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

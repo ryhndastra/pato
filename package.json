@@ -1,6 +1,7 @@
 {
   "name": "pato-monorepo",
   "private": true,
+  "type": "module",
   "workspaces": [
     "backend",
     "frontend"
