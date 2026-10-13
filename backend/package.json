@@ -5,7 +5,7 @@
   "main": "app.cjs",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "esbuild src/app.ts --bundle --platform=node --target=node20 --format=cjs --packages=external --footer:js=\"module.exports = app_default; module.exports.default = app_default;\" --outfile=app.cjs && node -e \"const fs=require('fs'); fs.writeFileSync('app.js', 'module.exports = require(\\\"./app.cjs\\\");\\n'); fs.writeFileSync('index.js', 'module.exports = require(\\\"./app.cjs\\\");\\n');\" && tsc -p tsconfig.json",
+    "build": "esbuild src/app.ts --bundle --platform=node --target=node20 --format=cjs --external:pg-native --footer:js=\"module.exports = app_default; module.exports.default = app_default;\" --outfile=app.cjs && node -e \"const fs=require('fs'); fs.writeFileSync('app.js', 'module.exports = require(\\\"./app.cjs\\\");\\n'); fs.writeFileSync('index.js', 'module.exports = require(\\\"./app.cjs\\\");\\n'); if (!fs.existsSync('api')) fs.mkdirSync('api'); fs.writeFileSync('api/index.js', 'module.exports = require(\\\"../app.cjs\\\");\\n');\" && tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "migrate": "tsx src/migrate.ts"
   },
