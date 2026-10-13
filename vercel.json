@@ -15,7 +15,7 @@
       "root": "backend",
       "framework": "express",
       "buildCommand": "npm run build",
-      "entrypoint": "dist/index.js"
+      "entrypoint": "dist/server.cjs"
     }
   },
   "rewrites": [

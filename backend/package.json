@@ -3,10 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "dist/app.js",
+  "main": "dist/server.cjs",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && esbuild dist/index.js --bundle --platform=node --format=cjs --packages=external --outfile=dist/server.cjs",
     "start": "node dist/index.js",
     "migrate": "tsx src/migrate.ts"
   },
@@ -28,6 +28,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.13.3",
     "@types/pg": "^8.23.1",
+    "esbuild": "^0.28.2",
     "tsx": "^4.20.6",
     "typescript": "~5.9.3"
   },
