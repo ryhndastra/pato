@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { env } from "../config.js";
+import { parseReceiptWithGemini } from "../services/ocr.service.js";
 import { claimItem, closeRoom, createRoom, deleteRoom, ForbiddenError, getRoomByCode, InvalidJoinError, ItemNotFoundError, joinRoom, listMyRooms, lockRoom, MemberNotFoundError, OverclaimError, rejectPayment, RoomLockedError, RoomNotFoundError, splitUnclaimedItems, submitPaymentProof, unclaimItem, unlockRoom, verifyPayment, getRoomEvents, postChatMessage, } from "../services/rooms.service.js";
 const createRoomSchema = z.object({
     title: z.string().trim().min(3).max(150),
@@ -425,6 +426,26 @@ export async function postChatHandler(req, res) {
             return;
         }
         throw error;
+    }
+}
+const ocrSchema = z.object({
+    image: z.string().min(10, "Foto struk kasir harus dilampirkan."),
+});
+export async function scanReceiptOcrHandler(req, res) {
+    const parsed = ocrSchema.safeParse(req.body);
+    if (!parsed.success) {
+        res.status(400).json({ error: "Foto struk kasir harus dilampirkan dalam format base64." });
+        return;
+    }
+    try {
+        const result = await parseReceiptWithGemini(parsed.data.image);
+        res.json(result);
+    }
+    catch (error) {
+        console.error("[OCR Controller Error]", error);
+        res.status(500).json({
+            error: error instanceof Error ? error.message : "Gagal membaca struk kasir dengan AI.",
+        });
     }
 }
 //# sourceMappingURL=rooms.controller.js.map

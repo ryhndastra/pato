@@ -10,6 +10,10 @@ export const env = {
     googleClientId: process.env.GOOGLE_CLIENT_ID ||
         process.env.VITE_GOOGLE_CLIENT_ID ||
         "719565988722-k5ggk4uck65skvn506bhilpi4gv90uc2.apps.googleusercontent.com",
+    geminiApiKeys: (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "")
+        .split(",")
+        .map((k) => k.trim())
+        .filter(Boolean),
 };
 if (!process.env.JWT_SECRET) {
     console.warn("⚠️ PERINGATAN: JWT_SECRET belum di-set di environment variables!");

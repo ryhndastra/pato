@@ -41,7 +41,8 @@ var env = {
   corsOrigin: process.env.CORS_ORIGIN ?? "*",
   frontendUrl: process.env.FRONTEND_URL ?? "http://localhost:5173",
   jwtSecret: process.env.JWT_SECRET || (process.env.NODE_ENV === "production" ? "pato_session_fallback_secret_prod_secure_2026" : "dev_pato_secret_key_12345"),
-  googleClientId: process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || "719565988722-k5ggk4uck65skvn506bhilpi4gv90uc2.apps.googleusercontent.com"
+  googleClientId: process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || "719565988722-k5ggk4uck65skvn506bhilpi4gv90uc2.apps.googleusercontent.com",
+  geminiApiKeys: (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "").split(",").map((k) => k.trim()).filter(Boolean)
 };
 if (!process.env.JWT_SECRET) {
   console.warn("\u26A0\uFE0F PERINGATAN: JWT_SECRET belum di-set di environment variables!");
@@ -120,14 +121,14 @@ var import_google_auth_library = require("google-auth-library");
 var import_node_dns = __toESM(require("node:dns"), 1);
 var import_pg = __toESM(require("pg"), 1);
 import_node_dns.default.setDefaultResultOrder("ipv4first");
-var isSupabaseOrCloud = Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production" || Boolean(process.env.DATABASE_URL?.includes("supabase"));
+var isCloudSsl = process.env.DATABASE_SSL === "true" || Boolean(process.env.DATABASE_URL?.includes("supabase")) || Boolean(process.env.DATABASE_URL?.includes("sslmode=require"));
 var pool = new import_pg.default.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: isSupabaseOrCloud ? { rejectUnauthorized: false } : void 0,
+  ssl: isCloudSsl ? { rejectUnauthorized: false } : void 0,
   connectionTimeoutMillis: 5e3,
   idleTimeoutMillis: 3e5,
-  min: process.env.DB_POOL_MIN ? Number(process.env.DB_POOL_MIN) : process.env.VERCEL ? 0 : 2,
-  max: process.env.DB_POOL_MAX ? Number(process.env.DB_POOL_MAX) : process.env.VERCEL ? 2 : 10,
+  min: process.env.DB_POOL_MIN ? Number(process.env.DB_POOL_MIN) : 2,
+  max: process.env.DB_POOL_MAX ? Number(process.env.DB_POOL_MAX) : 10,
   keepAlive: true,
   keepAliveInitialDelayMillis: 1e4
 });
@@ -325,6 +326,137 @@ var import_express2 = require("express");
 
 // dist/controllers/rooms.controller.js
 var import_zod2 = require("zod");
+
+// dist/services/ocr.service.js
+var keyRotationIndex = 0;
+var OCR_PROMPT = `
+Kamu adalah asisten keuangan ahli pembaca struk restoran kasir di Indonesia untuk aplikasi split bill "PaTo".
+Tugasmu adalah membaca gambar struk kasir yang dilampirkan dan mengekstrak rincian item, kuantitas, harga, pajak, dan service secara sangat akurat.
+
+Aturan Penting:
+1. Normalisasi nama menu/singkatan khas resto Indonesia ke nama yang jelas & rapi (contoh: 'Slmn Roll' -> 'Salmon Roll', 'Ocha Dngn' -> 'Ocha Dingin', 'Aym Grg' -> 'Ayam Goreng', 'Es T.Mns' -> 'Es Teh Manis').
+2. Pisahkan baris Pajak Resto (PB1 / PPN 10-11%) dan Service Charge (5-10%) dari daftar item makanan/minuman! Jangan masukkan pajak/service ke dalam daftar menu items.
+3. Kuantitas (quantity) harus bilangan bulat positif (minimal 1). Jika di struk tertulis "2x 15.000", quantity = 2, unitPrice = 15000.
+4. Jika struk menampilkan diskon kasir / voucher promo, masukkan ke field discountAmount.
+5. Jika ada nama restoran di kepala struk, isi field 'title' dengan nama resto tersebut (misal: "Sushi Tei Senopati", "Kopi Kenangan", "RM Padang Sederhana"). Jika tidak jelas, gunakan "Resto Makan Bareng".
+6. Output WAJIB berupa JSON valid murni yang mematuhi skema berikut:
+{
+  "title": string,
+  "items": [
+    {
+      "name": string,
+      "quantity": number,
+      "unitPrice": number,
+      "totalPrice": number
+    }
+  ],
+  "subtotal": number,
+  "taxAmount": number,
+  "serviceAmount": number,
+  "discountAmount": number,
+  "grandTotal": number
+}
+`;
+var CANDIDATE_MODELS = [
+  "gemini-3.5-flash-lite",
+  "gemini-3.5-flash",
+  "gemini-2.5-flash"
+];
+async function parseReceiptWithGemini(imageBase64OrDataUrl) {
+  const keys = env.geminiApiKeys;
+  if (!keys || keys.length === 0) {
+    throw new Error("GEMINI_API_KEYS belum diatur di environment variable backend!");
+  }
+  let mimeType = "image/jpeg";
+  let rawBase64 = imageBase64OrDataUrl;
+  if (imageBase64OrDataUrl.startsWith("data:")) {
+    const match = imageBase64OrDataUrl.match(/^data:([^;]+);base64,(.+)$/);
+    if (match) {
+      mimeType = match[1];
+      rawBase64 = match[2];
+    }
+  }
+  let lastError = null;
+  const totalKeys = keys.length;
+  for (let attempt = 0; attempt < totalKeys; attempt++) {
+    const currentKey = keys[keyRotationIndex % totalKeys];
+    keyRotationIndex = (keyRotationIndex + 1) % totalKeys;
+    for (const model of CANDIDATE_MODELS) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${currentKey}`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  { text: OCR_PROMPT },
+                  {
+                    inlineData: {
+                      mimeType: mimeType || "image/jpeg",
+                      data: rawBase64
+                    }
+                  }
+                ]
+              }
+            ],
+            generationConfig: {
+              responseMimeType: "application/json",
+              temperature: 0.1
+            }
+          })
+        });
+        if (!response.ok) {
+          const errBody = await response.text();
+          console.warn(`[OCR Gemini] Model ${model} dengan key ${currentKey.slice(0, 10)}... mengembalikan status ${response.status}:`, errBody);
+          if (response.status === 429 || response.status === 503 || response.status === 404) {
+            continue;
+          }
+          throw new Error(`Gagal menghubungi Gemini API: ${response.statusText}`);
+        }
+        const data = await response.json();
+        const candidate = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!candidate) {
+          throw new Error("Gemini tidak mengembalikan hasil teks struk.");
+        }
+        const parsed = JSON.parse(candidate);
+        const items = Array.isArray(parsed.items) ? parsed.items.map((it) => {
+          const qty = Math.max(1, Math.round(Number(it.quantity) || 1));
+          const unitPrice = Math.max(0, Math.round(Number(it.unitPrice) || Number(it.price) || 0));
+          const name = String(it.name || "Item Menu").trim();
+          return {
+            name,
+            quantity: qty,
+            unitPrice,
+            totalPrice: unitPrice * qty
+          };
+        }).filter((it) => it.name.length > 0 && it.unitPrice > 0) : [];
+        const calculatedSubtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+        const subtotal = Math.max(0, Math.round(Number(parsed.subtotal) || calculatedSubtotal));
+        const taxAmount = Math.max(0, Math.round(Number(parsed.taxAmount) || 0));
+        const serviceAmount = Math.max(0, Math.round(Number(parsed.serviceAmount) || 0));
+        const discountAmount = Math.max(0, Math.round(Number(parsed.discountAmount) || 0));
+        const grandTotal = Math.max(0, Math.round(Number(parsed.grandTotal) || subtotal + taxAmount + serviceAmount - discountAmount));
+        return {
+          title: String(parsed.title || "Resto Makan Bareng").trim(),
+          items,
+          subtotal,
+          taxAmount,
+          serviceAmount,
+          discountAmount,
+          grandTotal
+        };
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.warn(`[OCR Gemini Attempt Fail] ${lastError.message}`);
+      }
+    }
+  }
+  throw lastError || new Error("Gagal membaca struk dengan seluruh Gemini API Key yang tersedia.");
+}
 
 // dist/services/rooms.service.js
 var import_node_crypto2 = require("node:crypto");
@@ -1388,9 +1520,30 @@ async function postChatHandler(req, res) {
     throw error;
   }
 }
+var ocrSchema = import_zod2.z.object({
+  image: import_zod2.z.string().min(10, "Foto struk kasir harus dilampirkan.")
+});
+async function scanReceiptOcrHandler(req, res) {
+  const parsed = ocrSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Foto struk kasir harus dilampirkan dalam format base64." });
+    return;
+  }
+  try {
+    const result = await parseReceiptWithGemini(parsed.data.image);
+    res.json(result);
+  } catch (error) {
+    console.error("[OCR Controller Error]", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Gagal membaca struk kasir dengan AI."
+    });
+  }
+}
 
 // dist/routes/rooms.routes.js
 var roomsRouter = (0, import_express2.Router)();
+roomsRouter.post("/ocr", scanReceiptOcrHandler);
+roomsRouter.post("/:code/ocr", scanReceiptOcrHandler);
 roomsRouter.post("/", optionalAuth, createRoomHandler);
 roomsRouter.get("/mine", requireAuth, myRoomsHandler);
 roomsRouter.post("/:code/join", optionalAuth, joinLimiter, joinRoomHandler);

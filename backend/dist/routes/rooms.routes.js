@@ -1,8 +1,10 @@
 import { Router } from "express";
-import { claimItemHandler, closeRoomHandler, createRoomHandler, deleteRoomHandler, getRoomHandler, joinRoomHandler, lockRoomHandler, myRoomsHandler, rejectPaymentHandler, splitUnclaimedHandler, submitPaymentProofHandler, unclaimItemHandler, unlockRoomHandler, verifyPaymentHandler, getRoomEventsHandler, postChatHandler, } from "../controllers/rooms.controller.js";
+import { claimItemHandler, closeRoomHandler, createRoomHandler, deleteRoomHandler, getRoomHandler, joinRoomHandler, lockRoomHandler, myRoomsHandler, rejectPaymentHandler, splitUnclaimedHandler, submitPaymentProofHandler, unclaimItemHandler, unlockRoomHandler, verifyPaymentHandler, getRoomEventsHandler, postChatHandler, scanReceiptOcrHandler, } from "../controllers/rooms.controller.js";
 import { optionalAuth, requireAuth } from "../middleware/auth.js";
 import { claimLimiter, joinLimiter } from "../middleware/rateLimit.js";
 export const roomsRouter = Router();
+roomsRouter.post("/ocr", scanReceiptOcrHandler);
+roomsRouter.post("/:code/ocr", scanReceiptOcrHandler);
 roomsRouter.post("/", optionalAuth, createRoomHandler);
 // route statis /mine wajib di atas /:code, kalau tidak /mine ketangkep sebagai code dinamis.
 roomsRouter.get("/mine", requireAuth, myRoomsHandler);
