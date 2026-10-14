@@ -47,23 +47,18 @@ export function ChatDrawer({
   useEffect(() => {
     let cancelled = false;
 
-    function fetchEvents() {
-      apiGet<RoomEvent[]>(`/api/rooms/${encodeURIComponent(roomCode)}/events`)
-        .then((res) => {
-          if (!cancelled) {
-            setEvents(res);
-            onEventsCountChange?.(res.length);
-          }
-        })
-        .catch(() => {});
-    }
-
-    fetchEvents();
-    const interval = setInterval(fetchEvents, 3500);
+    // Load initial chat history once on mount, all subsequent messages arrive live via WebSocket
+    apiGet<RoomEvent[]>(`/api/rooms/${encodeURIComponent(roomCode)}/events`)
+      .then((res) => {
+        if (!cancelled) {
+          setEvents(res);
+          onEventsCountChange?.(res.length);
+        }
+      })
+      .catch(() => {});
 
     return () => {
       cancelled = true;
-      clearInterval(interval);
     };
   }, [roomCode, onEventsCountChange]);
 
