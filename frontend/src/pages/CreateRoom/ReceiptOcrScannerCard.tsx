@@ -9,6 +9,7 @@ import {
   UploadSimple,
 } from "@phosphor-icons/react";
 import { compressImageFile } from "../../lib/imageCompression";
+import { apiPost } from "../../lib/api";
 
 interface OcrResult {
   title?: string;
@@ -44,63 +45,25 @@ export function ReceiptOcrScannerCard({
       const compressedBase64 = await compressImageFile(file);
       onReceiptImageChange(compressedBase64);
 
-      setScanStep("Pato AI sedang membaca baris struk...");
-      await new Promise((r) => setTimeout(r, 600));
+      setScanStep("Pato AI (Gemini) sedang membaca baris struk...");
+      const extracted = await apiPost<OcrResult>("/api/rooms/ocr", {
+        image: compressedBase64,
+      });
 
-      setScanStep("Mendeteksi menu makanan, kuantitas & nominal...");
-      await new Promise((r) => setTimeout(r, 700));
-
-      // Intelligent parser / preset extraction based on file name or smart restaurant templates
-      const fileNameLower = file.name.toLowerCase();
-      let extracted: OcrResult;
-
-      if (fileNameLower.includes("kopi") || fileNameLower.includes("cafe")) {
-        extracted = {
-          title: "Kopi & Toast Cafe",
-          items: [
-            { name: "Kopi Kenangan Mantan (L)", unitPrice: 22000, quantity: 2 },
-            { name: "Earl Grey Milk Tea", unitPrice: 20000, quantity: 1 },
-            { name: "Roti Coklat Klasik", unitPrice: 12000, quantity: 2 },
-          ],
-          taxAmount: 8600,
-          serviceAmount: 0,
-        };
-      } else if (fileNameLower.includes("padang")) {
-        extracted = {
-          title: "Rumah Makan Padang",
-          items: [
-            { name: "Nasi Putih", unitPrice: 8000, quantity: 3 },
-            { name: "Rendang Daging", unitPrice: 24000, quantity: 2 },
-            { name: "Ayam Pop", unitPrice: 22000, quantity: 1 },
-            { name: "Gulai Tambusu", unitPrice: 26000, quantity: 1 },
-            { name: "Es Teh Manis", unitPrice: 5000, quantity: 3 },
-          ],
-          taxAmount: 13500,
-          serviceAmount: 0,
-        };
-      } else {
-        // Universal Restaurant Receipt Simulation
-        extracted = {
-          title: "Resto Makan Bareng",
-          items: [
-            { name: "Paket Nasi Spesial", unitPrice: 38000, quantity: 2 },
-            { name: "Ayam Goreng Gurih", unitPrice: 26000, quantity: 2 },
-            { name: "Sayur Jamur Crispy", unitPrice: 18000, quantity: 1 },
-            { name: "Es Jeruk Murni", unitPrice: 12000, quantity: 2 },
-            { name: "Es Teh Tawar", unitPrice: 4000, quantity: 1 },
-          ],
-          taxAmount: 17400,
-          serviceAmount: 8700,
-        };
+      if (!extracted || !Array.isArray(extracted.items) || extracted.items.length === 0) {
+        throw new Error("AI tidak mendeteksi daftar item makanan dari struk ini. Pastikan foto jelas dan cukup cahaya.");
       }
 
       setScanStep("Finalisasi daftar menu & pajak...");
-      await new Promise((r) => setTimeout(r, 400));
-
       onOcrExtracted(extracted);
       setScanSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal memproses struk kasir.");
+      console.error("[OCR Scan Error]", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Gagal memproses struk kasir. Coba foto ulang yang lebih terang atau input manual.",
+      );
     } finally {
       setIsProcessing(false);
       setScanStep(null);
