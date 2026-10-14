@@ -27,14 +27,20 @@ import { ReceiptImageModal } from "./ReceiptImageModal";
 import { RoomClosedCelebrationModal } from "./RoomClosedCelebrationModal";
 import { MobilePaymentDock } from "./MobilePaymentDock";
 import { RoomStates } from "./RoomStates";
-import { getGuestToken, hasGuestToken } from "./guestToken";
+import {
+  getGuestToken,
+  hasGuestToken,
+  getJoinedSession,
+  saveJoinedSession,
+} from "./guestToken";
 import { useRoomWebSocket } from "../../hooks/useRoomWebSocket";
 import { RoomMediaGalleryCard } from "./RoomMediaGalleryCard";
-import type { JoinResult, RoomDetail } from "./types";
+import type { JoinResult, RoomDetail, RoomMember } from "./types";
 
 export function RoomJoin() {
   const navigate = useNavigate();
-  const { code } = useParams<{ code: string }>();
+  const { code: rawCode } = useParams<{ code: string }>();
+  const code = rawCode?.trim().toUpperCase() ?? "";
   const { user, token: authToken } = useAuth();
 
   const [room, setRoom] = useState<RoomDetail | null>(null);
@@ -44,7 +50,10 @@ export function RoomJoin() {
 
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
-  const [joined, setJoined] = useState<JoinResult | null>(null);
+  const [joined, setJoined] = useState<JoinResult | null>(() => {
+    if (!code) return null;
+    return getJoinedSession(code);
+  });
   const [nameNotice, setNameNotice] = useState<string | null>(null);
 
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
@@ -106,10 +115,21 @@ export function RoomJoin() {
     Promise.all([roomPromise, joinPromise])
       .then(([roomRes, joinRes]) => {
         if (cancelled) return;
-        setJoined(joinRes);
         setRoom(roomRes);
         setNotFound(false);
         setLoadError(null);
+
+        // Validasi dan simpan sesi aktif
+        if (joinRes) {
+          saveJoinedSession(code, joinRes);
+          setJoined(joinRes);
+        } else {
+          // Jika reconnect API mengembalikan null, cek apakah sesi lokal masih valid di dalam room.members
+          const savedSession = getJoinedSession(code);
+          if (savedSession && roomRes.members.some((m) => m.id === savedSession.member_id)) {
+            setJoined(savedSession);
+          }
+        }
       })
       .catch((err: unknown) => {
         if (cancelled) return;
@@ -137,7 +157,30 @@ export function RoomJoin() {
         guest_token: getGuestToken(code),
         display_name: displayName,
       });
+
+      // 1. Simpan sesi permanen ke localStorage
+      saveJoinedSession(code, res);
       setJoined(res);
+
+      // 2. Optimistic update: langsung masukkan nama ke daftar room.members seketika (0ms delay!)
+      setRoom((prev) => {
+        if (!prev) return prev;
+        if (prev.members.some((m) => m.id === res.member_id)) return prev;
+        const newMember: RoomMember = {
+          id: res.member_id,
+          display_name: res.display_name,
+          is_host: res.is_host,
+          subtotal_share: 0,
+          share_amount: 0,
+          claimed_item_ids: [],
+          payment_status: "UNPAID",
+        };
+        return {
+          ...prev,
+          members: [...prev.members, newMember],
+        };
+      });
+
       if (res.display_name.trim().toLowerCase() !== displayName.trim().toLowerCase()) {
         setNameNotice(
           `Nama "${displayName}" sudah ada di meja ini. Kamu otomatis dinamai "${res.display_name}" agar pesanan & tagihan tidak tertukar.`,

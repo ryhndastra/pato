@@ -1,4 +1,7 @@
+import type { JoinResult } from "./types";
+
 const KEY_PREFIX = "pato_guest_token_";
+const SESSION_PREFIX = "pato_joined_session_";
 
 /** Cek tanpa membuat token baru - dipakai buat tahu apakah device ini
  *  sudah pernah gabung/jadi host room ini sebelumnya, supaya kita bisa
@@ -27,3 +30,29 @@ export function getGuestToken(roomCode: string): string {
 export function setHostGuestToken(roomCode: string, hostToken: string): void {
   localStorage.setItem(`${KEY_PREFIX}${roomCode.toUpperCase()}`, hostToken);
 }
+
+/** Simpan data JoinResult (member_id, display_name, is_host) ke localStorage
+ *  agar sesi langsung aktif seketika tanpa perlu daftar ulang saat web ditutup/refresh. */
+export function saveJoinedSession(roomCode: string, result: JoinResult): void {
+  try {
+    localStorage.setItem(`${SESSION_PREFIX}${roomCode.toUpperCase()}`, JSON.stringify(result));
+  } catch {
+    // Abaikan jika storage quota penuh
+  }
+}
+
+/** Ambil data sesi join yang tersimpan untuk room ini */
+export function getJoinedSession(roomCode: string): JoinResult | null {
+  try {
+    const raw = localStorage.getItem(`${SESSION_PREFIX}${roomCode.toUpperCase()}`);
+    return raw ? (JSON.parse(raw) as JoinResult) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Hapus data sesi join saat keluar room */
+export function clearJoinedSession(roomCode: string): void {
+  localStorage.removeItem(`${SESSION_PREFIX}${roomCode.toUpperCase()}`);
+}
+
