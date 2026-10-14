@@ -559,14 +559,15 @@ async function createRoom(input) {
   throw new Error("Gagal membuat room setelah beberapa percobaan, coba lagi.");
 }
 async function resolveDisplayName(client, roomId, desiredName) {
-  const { rows } = await client.query(`SELECT display_name FROM members WHERE room_id = $1 AND display_name LIKE $2 || '%'`, [roomId, desiredName]);
-  const taken = new Set(rows.map((r) => r.display_name));
-  if (!taken.has(desiredName))
-    return desiredName;
+  const trimmed = desiredName.trim();
+  const { rows } = await client.query(`SELECT display_name FROM members WHERE room_id = $1 AND LOWER(display_name) LIKE LOWER($2) || '%'`, [roomId, trimmed]);
+  const takenLower = new Set(rows.map((r) => r.display_name.trim().toLowerCase()));
+  if (!takenLower.has(trimmed.toLowerCase()))
+    return trimmed;
   let n = 2;
-  while (taken.has(`${desiredName} (${n})`))
+  while (takenLower.has(`${trimmed.toLowerCase()} (${n})`))
     n++;
-  return `${desiredName} (${n})`;
+  return `${trimmed} (${n})`;
 }
 async function joinRoom(roomCode, input, userId) {
   for (let attempt = 1; attempt <= MAX_JOIN_ATTEMPTS; attempt++) {
@@ -961,9 +962,33 @@ async function closeRoom(roomCode, hostUserId, guestToken) {
   if (!room)
     throw new RoomNotFoundError(`Room ${roomCode} tidak ditemukan.`);
   await assertIsHost(pool, room.id, hostUserId, guestToken);
-  const { rows: updated } = await pool.query(`UPDATE rooms SET status = 'CLOSED', closed_at = NOW(), updated_at = NOW()
+  const { rows: updated } = await pool.query(`UPDATE rooms
+     SET status = 'CLOSED',
+         closed_at = NOW(),
+         receipt_image_url = NULL,
+         media_purged_at = NOW(),
+         updated_at = NOW()
      WHERE id = $1 RETURNING status`, [room.id]);
+  await pool.query(`UPDATE payments SET proof_image_url = NULL WHERE room_id = $1`, [room.id]);
   return { status: updated[0].status };
+}
+async function purgeOldRoomMedia() {
+  try {
+    const { rows: targetRooms } = await pool.query(`SELECT id, room_code FROM rooms
+       WHERE (status = 'CLOSED' OR created_at < NOW() - INTERVAL '7 days')
+         AND (media_purged_at IS NULL OR receipt_image_url IS NOT NULL)`);
+    if (targetRooms.length === 0)
+      return { purgedRoomsCount: 0 };
+    for (const r of targetRooms) {
+      await pool.query(`UPDATE payments SET proof_image_url = NULL WHERE room_id = $1 AND proof_image_url IS NOT NULL`, [r.id]);
+      await pool.query(`UPDATE rooms SET receipt_image_url = NULL, media_purged_at = NOW() WHERE id = $1`, [r.id]);
+    }
+    console.log(`[Storage Purge Worker] Purged ephemeral media for ${targetRooms.length} room(s).`);
+    return { purgedRoomsCount: targetRooms.length };
+  } catch (err) {
+    console.error("[Storage Purge Worker Error]", err);
+    return { purgedRoomsCount: 0 };
+  }
 }
 async function splitUnclaimedItems(roomCode, hostUserId, guestToken) {
   const client = await pool.connect();
@@ -1595,6 +1620,11 @@ app.use((err, _req, res, _next) => {
 if (!process.env.VERCEL) {
   app.listen(env.port, () => {
     console.log(`PaTo backend jalan di http://localhost:${env.port}`);
+    purgeOldRoomMedia().catch((err) => console.error("[Storage Purge Worker] Startup run failed:", err));
+    const PURGE_INTERVAL_MS = 12 * 60 * 60 * 1e3;
+    setInterval(() => {
+      purgeOldRoomMedia().catch((err) => console.error("[Storage Purge Worker] Periodic run failed:", err));
+    }, PURGE_INTERVAL_MS);
   });
 }
 var index_default = app;

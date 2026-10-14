@@ -3,8 +3,10 @@ import {
   CheckCircle,
   CreditCard,
   ForkKnife,
+  Info,
   Sparkle,
   Trash,
+  X,
 } from "@phosphor-icons/react";
 import { useNavigate, useParams } from "react-router";
 import { apiDelete, apiGet, apiPost, ApiError } from "../../lib/api";
@@ -41,6 +43,7 @@ export function RoomJoin() {
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
   const [joined, setJoined] = useState<JoinResult | null>(null);
+  const [nameNotice, setNameNotice] = useState<string | null>(null);
 
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
   const [claimError, setClaimError] = useState<string | null>(null);
@@ -128,6 +131,11 @@ export function RoomJoin() {
         display_name: displayName,
       });
       setJoined(res);
+      if (res.display_name.trim().toLowerCase() !== displayName.trim().toLowerCase()) {
+        setNameNotice(
+          `Nama "${displayName}" sudah ada di meja ini. Kamu otomatis dinamai "${res.display_name}" agar pesanan & tagihan tidak tertukar.`,
+        );
+      }
       await fetchRoom();
     } catch (err) {
       setJoinError(err instanceof ApiError ? err.message : "Gagal gabung ke meja.");
@@ -347,6 +355,27 @@ export function RoomJoin() {
         <div className="mb-3">
           <StepProgressCard status={room.status} />
         </div>
+
+        {/* F01: Smart duplicate name notification banner */}
+        {nameNotice && (
+          <div className="mb-3 flex items-start justify-between gap-3 rounded-2xl bg-amber-50 p-3.5 text-xs font-semibold text-amber-900 border border-amber-200/90 shadow-2xs">
+            <div className="flex items-start gap-2.5">
+              <Info size={18} weight="bold" className="shrink-0 text-amber-600 mt-0.5" />
+              <div>
+                <p className="font-bold text-amber-950">Nama Panggilan Disesuaikan</p>
+                <p className="mt-0.5 text-amber-800">{nameNotice}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setNameNotice(null)}
+              className="shrink-0 rounded-lg p-1 text-amber-600 hover:bg-amber-100 hover:text-amber-800 transition-colors"
+              title="Tutup pemberitahuan"
+            >
+              <X size={15} weight="bold" />
+            </button>
+          </div>
+        )}
 
         {/* ------------------------------------------------------------- */}
         {/* A. SETTLEMENT STAGE (LOCKED OR CLOSED)                        */}

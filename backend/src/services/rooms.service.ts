@@ -128,23 +128,25 @@ export async function createRoom(input: CreateRoomInput) {
   throw new Error("Gagal membuat room setelah beberapa percobaan, coba lagi.");
 }
 
-/** "Budi" -> "Budi (2)" jika "Budi" sudah terpakai di room ini. */
+/** "Budi" -> "Budi (2)" jika "Budi" sudah terpakai di room ini (case-insensitive). */
 async function resolveDisplayName(
   client: PoolClient,
   roomId: string,
   desiredName: string,
 ) {
+  const trimmed = desiredName.trim();
   const { rows } = await client.query<{ display_name: string }>(
-    `SELECT display_name FROM members WHERE room_id = $1 AND display_name LIKE $2 || '%'`,
-    [roomId, desiredName],
+    `SELECT display_name FROM members WHERE room_id = $1 AND LOWER(display_name) LIKE LOWER($2) || '%'`,
+    [roomId, trimmed],
   );
-  const taken = new Set(rows.map((r) => r.display_name));
-  if (!taken.has(desiredName)) return desiredName;
+  const takenLower = new Set(rows.map((r) => r.display_name.trim().toLowerCase()));
+  if (!takenLower.has(trimmed.toLowerCase())) return trimmed;
 
   let n = 2;
-  while (taken.has(`${desiredName} (${n})`)) n++;
-  return `${desiredName} (${n})`;
+  while (takenLower.has(`${trimmed.toLowerCase()} (${n})`)) n++;
+  return `${trimmed} (${n})`;
 }
+
 
 interface JoinRoomInput {
   guestToken: string;
@@ -819,12 +821,59 @@ export async function closeRoom(roomCode: string, hostUserId?: string, guestToke
   await assertIsHost(pool, room.id, hostUserId, guestToken);
 
   const { rows: updated } = await pool.query<{ status: string }>(
-    `UPDATE rooms SET status = 'CLOSED', closed_at = NOW(), updated_at = NOW()
+    `UPDATE rooms
+     SET status = 'CLOSED',
+         closed_at = NOW(),
+         receipt_image_url = NULL,
+         media_purged_at = NOW(),
+         updated_at = NOW()
      WHERE id = $1 RETURNING status`,
     [room.id],
   );
+
+  // F10 Ephemeral Storage Purge: Hapus bukti pembayaran ketika room ditutup
+  await pool.query(
+    `UPDATE payments SET proof_image_url = NULL WHERE room_id = $1`,
+    [room.id],
+  );
+
   return { status: updated[0].status };
 }
+
+/**
+ * F10 Ephemeral Storage Auto-Purge Worker:
+ * Membersihkan gambar bukti transfer dan struk kasir untuk room yang sudah CLOSED
+ * atau room yang umurnya lebih dari 7 hari untuk menghemat kapasitas disk dan menjaga privasi.
+ */
+export async function purgeOldRoomMedia() {
+  try {
+    const { rows: targetRooms } = await pool.query<{ id: string; room_code: string }>(
+      `SELECT id, room_code FROM rooms
+       WHERE (status = 'CLOSED' OR created_at < NOW() - INTERVAL '7 days')
+         AND (media_purged_at IS NULL OR receipt_image_url IS NOT NULL)`
+    );
+
+    if (targetRooms.length === 0) return { purgedRoomsCount: 0 };
+
+    for (const r of targetRooms) {
+      await pool.query(
+        `UPDATE payments SET proof_image_url = NULL WHERE room_id = $1 AND proof_image_url IS NOT NULL`,
+        [r.id],
+      );
+      await pool.query(
+        `UPDATE rooms SET receipt_image_url = NULL, media_purged_at = NOW() WHERE id = $1`,
+        [r.id],
+      );
+    }
+
+    console.log(`[Storage Purge Worker] Purged ephemeral media for ${targetRooms.length} room(s).`);
+    return { purgedRoomsCount: targetRooms.length };
+  } catch (err) {
+    console.error("[Storage Purge Worker Error]", err);
+    return { purgedRoomsCount: 0 };
+  }
+}
+
 
 export async function splitUnclaimedItems(roomCode: string, hostUserId?: string, guestToken?: string) {
   const client = await pool.connect();
