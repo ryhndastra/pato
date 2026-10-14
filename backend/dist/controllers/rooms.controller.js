@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { env } from "../config.js";
 import { parseReceiptWithGemini } from "../services/ocr.service.js";
-import { claimItem, closeRoom, createRoom, deleteRoom, ForbiddenError, getRoomByCode, InvalidJoinError, ItemNotFoundError, joinRoom, listMyRooms, lockRoom, MemberNotFoundError, OverclaimError, rejectPayment, RoomLockedError, RoomNotFoundError, splitUnclaimedItems, submitPaymentProof, unclaimItem, unlockRoom, verifyPayment, getRoomEvents, postChatMessage, } from "../services/rooms.service.js";
+import { broadcastToRoom } from "../websocket.js";
+import { claimItem, closeRoom, createRoom, deleteRoom, ForbiddenError, getRoomByCode, InvalidJoinError, ItemNotFoundError, joinRoom, listMyRooms, lockRoom, MemberNotFoundError, OverclaimError, rejectPayment, RoomLockedError, RoomNotFoundError, splitUnclaimedItems, submitPaymentProof, unclaimItem, unlockRoom, verifyPayment, getRoomEvents, postChatMessage, updateRoomGroupPhoto, } from "../services/rooms.service.js";
 const createRoomSchema = z.object({
     title: z.string().trim().min(3).max(150),
     host_name: z.string().trim().min(1).max(60),
@@ -71,6 +72,8 @@ export async function joinRoomHandler(req, res) {
             guestToken: parsed.data.guest_token,
             displayName: parsed.data.display_name,
         }, req.userId);
+        const code = String(req.params.code).toUpperCase();
+        broadcastToRoom(code, { type: "ROOM_UPDATED", action: "MEMBER_JOINED" });
         res.json({
             member_id: result.memberId,
             display_name: result.displayName,
@@ -109,6 +112,7 @@ export async function getRoomHandler(req, res) {
             bank_account_name: room.bankAccountName,
             qris_image_url: room.qrisImageUrl,
             receipt_image_url: room.receiptImageUrl,
+            group_photo_url: room.groupPhotoUrl,
             items: room.items.map((item) => ({
                 id: item.id,
                 name: item.name,
@@ -177,7 +181,9 @@ export async function claimItemHandler(req, res) {
         return;
     }
     try {
-        await claimItem(String(req.params.code).toUpperCase(), String(req.params.itemId), parsed.data.guest_token);
+        const code = String(req.params.code).toUpperCase();
+        await claimItem(code, String(req.params.itemId), parsed.data.guest_token);
+        broadcastToRoom(code, { type: "ROOM_UPDATED", action: "CLAIM_CHANGED" });
         res.status(204).end();
     }
     catch (error) {
@@ -191,7 +197,9 @@ export async function unclaimItemHandler(req, res) {
         return;
     }
     try {
-        await unclaimItem(String(req.params.code).toUpperCase(), String(req.params.itemId), parsed.data.guest_token);
+        const code = String(req.params.code).toUpperCase();
+        await unclaimItem(code, String(req.params.itemId), parsed.data.guest_token);
+        broadcastToRoom(code, { type: "ROOM_UPDATED", action: "CLAIM_CHANGED" });
         res.status(204).end();
     }
     catch (error) {
@@ -201,7 +209,9 @@ export async function unclaimItemHandler(req, res) {
 export async function lockRoomHandler(req, res) {
     const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
     try {
-        const result = await lockRoom(String(req.params.code).toUpperCase(), req.userId, guestToken);
+        const code = String(req.params.code).toUpperCase();
+        const result = await lockRoom(code, req.userId, guestToken);
+        broadcastToRoom(code, { type: "ROOM_UPDATED", action: "ROOM_LOCKED" });
         res.json({ status: result.status });
     }
     catch (error) {
@@ -249,7 +259,9 @@ export async function deleteRoomHandler(req, res) {
 export async function unlockRoomHandler(req, res) {
     const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
     try {
-        const result = await unlockRoom(String(req.params.code).toUpperCase(), req.userId, guestToken);
+        const code = String(req.params.code).toUpperCase();
+        const result = await unlockRoom(code, req.userId, guestToken);
+        broadcastToRoom(code, { type: "ROOM_UPDATED", action: "ROOM_UNLOCKED" });
         res.json({ status: result.status });
     }
     catch (error) {
@@ -271,7 +283,9 @@ export async function unlockRoomHandler(req, res) {
 export async function closeRoomHandler(req, res) {
     const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
     try {
-        const result = await closeRoom(String(req.params.code).toUpperCase(), req.userId, guestToken);
+        const code = String(req.params.code).toUpperCase();
+        const result = await closeRoom(code, req.userId, guestToken);
+        broadcastToRoom(code, { type: "ROOM_UPDATED", action: "ROOM_CLOSED" });
         res.json({ status: result.status });
     }
     catch (error) {
@@ -289,7 +303,9 @@ export async function closeRoomHandler(req, res) {
 export async function splitUnclaimedHandler(req, res) {
     const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
     try {
-        await splitUnclaimedItems(String(req.params.code).toUpperCase(), req.userId, guestToken);
+        const code = String(req.params.code).toUpperCase();
+        await splitUnclaimedItems(code, req.userId, guestToken);
+        broadcastToRoom(code, { type: "ROOM_UPDATED", action: "UNCLAIMED_SPLIT" });
         res.json({ success: true });
     }
     catch (error) {
@@ -315,7 +331,9 @@ export async function submitPaymentProofHandler(req, res) {
         return;
     }
     try {
-        await submitPaymentProof(String(req.params.code).toUpperCase(), parsed.data.guest_token, parsed.data.proof_image_url);
+        const code = String(req.params.code).toUpperCase();
+        await submitPaymentProof(code, parsed.data.guest_token, parsed.data.proof_image_url);
+        broadcastToRoom(code, { type: "ROOM_UPDATED", action: "PAYMENT_SUBMITTED" });
         res.json({ success: true });
     }
     catch (error) {
@@ -329,7 +347,9 @@ export async function submitPaymentProofHandler(req, res) {
 export async function verifyPaymentHandler(req, res) {
     const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
     try {
-        await verifyPayment(String(req.params.code).toUpperCase(), String(req.params.memberId), req.userId, guestToken);
+        const code = String(req.params.code).toUpperCase();
+        await verifyPayment(code, String(req.params.memberId), req.userId, guestToken);
+        broadcastToRoom(code, { type: "ROOM_UPDATED", action: "PAYMENT_VERIFIED" });
         res.json({ success: true });
     }
     catch (error) {
@@ -356,7 +376,9 @@ export async function rejectPaymentHandler(req, res) {
     }
     const guestToken = parsed.data.guest_token;
     try {
-        await rejectPayment(String(req.params.code).toUpperCase(), String(req.params.memberId), parsed.data.reason, req.userId, guestToken);
+        const code = String(req.params.code).toUpperCase();
+        await rejectPayment(code, String(req.params.memberId), parsed.data.reason, req.userId, guestToken);
+        broadcastToRoom(code, { type: "ROOM_UPDATED", action: "PAYMENT_REJECTED" });
         res.json({ success: true });
     }
     catch (error) {
@@ -406,7 +428,7 @@ export async function postChatHandler(req, res) {
     }
     try {
         const event = await postChatMessage(roomCode, parsed.data.guest_token, parsed.data.message);
-        res.json({
+        const chatPayload = {
             id: event.id,
             member_id: event.member_id,
             display_name: event.display_name,
@@ -414,7 +436,9 @@ export async function postChatHandler(req, res) {
             sender_type: event.sender_type,
             message: event.message,
             created_at: event.created_at,
-        });
+        };
+        broadcastToRoom(roomCode, { type: "CHAT_MESSAGE", data: chatPayload });
+        res.json(chatPayload);
     }
     catch (error) {
         if (error instanceof RoomNotFoundError) {
@@ -423,6 +447,29 @@ export async function postChatHandler(req, res) {
         }
         if (error instanceof MemberNotFoundError) {
             res.status(400).json({ error: error.message });
+            return;
+        }
+        throw error;
+    }
+}
+const photoSchema = z.object({
+    group_photo_url: z.string().nullable(),
+});
+export async function updateRoomPhotoHandler(req, res) {
+    const roomCode = String(req.params.code).toUpperCase();
+    const parsed = photoSchema.safeParse(req.body);
+    if (!parsed.success) {
+        res.status(400).json({ error: "Data foto tidak valid." });
+        return;
+    }
+    try {
+        const result = await updateRoomGroupPhoto(roomCode, parsed.data.group_photo_url);
+        broadcastToRoom(roomCode, { type: "ROOM_UPDATED", action: "PHOTO_UPDATED" });
+        res.json(result);
+    }
+    catch (error) {
+        if (error instanceof RoomNotFoundError) {
+            res.status(404).json({ error: error.message });
             return;
         }
         throw error;

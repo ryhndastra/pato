@@ -1,10 +1,17 @@
+import http from "node:http";
 import { env } from "./config.js";
 import { app } from "./app.js";
 import { purgeOldRoomMedia } from "./services/rooms.service.js";
+import { initWebSocketServer } from "./websocket.js";
+
+const server = http.createServer(app);
+
+// Inisialisasi WebSocket server untuk sinkronisasi live real-time di meja patungan
+initWebSocketServer(server);
 
 if (!process.env.VERCEL) {
-  app.listen(env.port, () => {
-    console.log(`PaTo backend jalan di http://localhost:${env.port}`);
+  server.listen(env.port, () => {
+    console.log(`PaTo backend (HTTP + WebSocket) jalan di http://localhost:${env.port}`);
 
     // F10 Ephemeral Storage Purge Worker: jalan di background tiap 12 jam & saat startup
     purgeOldRoomMedia().catch((err) =>

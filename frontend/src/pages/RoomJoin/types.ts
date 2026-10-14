@@ -44,6 +44,7 @@ export interface RoomDetail {
   bank_account_name: string | null;
   qris_image_url?: string | null;
   receipt_image_url?: string | null;
+  group_photo_url?: string | null;
   items: RoomItem[];
   members: RoomMember[];
 }

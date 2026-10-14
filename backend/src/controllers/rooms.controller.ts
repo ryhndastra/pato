@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import { env } from "../config.js";
 import { parseReceiptWithGemini } from "../services/ocr.service.js";
+import { broadcastToRoom } from "../websocket.js";
 import {
   claimItem,
   closeRoom,
@@ -26,6 +27,7 @@ import {
   verifyPayment,
   getRoomEvents,
   postChatMessage,
+  updateRoomGroupPhoto,
 } from "../services/rooms.service.js";
 
 const createRoomSchema = z.object({
@@ -123,6 +125,9 @@ export async function joinRoomHandler(req: Request, res: Response) {
       req.userId,
     );
 
+    const code = String(req.params.code).toUpperCase();
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "MEMBER_JOINED" });
+
     res.json({
       member_id: result.memberId,
       display_name: result.displayName,
@@ -162,6 +167,7 @@ export async function getRoomHandler(req: Request, res: Response) {
       bank_account_name: room.bankAccountName,
       qris_image_url: room.qrisImageUrl,
       receipt_image_url: room.receiptImageUrl,
+      group_photo_url: room.groupPhotoUrl,
       items: room.items.map((item) => ({
         id: item.id,
         name: item.name,
@@ -233,11 +239,13 @@ export async function claimItemHandler(req: Request, res: Response) {
   }
 
   try {
+    const code = String(req.params.code).toUpperCase();
     await claimItem(
-      String(req.params.code).toUpperCase(),
+      code,
       String(req.params.itemId),
       parsed.data.guest_token,
     );
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "CLAIM_CHANGED" });
     res.status(204).end();
   } catch (error) {
     handleClaimError(error, res);
@@ -252,11 +260,13 @@ export async function unclaimItemHandler(req: Request, res: Response) {
   }
 
   try {
+    const code = String(req.params.code).toUpperCase();
     await unclaimItem(
-      String(req.params.code).toUpperCase(),
+      code,
       String(req.params.itemId),
       parsed.data.guest_token,
     );
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "CLAIM_CHANGED" });
     res.status(204).end();
   } catch (error) {
     handleClaimError(error, res);
@@ -266,11 +276,13 @@ export async function unclaimItemHandler(req: Request, res: Response) {
 export async function lockRoomHandler(req: Request, res: Response) {
   const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
   try {
+    const code = String(req.params.code).toUpperCase();
     const result = await lockRoom(
-      String(req.params.code).toUpperCase(),
+      code,
       req.userId,
       guestToken,
     );
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "ROOM_LOCKED" });
     res.json({ status: result.status });
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
@@ -323,11 +335,13 @@ export async function deleteRoomHandler(req: Request, res: Response) {
 export async function unlockRoomHandler(req: Request, res: Response) {
   const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
   try {
+    const code = String(req.params.code).toUpperCase();
     const result = await unlockRoom(
-      String(req.params.code).toUpperCase(),
+      code,
       req.userId,
       guestToken,
     );
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "ROOM_UNLOCKED" });
     res.json({ status: result.status });
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
@@ -349,11 +363,13 @@ export async function unlockRoomHandler(req: Request, res: Response) {
 export async function closeRoomHandler(req: Request, res: Response) {
   const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
   try {
+    const code = String(req.params.code).toUpperCase();
     const result = await closeRoom(
-      String(req.params.code).toUpperCase(),
+      code,
       req.userId,
       guestToken,
     );
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "ROOM_CLOSED" });
     res.json({ status: result.status });
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
@@ -371,11 +387,13 @@ export async function closeRoomHandler(req: Request, res: Response) {
 export async function splitUnclaimedHandler(req: Request, res: Response) {
   const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
   try {
+    const code = String(req.params.code).toUpperCase();
     await splitUnclaimedItems(
-      String(req.params.code).toUpperCase(),
+      code,
       req.userId,
       guestToken,
     );
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "UNCLAIMED_SPLIT" });
     res.json({ success: true });
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
@@ -403,11 +421,13 @@ export async function submitPaymentProofHandler(req: Request, res: Response) {
   }
 
   try {
+    const code = String(req.params.code).toUpperCase();
     await submitPaymentProof(
-      String(req.params.code).toUpperCase(),
+      code,
       parsed.data.guest_token,
       parsed.data.proof_image_url,
     );
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "PAYMENT_SUBMITTED" });
     res.json({ success: true });
   } catch (error) {
     if (error instanceof RoomNotFoundError || error instanceof MemberNotFoundError) {
@@ -421,12 +441,14 @@ export async function submitPaymentProofHandler(req: Request, res: Response) {
 export async function verifyPaymentHandler(req: Request, res: Response) {
   const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : undefined;
   try {
+    const code = String(req.params.code).toUpperCase();
     await verifyPayment(
-      String(req.params.code).toUpperCase(),
+      code,
       String(req.params.memberId),
       req.userId,
       guestToken,
     );
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "PAYMENT_VERIFIED" });
     res.json({ success: true });
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
@@ -455,13 +477,15 @@ export async function rejectPaymentHandler(req: Request, res: Response) {
 
   const guestToken = parsed.data.guest_token;
   try {
+    const code = String(req.params.code).toUpperCase();
     await rejectPayment(
-      String(req.params.code).toUpperCase(),
+      code,
       String(req.params.memberId),
       parsed.data.reason,
       req.userId,
       guestToken,
     );
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "PAYMENT_REJECTED" });
     res.json({ success: true });
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
@@ -515,7 +539,7 @@ export async function postChatHandler(req: Request, res: Response) {
 
   try {
     const event = await postChatMessage(roomCode, parsed.data.guest_token, parsed.data.message);
-    res.json({
+    const chatPayload = {
       id: event.id,
       member_id: event.member_id,
       display_name: event.display_name,
@@ -523,7 +547,9 @@ export async function postChatHandler(req: Request, res: Response) {
       sender_type: event.sender_type,
       message: event.message,
       created_at: event.created_at,
-    });
+    };
+    broadcastToRoom(roomCode, { type: "CHAT_MESSAGE", data: chatPayload });
+    res.json(chatPayload);
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
       res.status(404).json({ error: error.message });
@@ -531,6 +557,31 @@ export async function postChatHandler(req: Request, res: Response) {
     }
     if (error instanceof MemberNotFoundError) {
       res.status(400).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+}
+
+const photoSchema = z.object({
+  group_photo_url: z.string().nullable(),
+});
+
+export async function updateRoomPhotoHandler(req: Request, res: Response) {
+  const roomCode = String(req.params.code).toUpperCase();
+  const parsed = photoSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Data foto tidak valid." });
+    return;
+  }
+
+  try {
+    const result = await updateRoomGroupPhoto(roomCode, parsed.data.group_photo_url);
+    broadcastToRoom(roomCode, { type: "ROOM_UPDATED", action: "PHOTO_UPDATED" });
+    res.json(result);
+  } catch (error) {
+    if (error instanceof RoomNotFoundError) {
+      res.status(404).json({ error: error.message });
       return;
     }
     throw error;

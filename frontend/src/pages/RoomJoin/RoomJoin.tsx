@@ -28,6 +28,8 @@ import { RoomClosedCelebrationModal } from "./RoomClosedCelebrationModal";
 import { MobilePaymentDock } from "./MobilePaymentDock";
 import { RoomStates } from "./RoomStates";
 import { getGuestToken, hasGuestToken } from "./guestToken";
+import { useRoomWebSocket } from "../../hooks/useRoomWebSocket";
+import { RoomMediaGalleryCard } from "./RoomMediaGalleryCard";
 import type { JoinResult, RoomDetail } from "./types";
 
 export function RoomJoin() {
@@ -78,6 +80,11 @@ export function RoomJoin() {
       return res;
     });
   }, [code]);
+
+  const { isConnected: isLive } = useRoomWebSocket({
+    roomCode: code,
+    onRoomUpdated: fetchRoom,
+  });
 
   useEffect(() => {
     if (!code) return;
@@ -344,6 +351,7 @@ export function RoomJoin() {
       <RoomHeader
         room={room}
         chatCount={chatCount}
+        isLive={isLive}
         onOpenChat={() => setChatOpen(true)}
         onOpenReceiptImage={room.receipt_image_url ? () => setReceiptImageOpen(true) : undefined}
         onOpenAestheticReceipt={() => setAestheticReceiptOpen(true)}
@@ -376,6 +384,11 @@ export function RoomJoin() {
             </button>
           </div>
         )}
+
+        {/* Room Visual Hub: Struk Kasir, QRIS Host, Foto Barengan */}
+        <div className="mb-3.5">
+          <RoomMediaGalleryCard room={room} onPhotoUpdated={fetchRoom} />
+        </div>
 
         {/* ------------------------------------------------------------- */}
         {/* A. SETTLEMENT STAGE (LOCKED OR CLOSED)                        */}

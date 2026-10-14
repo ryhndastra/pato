@@ -11,10 +11,12 @@ import { useNavigate } from "react-router";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 import { StatusBadge } from "./StatusBadge";
 import type { RoomDetail } from "./types";
+import patoPlain from "../../assets/pato.png";
 
 interface RoomHeaderProps {
   room: RoomDetail;
   chatCount?: number;
+  isLive?: boolean;
   onOpenChat?: () => void;
   onOpenReceiptImage?: () => void;
   onOpenAestheticReceipt: () => void;
@@ -23,6 +25,7 @@ interface RoomHeaderProps {
 export function RoomHeader({
   room,
   chatCount = 0,
+  isLive = false,
   onOpenChat,
   onOpenReceiptImage,
   onOpenAestheticReceipt,
@@ -58,16 +61,25 @@ export function RoomHeader({
               type="button"
               onClick={() => navigate("/dashboard")}
               aria-label="Kembali ke Dashboard"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition-transform active:scale-90 hover:bg-white/25"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition-transform active:scale-90 hover:bg-white/25"
             >
               <ArrowLeft size={18} weight="bold" />
             </button>
 
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-200">
-                Meja Patungan
-              </span>
-              <h1 className="text-base sm:text-lg font-black text-white leading-tight truncate max-w-[160px] sm:max-w-xs">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <img src={patoPlain} alt="PaTo" className="h-3.5 w-3.5 object-contain" />
+                <span className="text-[10px] font-black uppercase tracking-wider text-blue-200">
+                  PaTo Meja
+                </span>
+                {isLive && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-300 ring-1 ring-emerald-400/40">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Live</span>
+                  </span>
+                )}
+              </div>
+              <h1 className="text-base sm:text-lg font-black text-white leading-tight truncate max-w-[150px] sm:max-w-xs">
                 {room.title}
               </h1>
             </div>

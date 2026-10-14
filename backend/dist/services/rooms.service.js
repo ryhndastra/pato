@@ -237,7 +237,7 @@ export async function getRoomByCode(roomCode) {
     const { rows: roomRows } = await pool.query(`SELECT
        r.id, r.room_code, r.title, r.status, r.host_user_id, r.subtotal, r.tax_amount, r.service_amount,
        r.discount_amount, r.grand_total, r.bank_name, r.bank_account_no, r.bank_account_name,
-       r.qris_image_url, r.receipt_image_url,
+       r.qris_image_url, r.receipt_image_url, r.group_photo_url,
        (
          SELECT COALESCE(json_agg(json_build_object(
            'id', i.id,
@@ -334,6 +334,7 @@ export async function getRoomByCode(roomCode) {
         bankAccountName: room.bank_account_name,
         qrisImageUrl: room.qris_image_url,
         receiptImageUrl: room.receipt_image_url,
+        groupPhotoUrl: room.group_photo_url,
         items: itemRows.map((item) => {
             const itemClaims = claimsByItem.get(item.id) ?? [];
             return {
@@ -697,5 +698,13 @@ export async function postChatMessage(roomCode, guestToken, message) {
     finally {
         client.release();
     }
+}
+export async function updateRoomGroupPhoto(roomCode, groupPhotoUrl) {
+    const { rows } = await pool.query("SELECT id FROM rooms WHERE room_code = $1", [roomCode]);
+    const room = rows[0];
+    if (!room)
+        throw new RoomNotFoundError(`Room ${roomCode} tidak ditemukan.`);
+    await pool.query("UPDATE rooms SET group_photo_url = $1, updated_at = NOW() WHERE id = $2", [groupPhotoUrl, room.id]);
+    return { groupPhotoUrl };
 }
 //# sourceMappingURL=rooms.service.js.map

@@ -33,6 +33,7 @@ __export(index_exports, {
   default: () => index_default
 });
 module.exports = __toCommonJS(index_exports);
+var import_node_http = __toESM(require("node:http"), 1);
 
 // dist/config.js
 var import_config = require("dotenv/config");
@@ -458,6 +459,96 @@ async function parseReceiptWithGemini(imageBase64OrDataUrl) {
   throw lastError || new Error("Gagal membaca struk dengan seluruh Gemini API Key yang tersedia.");
 }
 
+// dist/websocket.js
+var import_ws = require("ws");
+var roomClients = /* @__PURE__ */ new Map();
+function initWebSocketServer(server2) {
+  const wss = new import_ws.WebSocketServer({ server: server2, path: "/api/ws" });
+  wss.on("connection", (ws, req) => {
+    try {
+      const parsedUrl = new URL(req.url ?? "", "http://localhost");
+      const roomCode = parsedUrl.searchParams.get("roomCode")?.toUpperCase();
+      if (!roomCode) {
+        ws.close(1008, "Missing roomCode query param");
+        return;
+      }
+      if (!roomClients.has(roomCode)) {
+        roomClients.set(roomCode, /* @__PURE__ */ new Set());
+      }
+      const clients = roomClients.get(roomCode);
+      clients.add(ws);
+      let isAlive = true;
+      ws.on("pong", () => {
+        isAlive = true;
+      });
+      ws.on("message", (raw) => {
+        try {
+          const msg = JSON.parse(raw.toString());
+          if (msg.type === "ping") {
+            ws.send(JSON.stringify({ type: "pong" }));
+          }
+        } catch {
+        }
+      });
+      ws.on("close", () => {
+        clients.delete(ws);
+        if (clients.size === 0) {
+          roomClients.delete(roomCode);
+        }
+      });
+      ws.on("error", (err) => {
+        console.error(`[WebSocket Error][Room ${roomCode}]`, err.message);
+      });
+      ws.send(JSON.stringify({
+        type: "CONNECTED",
+        roomCode,
+        timestamp: (/* @__PURE__ */ new Date()).toISOString()
+      }));
+    } catch (err) {
+      console.error("[WebSocket Connection Handler Error]", err);
+      ws.close(1011, "Internal server error");
+    }
+  });
+  const heartbeatInterval = setInterval(() => {
+    for (const [code, clients] of roomClients.entries()) {
+      for (const ws of clients) {
+        if (ws.readyState === import_ws.WebSocket.OPEN) {
+          ws.ping();
+        } else if (ws.readyState === import_ws.WebSocket.CLOSED || ws.readyState === import_ws.WebSocket.CLOSING) {
+          clients.delete(ws);
+        }
+      }
+      if (clients.size === 0) {
+        roomClients.delete(code);
+      }
+    }
+  }, 3e4);
+  wss.on("close", () => {
+    clearInterval(heartbeatInterval);
+  });
+  return wss;
+}
+function broadcastToRoom(roomCode, payload) {
+  const upper = roomCode.toUpperCase();
+  const clients = roomClients.get(upper);
+  if (!clients || clients.size === 0)
+    return;
+  const data = JSON.stringify({
+    ...payload,
+    roomCode: upper,
+    timestamp: (/* @__PURE__ */ new Date()).toISOString()
+  });
+  for (const ws of clients) {
+    if (ws.readyState === import_ws.WebSocket.OPEN) {
+      try {
+        ws.send(data);
+      } catch (err) {
+        console.error(`[WebSocket Broadcast Error][Room ${upper}]`, err);
+      }
+    }
+  }
+}
+
 // dist/services/rooms.service.js
 var import_node_crypto2 = require("node:crypto");
 
@@ -692,7 +783,7 @@ async function getRoomByCode(roomCode) {
   const { rows: roomRows } = await pool.query(`SELECT
        r.id, r.room_code, r.title, r.status, r.host_user_id, r.subtotal, r.tax_amount, r.service_amount,
        r.discount_amount, r.grand_total, r.bank_name, r.bank_account_no, r.bank_account_name,
-       r.qris_image_url, r.receipt_image_url,
+       r.qris_image_url, r.receipt_image_url, r.group_photo_url,
        (
          SELECT COALESCE(json_agg(json_build_object(
            'id', i.id,
@@ -787,6 +878,7 @@ async function getRoomByCode(roomCode) {
     bankAccountName: room.bank_account_name,
     qrisImageUrl: room.qris_image_url,
     receiptImageUrl: room.receipt_image_url,
+    groupPhotoUrl: room.group_photo_url,
     items: itemRows.map((item) => {
       const itemClaims = claimsByItem.get(item.id) ?? [];
       return {
@@ -1134,6 +1226,14 @@ async function postChatMessage(roomCode, guestToken, message) {
     client.release();
   }
 }
+async function updateRoomGroupPhoto(roomCode, groupPhotoUrl) {
+  const { rows } = await pool.query("SELECT id FROM rooms WHERE room_code = $1", [roomCode]);
+  const room = rows[0];
+  if (!room)
+    throw new RoomNotFoundError(`Room ${roomCode} tidak ditemukan.`);
+  await pool.query("UPDATE rooms SET group_photo_url = $1, updated_at = NOW() WHERE id = $2", [groupPhotoUrl, room.id]);
+  return { groupPhotoUrl };
+}
 
 // dist/controllers/rooms.controller.js
 var createRoomSchema = import_zod2.z.object({
@@ -1202,6 +1302,8 @@ async function joinRoomHandler(req, res) {
       guestToken: parsed.data.guest_token,
       displayName: parsed.data.display_name
     }, req.userId);
+    const code = String(req.params.code).toUpperCase();
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "MEMBER_JOINED" });
     res.json({
       member_id: result.memberId,
       display_name: result.displayName,
@@ -1239,6 +1341,7 @@ async function getRoomHandler(req, res) {
       bank_account_name: room.bankAccountName,
       qris_image_url: room.qrisImageUrl,
       receipt_image_url: room.receiptImageUrl,
+      group_photo_url: room.groupPhotoUrl,
       items: room.items.map((item) => ({
         id: item.id,
         name: item.name,
@@ -1306,7 +1409,9 @@ async function claimItemHandler(req, res) {
     return;
   }
   try {
-    await claimItem(String(req.params.code).toUpperCase(), String(req.params.itemId), parsed.data.guest_token);
+    const code = String(req.params.code).toUpperCase();
+    await claimItem(code, String(req.params.itemId), parsed.data.guest_token);
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "CLAIM_CHANGED" });
     res.status(204).end();
   } catch (error) {
     handleClaimError(error, res);
@@ -1319,7 +1424,9 @@ async function unclaimItemHandler(req, res) {
     return;
   }
   try {
-    await unclaimItem(String(req.params.code).toUpperCase(), String(req.params.itemId), parsed.data.guest_token);
+    const code = String(req.params.code).toUpperCase();
+    await unclaimItem(code, String(req.params.itemId), parsed.data.guest_token);
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "CLAIM_CHANGED" });
     res.status(204).end();
   } catch (error) {
     handleClaimError(error, res);
@@ -1328,7 +1435,9 @@ async function unclaimItemHandler(req, res) {
 async function lockRoomHandler(req, res) {
   const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : void 0;
   try {
-    const result = await lockRoom(String(req.params.code).toUpperCase(), req.userId, guestToken);
+    const code = String(req.params.code).toUpperCase();
+    const result = await lockRoom(code, req.userId, guestToken);
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "ROOM_LOCKED" });
     res.json({ status: result.status });
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
@@ -1374,7 +1483,9 @@ async function deleteRoomHandler(req, res) {
 async function unlockRoomHandler(req, res) {
   const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : void 0;
   try {
-    const result = await unlockRoom(String(req.params.code).toUpperCase(), req.userId, guestToken);
+    const code = String(req.params.code).toUpperCase();
+    const result = await unlockRoom(code, req.userId, guestToken);
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "ROOM_UNLOCKED" });
     res.json({ status: result.status });
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
@@ -1395,7 +1506,9 @@ async function unlockRoomHandler(req, res) {
 async function closeRoomHandler(req, res) {
   const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : void 0;
   try {
-    const result = await closeRoom(String(req.params.code).toUpperCase(), req.userId, guestToken);
+    const code = String(req.params.code).toUpperCase();
+    const result = await closeRoom(code, req.userId, guestToken);
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "ROOM_CLOSED" });
     res.json({ status: result.status });
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
@@ -1412,7 +1525,9 @@ async function closeRoomHandler(req, res) {
 async function splitUnclaimedHandler(req, res) {
   const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : void 0;
   try {
-    await splitUnclaimedItems(String(req.params.code).toUpperCase(), req.userId, guestToken);
+    const code = String(req.params.code).toUpperCase();
+    await splitUnclaimedItems(code, req.userId, guestToken);
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "UNCLAIMED_SPLIT" });
     res.json({ success: true });
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
@@ -1437,7 +1552,9 @@ async function submitPaymentProofHandler(req, res) {
     return;
   }
   try {
-    await submitPaymentProof(String(req.params.code).toUpperCase(), parsed.data.guest_token, parsed.data.proof_image_url);
+    const code = String(req.params.code).toUpperCase();
+    await submitPaymentProof(code, parsed.data.guest_token, parsed.data.proof_image_url);
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "PAYMENT_SUBMITTED" });
     res.json({ success: true });
   } catch (error) {
     if (error instanceof RoomNotFoundError || error instanceof MemberNotFoundError) {
@@ -1450,7 +1567,9 @@ async function submitPaymentProofHandler(req, res) {
 async function verifyPaymentHandler(req, res) {
   const guestToken = typeof req.body?.guest_token === "string" ? req.body.guest_token : void 0;
   try {
-    await verifyPayment(String(req.params.code).toUpperCase(), String(req.params.memberId), req.userId, guestToken);
+    const code = String(req.params.code).toUpperCase();
+    await verifyPayment(code, String(req.params.memberId), req.userId, guestToken);
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "PAYMENT_VERIFIED" });
     res.json({ success: true });
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
@@ -1476,7 +1595,9 @@ async function rejectPaymentHandler(req, res) {
   }
   const guestToken = parsed.data.guest_token;
   try {
-    await rejectPayment(String(req.params.code).toUpperCase(), String(req.params.memberId), parsed.data.reason, req.userId, guestToken);
+    const code = String(req.params.code).toUpperCase();
+    await rejectPayment(code, String(req.params.memberId), parsed.data.reason, req.userId, guestToken);
+    broadcastToRoom(code, { type: "ROOM_UPDATED", action: "PAYMENT_REJECTED" });
     res.json({ success: true });
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
@@ -1524,7 +1645,7 @@ async function postChatHandler(req, res) {
   }
   try {
     const event = await postChatMessage(roomCode, parsed.data.guest_token, parsed.data.message);
-    res.json({
+    const chatPayload = {
       id: event.id,
       member_id: event.member_id,
       display_name: event.display_name,
@@ -1532,7 +1653,9 @@ async function postChatHandler(req, res) {
       sender_type: event.sender_type,
       message: event.message,
       created_at: event.created_at
-    });
+    };
+    broadcastToRoom(roomCode, { type: "CHAT_MESSAGE", data: chatPayload });
+    res.json(chatPayload);
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
       res.status(404).json({ error: error.message });
@@ -1540,6 +1663,28 @@ async function postChatHandler(req, res) {
     }
     if (error instanceof MemberNotFoundError) {
       res.status(400).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+}
+var photoSchema = import_zod2.z.object({
+  group_photo_url: import_zod2.z.string().nullable()
+});
+async function updateRoomPhotoHandler(req, res) {
+  const roomCode = String(req.params.code).toUpperCase();
+  const parsed = photoSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Data foto tidak valid." });
+    return;
+  }
+  try {
+    const result = await updateRoomGroupPhoto(roomCode, parsed.data.group_photo_url);
+    broadcastToRoom(roomCode, { type: "ROOM_UPDATED", action: "PHOTO_UPDATED" });
+    res.json(result);
+  } catch (error) {
+    if (error instanceof RoomNotFoundError) {
+      res.status(404).json({ error: error.message });
       return;
     }
     throw error;
@@ -1585,6 +1730,7 @@ roomsRouter.post("/:code/payments/:memberId/verify", optionalAuth, verifyPayment
 roomsRouter.post("/:code/payments/:memberId/reject", optionalAuth, rejectPaymentHandler);
 roomsRouter.get("/:code/events", getRoomEventsHandler);
 roomsRouter.post("/:code/chat", postChatHandler);
+roomsRouter.post("/:code/photo", updateRoomPhotoHandler);
 
 // dist/app.js
 var app = (0, import_express3.default)();
@@ -1617,9 +1763,11 @@ app.use((err, _req, res, _next) => {
 });
 
 // dist/index.js
+var server = import_node_http.default.createServer(app);
+initWebSocketServer(server);
 if (!process.env.VERCEL) {
-  app.listen(env.port, () => {
-    console.log(`PaTo backend jalan di http://localhost:${env.port}`);
+  server.listen(env.port, () => {
+    console.log(`PaTo backend (HTTP + WebSocket) jalan di http://localhost:${env.port}`);
     purgeOldRoomMedia().catch((err) => console.error("[Storage Purge Worker] Startup run failed:", err));
     const PURGE_INTERVAL_MS = 12 * 60 * 60 * 1e3;
     setInterval(() => {

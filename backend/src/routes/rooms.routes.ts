@@ -17,6 +17,7 @@ import {
   getRoomEventsHandler,
   postChatHandler,
   scanReceiptOcrHandler,
+  updateRoomPhotoHandler,
 } from "../controllers/rooms.controller.js";
 import { optionalAuth, requireAuth } from "../middleware/auth.js";
 import { claimLimiter, joinLimiter } from "../middleware/rateLimit.js";
@@ -42,4 +43,6 @@ roomsRouter.post("/:code/payments/:memberId/verify", optionalAuth, verifyPayment
 roomsRouter.post("/:code/payments/:memberId/reject", optionalAuth, rejectPaymentHandler);
 roomsRouter.get("/:code/events", getRoomEventsHandler);
 roomsRouter.post("/:code/chat", postChatHandler);
+roomsRouter.post("/:code/photo", updateRoomPhotoHandler);
+
 

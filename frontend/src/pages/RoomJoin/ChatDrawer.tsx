@@ -7,6 +7,7 @@ import {
 } from "@phosphor-icons/react";
 import { apiGet, apiPost } from "../../lib/api";
 import { getGuestToken } from "./guestToken";
+import { useRoomWebSocket } from "../../hooks/useRoomWebSocket";
 import type { RoomEvent } from "./types";
 
 interface ChatDrawerProps {
@@ -28,6 +29,20 @@ export function ChatDrawer({
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  useRoomWebSocket({
+    roomCode,
+    onChatMessage: (newChat) => {
+      if (newChat && typeof newChat === "object" && "id" in newChat) {
+        setEvents((prev) => {
+          if (prev.some((e) => e.id === (newChat as RoomEvent).id)) return prev;
+          const next = [...prev, newChat as RoomEvent];
+          onEventsCountChange?.(next.length);
+          return next;
+        });
+      }
+    },
+  });
 
   useEffect(() => {
     let cancelled = false;

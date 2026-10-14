@@ -5,6 +5,7 @@ import {
   Ticket,
   WhatsappLogo,
 } from "@phosphor-icons/react";
+import patoPlain from "../../assets/pato.png";
 
 interface DashboardHeroProps {
   name: string;
@@ -71,6 +72,12 @@ export function DashboardHero({
 
         <div className="relative z-10 mx-auto flex w-full max-w-[1120px] items-center justify-between">
           <div>
+            <div className="mb-1 flex items-center gap-1.5">
+              <img src={patoPlain} alt="PaTo" className="h-4.5 w-4.5 object-contain" />
+              <span className="text-[11px] font-black uppercase tracking-wider text-blue-200">
+                PaTo • Pay Together
+              </span>
+            </div>
             <p className="text-xs font-medium text-white/80 sm:text-sm lg:text-base">Halo,</p>
             <h1 className="mt-0.5 text-2xl font-extrabold tracking-tight text-white capitalize sm:text-3xl lg:text-4xl">
               {name}
