@@ -48,13 +48,13 @@ export function ReceiptOcrScannerCard({
       const compressedBase64 = await compressImageFile(file);
       onReceiptImageChange(compressedBase64);
 
-      setScanStep("Pato AI (Gemini) sedang membaca baris struk...");
+      setScanStep("Sedang membaca baris struk...");
       const extracted = await apiPost<OcrResult>("/api/rooms/ocr", {
         image: compressedBase64,
       });
 
       if (!extracted || !Array.isArray(extracted.items) || extracted.items.length === 0) {
-        throw new Error("AI tidak mendeteksi daftar item makanan dari struk ini. Pastikan foto jelas dan cukup cahaya.");
+        throw new Error("Tidak mendeteksi daftar item makanan dari struk ini. Pastikan foto jelas dan cukup cahaya.");
       }
 
       setScanStep("Finalisasi daftar menu & pajak...");
@@ -90,10 +90,10 @@ export function ReceiptOcrScannerCard({
           </span>
           <div>
             <h2 className="text-sm font-black text-slate-900 sm:text-base">
-              Scan Foto Struk Kasir (AI OCR)
+              Scan Foto Struk Kasir
             </h2>
             <p className="text-[11px] text-slate-500">
-              Upload struk agar AI mengisi otomatis daftar menu & pajak kasir
+              Upload struk agar otomatis terisi daftar menu & pajak kasir
             </p>
           </div>
         </div>
@@ -215,7 +215,7 @@ export function ReceiptOcrScannerCard({
                 Ambil Foto atau Upload Struk Kasir
               </p>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                Format JPG/PNG/WebP. AI akan otomatis membaca nama pesanan & nominal harga.
+                Format JPG/PNG/WebP. Sistem akan otomatis membaca nama pesanan & nominal harga.
               </p>
             </div>
 

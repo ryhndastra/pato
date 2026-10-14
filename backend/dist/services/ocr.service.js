@@ -94,7 +94,7 @@ export async function parseReceiptWithGemini(imageBase64OrDataUrl) {
                 const data = (await response.json());
                 const candidate = data?.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (!candidate) {
-                    throw new Error("Gemini tidak mengembalikan hasil teks struk.");
+                    throw new Error("Tidak dapat mendeteksi teks dari foto struk.");
                 }
                 // Parse JSON dari response Gemini
                 const parsed = JSON.parse(candidate);
@@ -134,6 +134,6 @@ export async function parseReceiptWithGemini(imageBase64OrDataUrl) {
             }
         }
     }
-    throw lastError || new Error("Gagal membaca struk dengan seluruh Gemini API Key yang tersedia.");
+    throw lastError || new Error("Gagal membaca struk kasir, silakan coba lagi atau input manual.");
 }
 //# sourceMappingURL=ocr.service.js.map
