@@ -29,25 +29,6 @@ export function AuthedShell() {
 
   return (
     <div className="flex min-h-dvh w-full flex-col bg-slate-50/60">
-      {/* Mobile top app bar with Pato logo */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 pt-[max(env(safe-area-inset-top,0px),0.625rem)] pb-2.5 backdrop-blur-md lg:hidden shadow-2xs">
-        <NavLink to="/dashboard" className="flex items-center gap-2">
-          <img src={wordmark} alt="PaTo" className="h-6 w-auto object-contain" />
-        </NavLink>
-
-        <button
-          type="button"
-          onClick={() => navigate("/profile")}
-          className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-blue-600 font-bold text-white text-xs shadow-2xs"
-          aria-label="Profil Akun"
-        >
-          {user?.avatarUrl ? (
-            <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
-          ) : (
-            user?.name?.charAt(0).toUpperCase() ?? "U"
-          )}
-        </button>
-      </header>
 
       {/* Desktop floating navbar */}
       <header className="sticky top-3 z-30 mx-auto hidden w-full max-w-[1200px] px-4 sm:px-6 lg:block lg:px-8">
