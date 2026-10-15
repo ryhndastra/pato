@@ -608,13 +608,34 @@ export async function claimItem(roomCode: string, itemId: string, guestToken: st
     );
     const memberName = memberRows[0]?.display_name ?? "Member";
 
-    await client.query(
+    const { rows: eventRows } = await client.query<{
+      id: string;
+      room_id: string;
+      member_id: string;
+      event_type: string;
+      sender_type: "SYSTEM" | "MEMBER";
+      message: string;
+      created_at: string;
+    }>(
       `INSERT INTO room_events (room_id, member_id, event_type, sender_type, message, created_at)
-       VALUES ($1, $2, 'CLAIM_ITEM', 'SYSTEM', $3, NOW())`,
+       VALUES ($1, $2, 'CLAIM_ITEM', 'SYSTEM', $3, NOW())
+       RETURNING id, room_id, member_id, event_type, sender_type, message, created_at`,
       [room.id, memberId, `${memberName} mengklaim 1x ${item.name}`],
     );
 
     await client.query("COMMIT");
+
+    return {
+      event: {
+        id: eventRows[0].id,
+        member_id: eventRows[0].member_id,
+        display_name: memberName,
+        event_type: eventRows[0].event_type,
+        sender_type: eventRows[0].sender_type,
+        message: eventRows[0].message,
+        created_at: eventRows[0].created_at,
+      },
+    };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -660,13 +681,34 @@ export async function unclaimItem(roomCode: string, itemId: string, guestToken: 
     );
     const itemName = itemRows[0]?.name ?? "item";
 
-    await client.query(
+    const { rows: eventRows } = await client.query<{
+      id: string;
+      room_id: string;
+      member_id: string;
+      event_type: string;
+      sender_type: "SYSTEM" | "MEMBER";
+      message: string;
+      created_at: string;
+    }>(
       `INSERT INTO room_events (room_id, member_id, event_type, sender_type, message, created_at)
-       VALUES ($1, $2, 'UNCLAIM_ITEM', 'SYSTEM', $3, NOW())`,
+       VALUES ($1, $2, 'UNCLAIM_ITEM', 'SYSTEM', $3, NOW())
+       RETURNING id, room_id, member_id, event_type, sender_type, message, created_at`,
       [room.id, memberId, `${memberName} melepas porsi ${itemName}`],
     );
 
     await client.query("COMMIT");
+
+    return {
+      event: {
+        id: eventRows[0].id,
+        member_id: eventRows[0].member_id,
+        display_name: memberName,
+        event_type: eventRows[0].event_type,
+        sender_type: eventRows[0].sender_type,
+        message: eventRows[0].message,
+        created_at: eventRows[0].created_at,
+      },
+    };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;

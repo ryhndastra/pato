@@ -240,11 +240,14 @@ export async function claimItemHandler(req: Request, res: Response) {
 
   try {
     const code = String(req.params.code).toUpperCase();
-    await claimItem(
+    const { event } = await claimItem(
       code,
       String(req.params.itemId),
       parsed.data.guest_token,
     );
+    if (event) {
+      broadcastToRoom(code, { type: "CHAT_MESSAGE", data: event });
+    }
     broadcastToRoom(code, { type: "ROOM_UPDATED", action: "CLAIM_CHANGED" });
     res.status(204).end();
   } catch (error) {
@@ -261,11 +264,14 @@ export async function unclaimItemHandler(req: Request, res: Response) {
 
   try {
     const code = String(req.params.code).toUpperCase();
-    await unclaimItem(
+    const { event } = await unclaimItem(
       code,
       String(req.params.itemId),
       parsed.data.guest_token,
     );
+    if (event) {
+      broadcastToRoom(code, { type: "CHAT_MESSAGE", data: event });
+    }
     broadcastToRoom(code, { type: "ROOM_UPDATED", action: "CLAIM_CHANGED" });
     res.status(204).end();
   } catch (error) {

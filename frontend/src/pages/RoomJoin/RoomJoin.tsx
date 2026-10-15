@@ -35,7 +35,8 @@ import {
 } from "./guestToken";
 import { useRoomWebSocket } from "../../hooks/useRoomWebSocket";
 import { RoomMediaGalleryCard } from "./RoomMediaGalleryCard";
-import type { JoinResult, RoomDetail, RoomMember } from "./types";
+import { soundFX } from "../../lib/soundFx";
+import type { JoinResult, RoomDetail, RoomMember, RoomEvent } from "./types";
 
 export function RoomJoin() {
   const navigate = useNavigate();
@@ -75,7 +76,25 @@ export function RoomJoin() {
   const [celebrationOpen, setCelebrationOpen] = useState(false);
   const [showPaymentInfoModal, setShowPaymentInfoModal] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
-  const [chatCount, setChatCount] = useState(0);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  const handleOpenChat = useCallback(() => {
+    setChatOpen(true);
+    setUnreadChatCount(0);
+  }, []);
+
+  const handleNewChatActivity = useCallback((_ev: RoomEvent) => {
+    setChatOpen((open) => {
+      if (!open) {
+        setUnreadChatCount((prev) => prev + 1);
+      }
+      return open;
+    });
+  }, []);
+
+  const handleResetUnread = useCallback(() => {
+    setUnreadChatCount(0);
+  }, []);
 
   // Native Segmented Control state: settlement vs menu
   const [activeTab, setActiveTab] = useState<"settlement" | "menu">("settlement");
@@ -89,6 +108,18 @@ export function RoomJoin() {
       return res;
     });
   }, [code]);
+
+  // Auto-celebration for ALL members when room is officially CLOSED
+  useEffect(() => {
+    if (room?.status === "CLOSED" && code) {
+      const celebratedKey = `pato_celebrated_${code}`;
+      if (!sessionStorage.getItem(celebratedKey)) {
+        sessionStorage.setItem(celebratedKey, "true");
+        setCelebrationOpen(true);
+        soundFX.playCelebration();
+      }
+    }
+  }, [room?.status, code]);
 
   const { isConnected: isLive } = useRoomWebSocket({
     roomCode: code,
@@ -275,7 +306,10 @@ export function RoomJoin() {
         authToken,
       );
       await fetchRoom();
+      const celebratedKey = `pato_celebrated_${code}`;
+      sessionStorage.setItem(celebratedKey, "true");
       setCelebrationOpen(true);
+      soundFX.playCelebration();
     } catch (err) {
       setCloseError(err instanceof ApiError ? err.message : "Gagal menutup meja.");
     } finally {
@@ -393,9 +427,9 @@ export function RoomJoin() {
       {/* 1. NATIVE TOP NAVIGATION BAR & HERO */}
       <RoomHeader
         room={room}
-        chatCount={chatCount}
+        chatCount={unreadChatCount}
         isLive={isLive}
-        onOpenChat={() => setChatOpen(true)}
+        onOpenChat={handleOpenChat}
         onOpenReceiptImage={room.receipt_image_url ? () => setReceiptImageOpen(true) : undefined}
         onOpenAestheticReceipt={() => setAestheticReceiptOpen(true)}
       />
@@ -715,7 +749,8 @@ export function RoomJoin() {
         isJoined={Boolean(joined)}
         isOpen={chatOpen}
         onClose={() => setChatOpen(false)}
-        onEventsCountChange={setChatCount}
+        onNewActivity={handleNewChatActivity}
+        onResetUnread={handleResetUnread}
       />
 
       {/* Modal for viewing Bank Account & QRIS preview anytime */}

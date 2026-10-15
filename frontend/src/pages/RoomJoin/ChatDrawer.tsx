@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   ChatCircleDots,
   Info,
@@ -8,6 +8,7 @@ import {
 import { apiGet, apiPost } from "../../lib/api";
 import { getGuestToken } from "./guestToken";
 import { useRoomWebSocket } from "../../hooks/useRoomWebSocket";
+import { soundFX } from "../../lib/soundFx";
 import type { RoomEvent } from "./types";
 
 interface ChatDrawerProps {
@@ -15,7 +16,8 @@ interface ChatDrawerProps {
   isJoined: boolean;
   isOpen: boolean;
   onClose: () => void;
-  onEventsCountChange?: (count: number) => void;
+  onNewActivity?: (ev: RoomEvent) => void;
+  onResetUnread?: () => void;
 }
 
 export function ChatDrawer({
@@ -23,50 +25,76 @@ export function ChatDrawer({
   isJoined,
   isOpen,
   onClose,
-  onEventsCountChange,
+  onNewActivity,
+  onResetUnread,
 }: ChatDrawerProps) {
   const [events, setEvents] = useState<RoomEvent[]>([]);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
+  const fetchEvents = useCallback(() => {
+    if (!roomCode) return;
+    apiGet<RoomEvent[]>(`/api/rooms/${encodeURIComponent(roomCode)}/events`)
+      .then((res) => {
+        setEvents((prev) => {
+          const map = new Map<string, RoomEvent>();
+          for (const ev of prev) map.set(ev.id, ev);
+          for (const ev of res) map.set(ev.id, ev);
+          return Array.from(map.values()).sort(
+            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+          );
+        });
+      })
+      .catch(() => {});
+  }, [roomCode]);
+
   useRoomWebSocket({
     roomCode,
+    onRoomUpdated: () => {
+      // Room state changed (e.g. claim, unclaim, lock, close), fetch logs immediately!
+      fetchEvents();
+    },
     onChatMessage: (newChat) => {
       if (newChat && typeof newChat === "object" && "id" in newChat) {
+        const ev = newChat as RoomEvent;
+        if (ev.event_type === "CHAT_MESSAGE" && ev.sender_type !== "SYSTEM") {
+          soundFX.playMessage();
+        }
         setEvents((prev) => {
-          if (prev.some((e) => e.id === (newChat as RoomEvent).id)) return prev;
-          const next = [...prev, newChat as RoomEvent];
-          onEventsCountChange?.(next.length);
-          return next;
+          if (prev.some((e) => e.id === ev.id)) return prev;
+          return [...prev, ev];
         });
+        onNewActivity?.(ev);
       }
     },
   });
 
   useEffect(() => {
-    let cancelled = false;
+    fetchEvents();
+  }, [fetchEvents]);
 
-    // Load initial chat history once on mount, all subsequent messages arrive live via WebSocket
-    apiGet<RoomEvent[]>(`/api/rooms/${encodeURIComponent(roomCode)}/events`)
-      .then((res) => {
-        if (!cancelled) {
-          setEvents(res);
-          onEventsCountChange?.(res.length);
-        }
-      })
-      .catch(() => {});
+  // When drawer is opened, reset unread counter immediately
+  useEffect(() => {
+    if (isOpen) {
+      onResetUnread?.();
+    }
+  }, [isOpen, onResetUnread]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [roomCode, onEventsCountChange]);
+  const uniqueEvents = useMemo(() => {
+    const seen = new Set<string>();
+    return events.filter((ev) => {
+      if (!ev.id || seen.has(ev.id)) return false;
+      seen.add(ev.id);
+      return true;
+    });
+  }, [events]);
 
   useEffect(() => {
     if (isOpen && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [events, isOpen]);
+  }, [uniqueEvents, isOpen]);
 
   async function handleSend(e: FormEvent) {
     e.preventDefault();
@@ -82,7 +110,11 @@ export function ChatDrawer({
           message: clean,
         },
       );
-      setEvents((prev) => [...prev, newEvent]);
+      // Strictly deduplicate by ID so sender never sees duplicate message
+      setEvents((prev) => {
+        if (prev.some((e) => e.id === newEvent.id)) return prev;
+        return [...prev, newEvent];
+      });
       setMessage("");
     } catch {
       // Ignore transient errors
@@ -131,7 +163,7 @@ export function ChatDrawer({
               <h3 className="text-xs font-bold text-ink leading-tight">Obrolan Meja</h3>
               <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
                 <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                <span>{events.length} aktivitas terdata</span>
+                <span>{uniqueEvents.length} aktivitas terdata</span>
               </div>
             </div>
           </div>
@@ -151,7 +183,7 @@ export function ChatDrawer({
           ref={scrollRef}
           className="flex flex-1 flex-col gap-2 overflow-y-auto p-3.5 text-xs text-ink-soft"
         >
-          {events.length === 0 ? (
+          {uniqueEvents.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center py-8 text-center text-slate-400">
               <ChatCircleDots size={32} weight="regular" className="mb-1 text-slate-300" />
               <p className="text-xs font-bold text-slate-600">Belum ada obrolan</p>
@@ -160,7 +192,7 @@ export function ChatDrawer({
               </p>
             </div>
           ) : (
-            events.map((ev) => {
+            uniqueEvents.map((ev) => {
               const isSystem = ev.sender_type === "SYSTEM";
 
               if (isSystem) {

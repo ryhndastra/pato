@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Check,
   ForkKnife,
@@ -7,6 +8,7 @@ import {
 } from "@phosphor-icons/react";
 import type { RoomItem, RoomMember, RoomStatus } from "./types";
 import { safeIDR } from "./money";
+import { soundFX } from "../../lib/soundFx";
 
 interface ItemListProps {
   items: RoomItem[];
@@ -33,6 +35,7 @@ export function ItemList({
   onClaim,
   onUnclaim,
 }: ItemListProps) {
+  const [filter, setFilter] = useState<"all" | "mine">("all");
   const claimsLocked = roomStatus === "LOCKED" || roomStatus === "CLOSED";
 
   if (items.length === 0) {
@@ -51,9 +54,75 @@ export function ItemList({
 
   const membersById = new Map(members.map((m) => [m.id, m]));
 
+  const myClaimedItems = items.filter((item) => {
+    const myClaim = item.claims?.find((c) => c.member_id === currentMemberId);
+    const myPortions = myClaim
+      ? Number(myClaim.portion_quantity)
+      : currentMemberId && item.claimed_by_member_ids?.includes(currentMemberId)
+        ? 1
+        : 0;
+    return myPortions > 0;
+  });
+
+  const displayedItems = filter === "mine" ? myClaimedItems : items;
+
+  function handleClaimWithSound(itemId: string) {
+    soundFX.playClaim();
+    onClaim(itemId);
+  }
+
+  function handleUnclaimWithSound(itemId: string) {
+    soundFX.playUnclaim();
+    onUnclaim(itemId);
+  }
+
   return (
     <div className="flex flex-col gap-3">
-      {items.map((item) => {
+      {/* Filter Tabs: Semua Menu vs Pesanan Saya */}
+      {currentMemberId && (
+        <div className="flex items-center gap-2 pb-1">
+          <button
+            type="button"
+            onClick={() => setFilter("all")}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all ${
+              filter === "all"
+                ? "bg-slate-900 text-white shadow-xs"
+                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            Semua Menu ({items.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter("mine")}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all ${
+              filter === "mine"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100"
+            }`}
+          >
+            Pesanan Saya ({myClaimedItems.length})
+          </button>
+        </div>
+      )}
+
+      {filter === "mine" && displayedItems.length === 0 && (
+        <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-blue-200 bg-blue-50/40 p-6 text-center">
+          <p className="text-xs font-bold text-blue-950">Kamu belum memilih menu apa pun</p>
+          <p className="max-w-[34ch] text-[11px] text-blue-700">
+            Klaim porsi makanan atau minuman kamu di tab &quot;Semua Menu&quot;.
+          </p>
+          <button
+            type="button"
+            onClick={() => setFilter("all")}
+            className="mt-1 rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-blue-700"
+          >
+            Lihat Semua Menu
+          </button>
+        </div>
+      )}
+
+      {displayedItems.map((item) => {
         const qty = Number.isFinite(item.quantity) ? item.quantity : 1;
         const totalItemPrice = item.unit_price * qty;
 
@@ -190,7 +259,7 @@ export function ItemList({
                       <button
                         type="button"
                         disabled={isPending}
-                        onClick={() => onUnclaim(item.id)}
+                        onClick={() => handleUnclaimWithSound(item.id)}
                         title={myPortions > 1 ? "Kurangi 1 porsi" : "Batalkan klaim"}
                         className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-700 transition-colors hover:bg-blue-100 active:scale-95 disabled:opacity-50"
                       >
@@ -207,7 +276,7 @@ export function ItemList({
                         <button
                           type="button"
                           disabled={!canClaimMore || isPending}
-                          onClick={() => onClaim(item.id)}
+                          onClick={() => handleClaimWithSound(item.id)}
                           title="Tambah 1 porsi lagi"
                           className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white transition-colors hover:bg-blue-700 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
                         >
@@ -219,7 +288,7 @@ export function ItemList({
                     <button
                       type="button"
                       disabled={!canClaimMore || isPending}
-                      onClick={() => onClaim(item.id)}
+                      onClick={() => handleClaimWithSound(item.id)}
                       className={`inline-flex h-8 items-center gap-1.5 rounded-xl px-3 text-xs font-bold transition-all active:scale-95 disabled:cursor-not-allowed ${
                         isFull
                           ? "bg-slate-100 text-slate-400"

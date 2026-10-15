@@ -940,9 +940,21 @@ async function claimItem(roomCode, itemId, guestToken) {
     await client.query("UPDATE rooms SET status = 'CLAIMING', updated_at = NOW() WHERE id = $1 AND status = 'DRAFT'", [room.id]);
     const { rows: memberRows } = await client.query("SELECT display_name FROM members WHERE id = $1", [memberId]);
     const memberName = memberRows[0]?.display_name ?? "Member";
-    await client.query(`INSERT INTO room_events (room_id, member_id, event_type, sender_type, message, created_at)
-       VALUES ($1, $2, 'CLAIM_ITEM', 'SYSTEM', $3, NOW())`, [room.id, memberId, `${memberName} mengklaim 1x ${item.name}`]);
+    const { rows: eventRows } = await client.query(`INSERT INTO room_events (room_id, member_id, event_type, sender_type, message, created_at)
+       VALUES ($1, $2, 'CLAIM_ITEM', 'SYSTEM', $3, NOW())
+       RETURNING id, room_id, member_id, event_type, sender_type, message, created_at`, [room.id, memberId, `${memberName} mengklaim 1x ${item.name}`]);
     await client.query("COMMIT");
+    return {
+      event: {
+        id: eventRows[0].id,
+        member_id: eventRows[0].member_id,
+        display_name: memberName,
+        event_type: eventRows[0].event_type,
+        sender_type: eventRows[0].sender_type,
+        message: eventRows[0].message,
+        created_at: eventRows[0].created_at
+      }
+    };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -967,9 +979,21 @@ async function unclaimItem(roomCode, itemId, guestToken) {
     const memberName = memberRows[0]?.display_name ?? "Member";
     const { rows: itemRows } = await client.query("SELECT name FROM items WHERE id = $1", [itemId]);
     const itemName = itemRows[0]?.name ?? "item";
-    await client.query(`INSERT INTO room_events (room_id, member_id, event_type, sender_type, message, created_at)
-       VALUES ($1, $2, 'UNCLAIM_ITEM', 'SYSTEM', $3, NOW())`, [room.id, memberId, `${memberName} melepas porsi ${itemName}`]);
+    const { rows: eventRows } = await client.query(`INSERT INTO room_events (room_id, member_id, event_type, sender_type, message, created_at)
+       VALUES ($1, $2, 'UNCLAIM_ITEM', 'SYSTEM', $3, NOW())
+       RETURNING id, room_id, member_id, event_type, sender_type, message, created_at`, [room.id, memberId, `${memberName} melepas porsi ${itemName}`]);
     await client.query("COMMIT");
+    return {
+      event: {
+        id: eventRows[0].id,
+        member_id: eventRows[0].member_id,
+        display_name: memberName,
+        event_type: eventRows[0].event_type,
+        sender_type: eventRows[0].sender_type,
+        message: eventRows[0].message,
+        created_at: eventRows[0].created_at
+      }
+    };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
@@ -1410,7 +1434,10 @@ async function claimItemHandler(req, res) {
   }
   try {
     const code = String(req.params.code).toUpperCase();
-    await claimItem(code, String(req.params.itemId), parsed.data.guest_token);
+    const { event } = await claimItem(code, String(req.params.itemId), parsed.data.guest_token);
+    if (event) {
+      broadcastToRoom(code, { type: "CHAT_MESSAGE", data: event });
+    }
     broadcastToRoom(code, { type: "ROOM_UPDATED", action: "CLAIM_CHANGED" });
     res.status(204).end();
   } catch (error) {
@@ -1425,7 +1452,10 @@ async function unclaimItemHandler(req, res) {
   }
   try {
     const code = String(req.params.code).toUpperCase();
-    await unclaimItem(code, String(req.params.itemId), parsed.data.guest_token);
+    const { event } = await unclaimItem(code, String(req.params.itemId), parsed.data.guest_token);
+    if (event) {
+      broadcastToRoom(code, { type: "CHAT_MESSAGE", data: event });
+    }
     broadcastToRoom(code, { type: "ROOM_UPDATED", action: "CLAIM_CHANGED" });
     res.status(204).end();
   } catch (error) {
