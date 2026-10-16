@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  CheckCircle,
   CreditCard,
   ForkKnife,
   Info,
-  Sparkle,
   Trash,
   X,
 } from "@phosphor-icons/react";
@@ -513,32 +511,6 @@ export function RoomJoin() {
             {/* TAB 1: KAS & PELUNASAN / BAYAR KE HOST */}
             {activeTab === "settlement" && (
               <div className="flex flex-col gap-3.5">
-                {room.status === "CLOSED" && (
-                  <div className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-200/90 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 p-3.5 shadow-2xs">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-2xs">
-                        <CheckCircle size={22} weight="fill" />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-black text-emerald-950">
-                          Meja Selesai & Lunas 100%!
-                        </p>
-                        <p className="text-[11px] text-emerald-800">
-                          Patungan telah ditutup. Semua tagihan beres tanpa selisih.
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setCelebrationOpen(true)}
-                      className="shrink-0 flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 active:scale-95 transition-all"
-                    >
-                      <Sparkle size={14} weight="fill" className="text-amber-300" />
-                      <span>Perayaan</span>
-                    </button>
-                  </div>
-                )}
-
                 {isHost ? (
                   /* HOST COMMAND CENTER (Unified single screen: hero stats + friends list + host food disclosure) */
                   <>
