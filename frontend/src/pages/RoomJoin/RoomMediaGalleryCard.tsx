@@ -47,7 +47,7 @@ export function RoomMediaGalleryCard({
       onPhotoUpdated?.();
     } catch (err) {
       console.error("[Upload Group Photo Error]", err);
-      setUploadError("Gagal mengunggah foto barengan. Coba pilih file foto lain.");
+      setUploadError("Gagal mengunggah foto meja.");
     } finally {
       setIsUploadingPhoto(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -55,7 +55,7 @@ export function RoomMediaGalleryCard({
   }
 
   async function handleRemoveGroupPhoto() {
-    const ok = window.confirm("Hapus foto barengan ini?");
+    const ok = window.confirm("Hapus foto meja ini?");
     if (!ok) return;
 
     setIsUploadingPhoto(true);
@@ -65,36 +65,34 @@ export function RoomMediaGalleryCard({
       });
       onPhotoUpdated?.();
     } catch {
-      setUploadError("Gagal menghapus foto barengan.");
+      setUploadError("Gagal menghapus foto meja.");
     } finally {
       setIsUploadingPhoto(false);
     }
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-2xs">
-      <div className="flex items-center justify-between pb-2.5">
-        <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-            <Images size={14} weight="bold" />
-          </span>
-          <h2 className="text-xs font-bold text-slate-800">
+    <section className="rounded-2xl border border-slate-200/70 bg-white p-3 shadow-2xs">
+      <div className="flex items-center justify-between pb-2">
+        <div className="flex items-center gap-1.5">
+          <Images size={14} weight="bold" className="text-slate-500" />
+          <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
             Media & Foto Meja
           </h2>
         </div>
 
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-600">
-          {mediaCount}/3 Tersedia
+        <span className="font-mono text-[10px] font-bold text-slate-500 bg-slate-100/80 px-2 py-0.5 rounded-md">
+          {mediaCount}/3
         </span>
       </div>
 
       {uploadError && (
-        <div className="mb-2.5 rounded-xl bg-rose-50 p-2 text-xs font-semibold text-rose-700 border border-rose-100">
+        <div className="mb-2 rounded-lg bg-rose-50 p-2 text-xs font-semibold text-rose-700 border border-rose-100">
           {uploadError}
         </div>
       )}
 
-      {/* Hidden file input for camera/photo upload */}
+      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -106,23 +104,23 @@ export function RoomMediaGalleryCard({
         }}
       />
 
-      {/* Modern Compact 3-Column Visual Strip */}
+      {/* Minimalist 3-Column Strip */}
       <div className="grid grid-cols-3 gap-2">
         {/* 1. Struk Kasir */}
         {hasReceipt && room.receipt_image_url ? (
           <button
             type="button"
             onClick={() => setActiveModal("receipt")}
-            className="group flex flex-col items-center justify-center rounded-xl border border-blue-100 bg-blue-50/50 p-2 text-center transition-all hover:bg-blue-100/50 hover:border-blue-200 active:scale-95"
+            className="group flex flex-col items-center justify-center rounded-xl border border-slate-200/80 bg-slate-50/50 p-2 text-center transition-all hover:bg-slate-100/70 hover:border-slate-300 active:scale-95 shadow-2xs"
           >
-            <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-slate-200 shadow-2xs">
+            <div className="relative h-9 w-9 overflow-hidden rounded-lg bg-slate-200 shadow-2xs">
               <img
                 src={room.receipt_image_url}
                 alt="Struk Kasir"
                 className="h-full w-full object-cover transition-transform group-hover:scale-105"
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
-                <Eye size={14} weight="bold" className="text-white drop-shadow" />
+                <Eye size={13} weight="bold" className="text-white drop-shadow" />
               </div>
             </div>
             <span className="mt-1 text-[11px] font-bold text-slate-800 truncate w-full">
@@ -131,11 +129,11 @@ export function RoomMediaGalleryCard({
             <span className="text-[10px] font-bold text-blue-600">Lihat Foto</span>
           </button>
         ) : (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/70 p-2 text-center">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
-              <Receipt size={16} weight="regular" />
+          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/50 p-2 text-center">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+              <Receipt size={14} weight="regular" />
             </span>
-            <span className="mt-1 text-[11px] font-semibold text-slate-600 truncate w-full">
+            <span className="mt-1 text-[11px] font-semibold text-slate-700 truncate w-full">
               Struk Kasir
             </span>
             <span className="text-[10px] text-slate-400">Tanpa Struk</span>
@@ -147,29 +145,29 @@ export function RoomMediaGalleryCard({
           <button
             type="button"
             onClick={() => setActiveModal("qris")}
-            className="group flex flex-col items-center justify-center rounded-xl border border-purple-100 bg-purple-50/50 p-2 text-center transition-all hover:bg-purple-100/50 hover:border-purple-200 active:scale-95"
+            className="group flex flex-col items-center justify-center rounded-xl border border-slate-200/80 bg-slate-50/50 p-2 text-center transition-all hover:bg-slate-100/70 hover:border-slate-300 active:scale-95 shadow-2xs"
           >
-            <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-white p-0.5 border border-purple-200 shadow-2xs">
+            <div className="relative h-9 w-9 overflow-hidden rounded-lg bg-white p-0.5 border border-slate-200 shadow-2xs">
               <img
                 src={room.qris_image_url}
                 alt="QRIS Host"
                 className="h-full w-full object-contain transition-transform group-hover:scale-105"
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
-                <Eye size={14} weight="bold" className="text-white drop-shadow" />
+                <Eye size={13} weight="bold" className="text-white drop-shadow" />
               </div>
             </div>
             <span className="mt-1 text-[11px] font-bold text-slate-800 truncate w-full">
               QRIS Host
             </span>
-            <span className="text-[10px] font-bold text-purple-600">Scan QR</span>
+            <span className="text-[10px] font-bold text-blue-600">Scan QR</span>
           </button>
         ) : (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/70 p-2 text-center">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
-              <Bank size={16} weight="regular" />
+          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/50 p-2 text-center">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+              <Bank size={14} weight="regular" />
             </span>
-            <span className="mt-1 text-[11px] font-semibold text-slate-600 truncate w-full">
+            <span className="mt-1 text-[11px] font-semibold text-slate-700 truncate w-full">
               Pembayaran
             </span>
             <span className="text-[10px] text-slate-500 font-medium">Rekening</span>
@@ -178,44 +176,44 @@ export function RoomMediaGalleryCard({
 
         {/* 3. Foto Barengan */}
         {isUploadingPhoto ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/70 p-2 text-center">
-            <CircleNotch size={18} weight="bold" className="animate-spin text-emerald-600" />
+          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/50 p-2 text-center">
+            <CircleNotch size={16} weight="bold" className="animate-spin text-slate-600" />
             <span className="mt-1 text-[10px] font-bold text-slate-500">Mengunggah...</span>
           </div>
         ) : hasGroupPhoto && room.group_photo_url ? (
           <button
             type="button"
             onClick={() => setActiveModal("group")}
-            className="group flex flex-col items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50/50 p-2 text-center transition-all hover:bg-emerald-100/50 hover:border-emerald-200 active:scale-95"
+            className="group flex flex-col items-center justify-center rounded-xl border border-slate-200/80 bg-slate-50/50 p-2 text-center transition-all hover:bg-slate-100/70 hover:border-slate-300 active:scale-95 shadow-2xs"
           >
-            <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-slate-200 shadow-2xs">
+            <div className="relative h-9 w-9 overflow-hidden rounded-lg bg-slate-200 shadow-2xs">
               <img
                 src={room.group_photo_url}
                 alt="Foto Barengan"
                 className="h-full w-full object-cover transition-transform group-hover:scale-105"
               />
               <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
-                <Eye size={14} weight="bold" className="text-white drop-shadow" />
+                <Eye size={13} weight="bold" className="text-white drop-shadow" />
               </div>
             </div>
             <span className="mt-1 text-[11px] font-bold text-slate-800 truncate w-full">
               Foto Meja
             </span>
-            <span className="text-[10px] font-bold text-emerald-600">Lihat Foto</span>
+            <span className="text-[10px] font-bold text-blue-600">Lihat Foto</span>
           </button>
         ) : (
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="group flex flex-col items-center justify-center rounded-xl border border-dashed border-emerald-300 bg-emerald-50/40 p-2 text-center transition-all hover:bg-emerald-100/50 active:scale-95"
+            className="group flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50/60 p-2 text-center transition-all hover:bg-slate-100 hover:border-slate-400 active:scale-95"
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-2xs group-hover:scale-105 transition-transform">
-              <Plus size={16} weight="bold" />
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-800 text-white shadow-2xs group-hover:scale-105 transition-transform">
+              <Plus size={14} weight="bold" />
             </span>
-            <span className="mt-1 text-[11px] font-bold text-emerald-900 truncate w-full">
+            <span className="mt-1 text-[11px] font-bold text-slate-800 truncate w-full">
               Foto Meja
             </span>
-            <span className="text-[10px] font-bold text-emerald-700">+ Tambah</span>
+            <span className="text-[10px] font-bold text-slate-500">+ Upload</span>
           </button>
         )}
       </div>
@@ -229,7 +227,7 @@ export function RoomMediaGalleryCard({
           onClick={() => setActiveModal(null)}
         >
           <div
-            className="relative flex max-h-[90vh] w-full max-w-lg flex-col items-center justify-center rounded-3xl bg-slate-900/95 p-3.5 shadow-2xl border border-slate-800 text-white"
+            className="relative flex max-h-[90vh] w-full max-w-lg flex-col items-center justify-center rounded-2xl bg-slate-900 p-3.5 shadow-2xl border border-slate-800 text-white"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex w-full items-center justify-between px-2 pb-2.5">
@@ -247,11 +245,11 @@ export function RoomMediaGalleryCard({
               </button>
             </div>
 
-            <div className="overflow-auto rounded-2xl bg-black/50 p-1.5 max-h-[72vh] w-full flex items-center justify-center">
+            <div className="overflow-auto rounded-xl bg-black/50 p-1.5 max-h-[72vh] w-full flex items-center justify-center">
               <img
                 src={room.receipt_image_url}
                 alt="Struk Kasir Full"
-                className="h-auto max-h-[70vh] w-auto max-w-full rounded-xl object-contain shadow-lg"
+                className="h-auto max-h-[70vh] w-auto max-w-full rounded-lg object-contain shadow-lg"
               />
             </div>
           </div>
@@ -267,12 +265,12 @@ export function RoomMediaGalleryCard({
           onClick={() => setActiveModal(null)}
         >
           <div
-            className="relative flex max-h-[90vh] w-full max-w-sm flex-col items-center justify-center rounded-3xl bg-white p-4 shadow-2xl border border-slate-200 text-slate-900"
+            className="relative flex max-h-[90vh] w-full max-w-sm flex-col items-center justify-center rounded-2xl bg-white p-4 shadow-2xl border border-slate-200 text-slate-900"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex w-full items-center justify-between pb-3">
               <div className="flex items-center gap-2">
-                <QrCode size={18} weight="bold" className="text-purple-600" />
+                <QrCode size={18} weight="bold" className="text-blue-600" />
                 <span className="text-xs font-black sm:text-sm">QRIS Pembayaran Host</span>
               </div>
               <button
@@ -285,7 +283,7 @@ export function RoomMediaGalleryCard({
               </button>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 w-full flex items-center justify-center">
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white p-2 w-full flex items-center justify-center">
               <img
                 src={room.qris_image_url}
                 alt="QRIS Full"
@@ -297,7 +295,7 @@ export function RoomMediaGalleryCard({
               <a
                 href={room.qris_image_url}
                 download={`QRIS_${room.room_code}.jpg`}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-purple-600 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-purple-700"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-black active:scale-95 transition-all"
               >
                 <DownloadSimple size={16} weight="bold" />
                 <span>Simpan Gambar ke Galeri</span>
@@ -316,7 +314,7 @@ export function RoomMediaGalleryCard({
           onClick={() => setActiveModal(null)}
         >
           <div
-            className="relative flex max-h-[90vh] w-full max-w-xl flex-col items-center justify-center rounded-3xl bg-slate-900/95 p-3.5 shadow-2xl border border-slate-800 text-white"
+            className="relative flex max-h-[90vh] w-full max-w-xl flex-col items-center justify-center rounded-2xl bg-slate-900 p-3.5 shadow-2xl border border-slate-800 text-white"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex w-full items-center justify-between px-2 pb-2.5">
@@ -334,11 +332,11 @@ export function RoomMediaGalleryCard({
               </button>
             </div>
 
-            <div className="overflow-auto rounded-2xl bg-black/50 p-1.5 max-h-[72vh] w-full flex items-center justify-center">
+            <div className="overflow-auto rounded-xl bg-black/50 p-1.5 max-h-[72vh] w-full flex items-center justify-center">
               <img
                 src={room.group_photo_url}
                 alt="Foto Barengan Full"
-                className="h-auto max-h-[70vh] w-auto max-w-full rounded-xl object-contain shadow-lg"
+                className="h-auto max-h-[70vh] w-auto max-w-full rounded-lg object-contain shadow-lg"
               />
             </div>
 
@@ -361,7 +359,7 @@ export function RoomMediaGalleryCard({
                   setActiveModal(null);
                   fileInputRef.current?.click();
                 }}
-                className="inline-flex items-center gap-1 font-bold text-emerald-400 hover:text-emerald-300"
+                className="inline-flex items-center gap-1 font-bold text-white hover:text-slate-200"
               >
                 <UploadSimple size={14} weight="bold" />
                 <span>Ganti Foto</span>

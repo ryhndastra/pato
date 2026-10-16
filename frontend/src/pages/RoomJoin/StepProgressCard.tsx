@@ -34,29 +34,29 @@ export function StepProgressCard({ status }: StepProgressCardProps) {
   return (
     <nav
       aria-label="Tahapan Meja"
-      className="flex w-full items-center justify-between gap-1.5 rounded-xl border border-slate-200/80 bg-white/95 p-1 shadow-2xs backdrop-blur-sm"
+      className="flex w-full items-center justify-between gap-1 rounded-xl border border-slate-200/60 bg-white/70 p-1 shadow-2xs backdrop-blur-xs"
     >
       {steps.map((step) => {
-        let containerStyle = "text-slate-400 bg-transparent hover:text-slate-600";
+        let containerStyle = "text-slate-400 bg-transparent";
         let badgeStyle = "bg-slate-100 text-slate-400";
         let indicator = <span className="font-mono text-[10px] font-bold">{step.id}</span>;
 
         if (isClosed) {
-          containerStyle = "text-emerald-800 bg-emerald-50/70 font-bold";
+          containerStyle = "text-emerald-900 bg-emerald-50/60 font-bold";
           badgeStyle = "bg-emerald-600 text-white";
           indicator = <Check size={11} weight="bold" />;
         } else if (step.isCurrent) {
-          containerStyle = "text-blue-900 bg-blue-50/80 font-black shadow-2xs ring-1 ring-blue-100";
+          containerStyle = "text-slate-900 bg-white font-extrabold shadow-2xs border border-slate-200/70";
           badgeStyle = "bg-blue-600 text-white";
           indicator = (
-            <span className="relative flex h-2 w-2">
+            <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
             </span>
           );
         } else if (step.isDone) {
           containerStyle = "text-slate-700 font-semibold";
-          badgeStyle = "bg-emerald-100 text-emerald-700";
+          badgeStyle = "bg-emerald-100 text-emerald-800";
           indicator = <Check size={11} weight="bold" />;
         }
 

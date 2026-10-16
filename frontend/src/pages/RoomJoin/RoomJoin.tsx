@@ -425,7 +425,7 @@ export function RoomJoin() {
   const pendingVerificationCount = friends.filter((m) => m.payment_status === "PENDING").length;
 
   return (
-    <div className="flex min-h-dvh w-full flex-col bg-slate-100/70">
+    <div className="flex min-h-dvh w-full flex-col bg-[#f8fafc]">
       {/* 1. NATIVE TOP NAVIGATION BAR & HERO */}
       <RoomHeader
         room={room}
@@ -465,7 +465,7 @@ export function RoomJoin() {
         )}
 
         {/* Room Visual Hub: Struk Kasir, QRIS Host, Foto Barengan */}
-        <div className="mb-3.5">
+        <div className="mb-3">
           <RoomMediaGalleryCard room={room} onPhotoUpdated={fetchRoom} />
         </div>
 
@@ -473,22 +473,22 @@ export function RoomJoin() {
         {/* A. SETTLEMENT STAGE (LOCKED OR CLOSED)                        */}
         {/* ------------------------------------------------------------- */}
         {isSettlement ? (
-          <div className="flex flex-col gap-3.5">
+          <div className="flex flex-col gap-3">
             {/* Native iOS/Android Segmented Control */}
-            <div className="flex w-full rounded-xl bg-slate-200/80 p-1 shadow-2xs">
+            <div className="flex w-full rounded-xl bg-slate-100 p-1 border border-slate-200/70 shadow-2xs">
               <button
                 type="button"
                 onClick={() => setActiveTab("settlement")}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all ${
                   activeTab === "settlement"
-                    ? "bg-white text-slate-900 shadow-2xs"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 <CreditCard size={15} weight="bold" />
                 <span>{isHost ? "Kas & Pelunasan" : "Bayar Tagihan"}</span>
                 {isHost && pendingVerificationCount > 0 && (
-                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 font-mono text-[9px] font-black text-white">
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 font-mono text-[9px] font-black text-white">
                     {pendingVerificationCount}
                   </span>
                 )}
@@ -499,8 +499,8 @@ export function RoomJoin() {
                 onClick={() => setActiveTab("menu")}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all ${
                   activeTab === "menu"
-                    ? "bg-white text-slate-900 shadow-2xs"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 <ForkKnife size={15} weight="bold" />

@@ -147,7 +147,7 @@ export function MobilePaymentDock({
               <button
                 type="button"
                 onClick={onLockClick || onScrollToClaim}
-                className="flex h-9.5 items-center gap-1.5 rounded-xl bg-blue-600 px-4 text-xs font-bold text-white shadow-xs hover:bg-blue-700 active:scale-95 transition-all"
+                className="flex h-9.5 items-center gap-1.5 rounded-xl bg-slate-900 px-4 text-xs font-bold text-white shadow-xs hover:bg-black active:scale-95 transition-all"
               >
                 <LockSimple size={14} weight="bold" />
                 <span>Kunci Meja</span>

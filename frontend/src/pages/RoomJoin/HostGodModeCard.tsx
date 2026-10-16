@@ -46,21 +46,21 @@ export function HostGodModeCard({
   }
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-2xl border border-amber-200/90 bg-gradient-to-b from-amber-50/70 to-orange-50/30 p-3.5 shadow-2xs">
+    <div className="flex flex-col gap-2.5 rounded-2xl border border-slate-200/70 bg-white p-3.5 shadow-2xs">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <Crown size={15} weight="fill" className="text-amber-500" />
-          <span className="text-xs font-bold text-amber-950">
+          <span className="text-xs font-bold text-slate-800">
             Pusat Kontrol Host
           </span>
         </div>
-        <span className="rounded-full bg-amber-100/80 px-2 py-0.5 font-mono text-[10px] font-bold text-amber-800">
-          Mode Atur Meja
+        <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-600">
+          Host Admin
         </span>
       </div>
 
       {unclaimedPortions > 0 ? (
-        <div className="flex items-center justify-between gap-2.5 rounded-xl border border-amber-200/90 bg-white/90 p-2.5 shadow-2xs">
+        <div className="flex items-center justify-between gap-2.5 rounded-xl border border-amber-200/70 bg-amber-50/60 p-2.5">
           <div className="flex items-center gap-2 min-w-0">
             <WarningCircle size={16} weight="fill" className="shrink-0 text-amber-600" />
             <p className="text-[11px] text-amber-900 leading-tight">
@@ -79,9 +79,9 @@ export function HostGodModeCard({
           </button>
         </div>
       ) : (
-        <div className="flex items-center gap-2 rounded-xl bg-white/70 p-2 text-[11px] text-emerald-800 border border-emerald-100">
+        <div className="flex items-center gap-2 rounded-xl bg-emerald-50/50 p-2 text-[11px] text-emerald-800 border border-emerald-100">
           <CheckCircle size={15} weight="fill" className="text-emerald-600 shrink-0" />
-          <span>Semua menu telah lengkap terbagi ke peserta meja!</span>
+          <span>Semua menu telah lengkap terbagi ke peserta meja.</span>
         </div>
       )}
 
@@ -101,7 +101,7 @@ export function HostGodModeCard({
         type="button"
         onClick={onLock}
         disabled={locking}
-        className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-xs font-bold text-white shadow-xs transition-all hover:bg-blue-700 active:scale-[0.98] disabled:opacity-60"
+        className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-xs font-bold text-white shadow-xs transition-all hover:bg-black active:scale-[0.98] disabled:opacity-60"
       >
         <LockSimple size={15} weight="bold" />
         <span>{locking ? "Mengunci Meja..." : "Kunci Tagihan & Buka Pembayaran"}</span>
