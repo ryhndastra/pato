@@ -12,6 +12,7 @@ export interface AuthUser {
   email: string;
   name: string;
   avatarUrl: string | null;
+  hasPassword?: boolean;
 }
 
 interface UserRow {
@@ -111,5 +112,78 @@ function toAuthUser(row: UserRow): AuthUser {
     email: row.email,
     name: row.name,
     avatarUrl: row.avatar_url,
+    hasPassword: Boolean(row.password_hash),
   };
 }
+
+export async function getUserById(userId: string): Promise<AuthUser | null> {
+  const { rows } = await pool.query<UserRow>(
+    "SELECT id, email, name, avatar_url, password_hash FROM users WHERE id = $1",
+    [userId],
+  );
+  if (!rows[0]) return null;
+  return toAuthUser(rows[0]);
+}
+
+export async function updateUserProfile(
+  userId: string,
+  params: {
+    name?: string;
+    avatarUrl?: string | null;
+    currentPassword?: string;
+    newPassword?: string;
+  },
+): Promise<AuthUser> {
+  const { rows } = await pool.query<UserRow>(
+    "SELECT id, email, name, avatar_url, password_hash FROM users WHERE id = $1",
+    [userId],
+  );
+  const user = rows[0];
+  if (!user) {
+    throw new Error("Pengguna tidak ditemukan.");
+  }
+
+  let newPasswordHash: string | null = null;
+  if (params.newPassword) {
+    if (user.password_hash) {
+      if (!params.currentPassword) {
+        throw new InvalidCredentialsError("Kata sandi saat ini harus diisi.");
+      }
+      const matches = await bcrypt.compare(params.currentPassword, user.password_hash);
+      if (!matches) {
+        throw new InvalidCredentialsError("Kata sandi saat ini salah.");
+      }
+    }
+    newPasswordHash = await bcrypt.hash(params.newPassword, SALT_ROUNDS);
+  }
+
+  const updates: string[] = ["updated_at = NOW()"];
+  const values: unknown[] = [userId];
+  let paramIndex = 2;
+
+  if (params.name !== undefined) {
+    updates.push(`name = $${paramIndex++}`);
+    values.push(params.name.trim());
+  }
+
+  if (params.avatarUrl !== undefined) {
+    updates.push(`avatar_url = $${paramIndex++}`);
+    values.push(params.avatarUrl);
+  }
+
+  if (newPasswordHash !== null) {
+    updates.push(`password_hash = $${paramIndex++}`);
+    values.push(newPasswordHash);
+  }
+
+  const query = `
+    UPDATE users
+    SET ${updates.join(", ")}
+    WHERE id = $1
+    RETURNING id, email, name, avatar_url, password_hash
+  `;
+
+  const { rows: updatedRows } = await pool.query<UserRow>(query, values);
+  return toAuthUser(updatedRows[0]);
+}
+

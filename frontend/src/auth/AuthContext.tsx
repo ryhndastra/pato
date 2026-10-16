@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
-import { apiPost } from "../lib/api";
-import { AuthContext, type PatoUser } from "./authContext";
+import { apiGet, apiPatch, apiPost } from "../lib/api";
+import { AuthContext, type PatoUser, type UpdateProfileParams } from "./authContext";
 
 const TOKEN_KEY = "pato_token";
 const USER_KEY = "pato_user";
@@ -12,6 +12,7 @@ interface SessionResponse {
     name: string;
     email: string;
     avatar_url: string | null;
+    has_password?: boolean;
   };
 }
 
@@ -21,6 +22,7 @@ function toPatoUser(raw: SessionResponse["user"]): PatoUser {
     name: raw.name,
     email: raw.email,
     avatarUrl: raw.avatar_url,
+    hasPassword: raw.has_password,
   };
 }
 
@@ -83,6 +85,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persistSession(session);
   }
 
+  async function updateProfile(params: UpdateProfileParams): Promise<PatoUser> {
+    if (!token) throw new Error("Kamu harus login terlebih dahulu.");
+    const res = await apiPatch<{ user: SessionResponse["user"] }>(
+      "/api/auth/profile",
+      {
+        name: params.name,
+        avatar_url: params.avatarUrl,
+        current_password: params.currentPassword,
+        new_password: params.newPassword,
+      },
+      token,
+    );
+    const nextUser = toPatoUser(res.user);
+    localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+    setUser(nextUser);
+    return nextUser;
+  }
+
+  async function refreshUser(): Promise<PatoUser | null> {
+    if (!token) return null;
+    try {
+      const res = await apiGet<{ user: SessionResponse["user"] }>("/api/auth/me", token);
+      const nextUser = toPatoUser(res.user);
+      localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+      setUser(nextUser);
+      return nextUser;
+    } catch {
+      return null;
+    }
+  }
+
   function logout() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
@@ -92,7 +125,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, loginWithGoogle, loginWithEmail, registerWithEmail, logout }}
+      value={{
+        user,
+        token,
+        loginWithGoogle,
+        loginWithEmail,
+        registerWithEmail,
+        updateProfile,
+        refreshUser,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>

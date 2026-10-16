@@ -33,6 +33,22 @@ export async function apiPost<T>(
   return handleResponse<T>(res);
 }
 
+export async function apiPatch<T>(
+  path: string,
+  body: unknown,
+  token?: string | null,
+): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  return handleResponse<T>(res);
+}
+
 export async function apiDelete<T>(
   path: string,
   body?: unknown,
@@ -48,3 +64,4 @@ export async function apiDelete<T>(
   });
   return handleResponse<T>(res);
 }
+

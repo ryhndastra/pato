@@ -235,8 +235,58 @@ function toAuthUser(row) {
     id: row.id,
     email: row.email,
     name: row.name,
-    avatarUrl: row.avatar_url
+    avatarUrl: row.avatar_url,
+    hasPassword: Boolean(row.password_hash)
   };
+}
+async function getUserById(userId) {
+  const { rows } = await pool.query("SELECT id, email, name, avatar_url, password_hash FROM users WHERE id = $1", [userId]);
+  if (!rows[0])
+    return null;
+  return toAuthUser(rows[0]);
+}
+async function updateUserProfile(userId, params) {
+  const { rows } = await pool.query("SELECT id, email, name, avatar_url, password_hash FROM users WHERE id = $1", [userId]);
+  const user = rows[0];
+  if (!user) {
+    throw new Error("Pengguna tidak ditemukan.");
+  }
+  let newPasswordHash = null;
+  if (params.newPassword) {
+    if (user.password_hash) {
+      if (!params.currentPassword) {
+        throw new InvalidCredentialsError("Kata sandi saat ini harus diisi.");
+      }
+      const matches = await import_bcryptjs.default.compare(params.currentPassword, user.password_hash);
+      if (!matches) {
+        throw new InvalidCredentialsError("Kata sandi saat ini salah.");
+      }
+    }
+    newPasswordHash = await import_bcryptjs.default.hash(params.newPassword, SALT_ROUNDS);
+  }
+  const updates = ["updated_at = NOW()"];
+  const values = [userId];
+  let paramIndex = 2;
+  if (params.name !== void 0) {
+    updates.push(`name = $${paramIndex++}`);
+    values.push(params.name.trim());
+  }
+  if (params.avatarUrl !== void 0) {
+    updates.push(`avatar_url = $${paramIndex++}`);
+    values.push(params.avatarUrl);
+  }
+  if (newPasswordHash !== null) {
+    updates.push(`password_hash = $${paramIndex++}`);
+    values.push(newPasswordHash);
+  }
+  const query = `
+    UPDATE users
+    SET ${updates.join(", ")}
+    WHERE id = $1
+    RETURNING id, email, name, avatar_url, password_hash
+  `;
+  const { rows: updatedRows } = await pool.query(query, values);
+  return toAuthUser(updatedRows[0]);
 }
 
 // dist/controllers/auth.controller.js
@@ -248,7 +298,8 @@ function sendSession(res, user, status = 200) {
       id: user.id,
       name: user.name,
       email: user.email,
-      avatar_url: user.avatarUrl
+      avatar_url: user.avatarUrl,
+      has_password: user.hasPassword
     }
   });
 }
@@ -315,12 +366,74 @@ async function googleHandler(req, res) {
     throw error;
   }
 }
+async function meHandler(req, res) {
+  if (!req.userId) {
+    res.status(401).json({ error: "Kamu harus login dulu." });
+    return;
+  }
+  const user = await getUserById(req.userId);
+  if (!user) {
+    res.status(404).json({ error: "Pengguna tidak ditemukan." });
+    return;
+  }
+  res.json({
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar_url: user.avatarUrl,
+      has_password: user.hasPassword
+    }
+  });
+}
+var updateProfileSchema = import_zod.z.object({
+  name: import_zod.z.string().trim().min(1).max(100).optional(),
+  avatar_url: import_zod.z.string().nullable().optional(),
+  current_password: import_zod.z.string().min(1).optional(),
+  new_password: import_zod.z.string().min(8).max(100).optional()
+});
+async function updateProfileHandler(req, res) {
+  if (!req.userId) {
+    res.status(401).json({ error: "Kamu harus login dulu." });
+    return;
+  }
+  const parsed = updateProfileSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Data gak valid.", details: parsed.error.flatten() });
+    return;
+  }
+  try {
+    const updated = await updateUserProfile(req.userId, {
+      name: parsed.data.name,
+      avatarUrl: parsed.data.avatar_url,
+      currentPassword: parsed.data.current_password,
+      newPassword: parsed.data.new_password
+    });
+    res.json({
+      user: {
+        id: updated.id,
+        name: updated.name,
+        email: updated.email,
+        avatar_url: updated.avatarUrl,
+        has_password: updated.hasPassword
+      }
+    });
+  } catch (error) {
+    if (error instanceof InvalidCredentialsError) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+}
 
 // dist/routes/auth.routes.js
 var authRouter = (0, import_express.Router)();
 authRouter.post("/register", registerHandler);
 authRouter.post("/login", loginHandler);
 authRouter.post("/google", googleHandler);
+authRouter.get("/me", requireAuth, meHandler);
+authRouter.patch("/profile", requireAuth, updateProfileHandler);
 
 // dist/routes/rooms.routes.js
 var import_express2 = require("express");

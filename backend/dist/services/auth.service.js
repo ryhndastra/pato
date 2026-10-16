@@ -65,6 +65,56 @@ function toAuthUser(row) {
         email: row.email,
         name: row.name,
         avatarUrl: row.avatar_url,
+        hasPassword: Boolean(row.password_hash),
     };
+}
+export async function getUserById(userId) {
+    const { rows } = await pool.query("SELECT id, email, name, avatar_url, password_hash FROM users WHERE id = $1", [userId]);
+    if (!rows[0])
+        return null;
+    return toAuthUser(rows[0]);
+}
+export async function updateUserProfile(userId, params) {
+    const { rows } = await pool.query("SELECT id, email, name, avatar_url, password_hash FROM users WHERE id = $1", [userId]);
+    const user = rows[0];
+    if (!user) {
+        throw new Error("Pengguna tidak ditemukan.");
+    }
+    let newPasswordHash = null;
+    if (params.newPassword) {
+        if (user.password_hash) {
+            if (!params.currentPassword) {
+                throw new InvalidCredentialsError("Kata sandi saat ini harus diisi.");
+            }
+            const matches = await bcrypt.compare(params.currentPassword, user.password_hash);
+            if (!matches) {
+                throw new InvalidCredentialsError("Kata sandi saat ini salah.");
+            }
+        }
+        newPasswordHash = await bcrypt.hash(params.newPassword, SALT_ROUNDS);
+    }
+    const updates = ["updated_at = NOW()"];
+    const values = [userId];
+    let paramIndex = 2;
+    if (params.name !== undefined) {
+        updates.push(`name = $${paramIndex++}`);
+        values.push(params.name.trim());
+    }
+    if (params.avatarUrl !== undefined) {
+        updates.push(`avatar_url = $${paramIndex++}`);
+        values.push(params.avatarUrl);
+    }
+    if (newPasswordHash !== null) {
+        updates.push(`password_hash = $${paramIndex++}`);
+        values.push(newPasswordHash);
+    }
+    const query = `
+    UPDATE users
+    SET ${updates.join(", ")}
+    WHERE id = $1
+    RETURNING id, email, name, avatar_url, password_hash
+  `;
+    const { rows: updatedRows } = await pool.query(query, values);
+    return toAuthUser(updatedRows[0]);
 }
 //# sourceMappingURL=auth.service.js.map

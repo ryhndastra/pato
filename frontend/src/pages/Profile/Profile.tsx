@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   Bank,
   BellRinging,
+  Camera,
   Check,
   CheckCircle,
   Copy,
@@ -20,6 +21,7 @@ import { useMyRooms } from "../Dashboard/useMyRooms";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 import { formatIDR } from "../../lib/format";
 import mascotHelper from "../../assets/pato_mascot_helper.jpg";
+import { EditProfileModal } from "./EditProfileModal";
 
 const PAYOUT_STORAGE_KEY = "pato_default_payout_info";
 const PREFS_STORAGE_KEY = "pato_user_app_preferences";
@@ -44,6 +46,8 @@ export function Profile() {
   const { copied, copy } = useCopyToClipboard();
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileSuccessMessage, setProfileSuccessMessage] = useState<string | null>(null);
   const [isEditingPayout, setIsEditingPayout] = useState(false);
   const [payoutSaved, setPayoutSaved] = useState(false);
 
@@ -180,14 +184,22 @@ export function Profile() {
               </h1>
             </div>
 
-            {/* Profile Avatar matching Dashboard */}
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-[2.5px] border-white/80 bg-white/20 text-sm font-bold text-white shadow-lg sm:h-14 sm:w-14 lg:h-16 lg:w-16">
+            {/* Profile Avatar with clickable edit action */}
+            <button
+              type="button"
+              onClick={() => setIsEditingProfile(true)}
+              title="Ubah Foto & Profil"
+              className="group relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-[2.5px] border-white/80 bg-white/20 text-sm font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 sm:h-14 sm:w-14 lg:h-16 lg:w-16"
+            >
               {user?.avatarUrl ? (
                 <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
               ) : (
                 initial
               )}
-            </div>
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-white text-blue-600 shadow-sm sm:h-5 sm:w-5">
+                <Camera size={11} weight="bold" />
+              </span>
+            </button>
           </div>
         </div>
 
@@ -208,15 +220,33 @@ export function Profile() {
                 <p className="text-xs text-slate-400 mt-0.5">{userEmail}</p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowLogoutConfirm(true)}
-                className="inline-flex h-9 items-center gap-1.5 self-start sm:self-auto rounded-xl bg-rose-50 px-3.5 text-xs font-bold text-rose-600 hover:bg-rose-100 active:scale-95 transition-all"
-              >
-                <SignOut size={14} weight="bold" />
-                <span>Keluar Akun</span>
-              </button>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingProfile(true)}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-blue-50 px-3.5 text-xs font-bold text-blue-600 hover:bg-blue-100 active:scale-95 transition-all"
+                >
+                  <PencilSimple size={14} weight="bold" />
+                  <span>Ubah Profil</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowLogoutConfirm(true)}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-rose-50 px-3 text-xs font-bold text-rose-600 hover:bg-rose-100 active:scale-95 transition-all"
+                >
+                  <SignOut size={14} weight="bold" />
+                  <span>Keluar</span>
+                </button>
+              </div>
             </div>
+
+            {profileSuccessMessage && (
+              <div className="mt-3 flex items-center gap-1.5 rounded-2xl bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-800 border border-emerald-200/80 animate-in fade-in duration-200">
+                <CheckCircle size={15} weight="fill" className="text-emerald-600 shrink-0" />
+                <span>{profileSuccessMessage}</span>
+              </div>
+            )}
 
             {/* Quick Metrics Strip */}
             <div className="mt-3.5 grid grid-cols-3 divide-x divide-slate-100 text-center">
@@ -551,6 +581,16 @@ export function Profile() {
           </div>
         </div>
       )}
+
+      {/* 4. Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={isEditingProfile}
+        onClose={() => setIsEditingProfile(false)}
+        onSuccess={() => {
+          setProfileSuccessMessage("Profil berhasil diperbarui!");
+          setTimeout(() => setProfileSuccessMessage(null), 3500);
+        }}
+      />
     </div>
   );
 }

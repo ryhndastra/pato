@@ -5,6 +5,14 @@ export interface PatoUser {
   name: string;
   email: string;
   avatarUrl?: string | null;
+  hasPassword?: boolean;
+}
+
+export interface UpdateProfileParams {
+  name?: string;
+  avatarUrl?: string | null;
+  currentPassword?: string;
+  newPassword?: string;
 }
 
 export interface AuthContextValue {
@@ -17,7 +25,10 @@ export interface AuthContextValue {
     email: string,
     password: string,
   ) => Promise<void>;
+  updateProfile: (params: UpdateProfileParams) => Promise<PatoUser>;
+  refreshUser: () => Promise<PatoUser | null>;
   logout: () => void;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
+
