@@ -401,3 +401,4 @@ export function EditProfileModal({ isOpen, onClose, onSuccess }: EditProfileModa
     </div>
   );
 }
+
