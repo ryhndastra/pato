@@ -124,7 +124,7 @@ export function RoomJoin() {
     }
   }, [room?.status, code]);
 
-  const { isConnected: isLive } = useRoomWebSocket({
+  useRoomWebSocket({
     roomCode: code,
     onRoomUpdated: fetchRoom,
   });
@@ -429,7 +429,6 @@ export function RoomJoin() {
       <RoomHeader
         room={room}
         chatCount={unreadChatCount}
-        isLive={isLive}
         onOpenChat={handleOpenChat}
         onOpenReceiptImage={room.receipt_image_url ? () => setReceiptImageOpen(true) : undefined}
         onOpenAestheticReceipt={() => setAestheticReceiptOpen(true)}

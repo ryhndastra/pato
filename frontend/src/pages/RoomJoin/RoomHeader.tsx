@@ -16,7 +16,6 @@ import patoPlain from "../../assets/pato.png";
 interface RoomHeaderProps {
   room: RoomDetail;
   chatCount?: number;
-  isLive?: boolean;
   onOpenChat?: () => void;
   onOpenReceiptImage?: () => void;
   onOpenAestheticReceipt: () => void;
@@ -25,7 +24,6 @@ interface RoomHeaderProps {
 export function RoomHeader({
   room,
   chatCount = 0,
-  isLive = false,
   onOpenChat,
   onOpenReceiptImage,
   onOpenAestheticReceipt,
@@ -72,12 +70,6 @@ export function RoomHeader({
                 <span className="font-mono text-[10px] font-bold tracking-wider text-blue-200 uppercase">
                   PATO MEJA
                 </span>
-                {isLive && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-200 ring-1 ring-emerald-300/30">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Live</span>
-                  </span>
-                )}
               </div>
               <h1 className="text-base sm:text-lg font-black text-white leading-tight truncate">
                 {room.title}

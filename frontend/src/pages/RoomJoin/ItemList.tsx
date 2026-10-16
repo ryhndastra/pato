@@ -6,7 +6,7 @@ import {
   MagnifyingGlass,
   Minus,
   Plus,
-  Sparkle,
+  Receipt,
   Trash,
   UsersThree,
   X,
@@ -306,7 +306,7 @@ export function ItemList({
         <div className="flex items-center justify-between rounded-xl border border-blue-200/80 bg-blue-50/70 p-3 shadow-2xs">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-2xs">
-              <Sparkle size={16} weight="fill" />
+              <Receipt size={16} weight="bold" />
             </span>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-blue-800">
