@@ -1,12 +1,26 @@
 -- Mirrors docs/04_DATABASE_SCHEMA_AND_MODELS.md exactly.
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TYPE room_status AS ENUM ('DRAFT', 'CLAIMING', 'LOCKED', 'CLOSED');
-CREATE TYPE payment_status AS ENUM ('PENDING', 'REJECTED', 'VERIFIED');
-CREATE TYPE sender_type AS ENUM ('SYSTEM', 'MEMBER');
+DO $$ BEGIN
+    CREATE TYPE room_status AS ENUM ('DRAFT', 'CLAIMING', 'LOCKED', 'CLOSED');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE payment_status AS ENUM ('PENDING', 'REJECTED', 'VERIFIED');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE sender_type AS ENUM ('SYSTEM', 'MEMBER');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- USERS
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255),
@@ -18,7 +32,7 @@ CREATE TABLE users (
 );
 
 -- ROOMS
-CREATE TABLE rooms (
+CREATE TABLE IF NOT EXISTS rooms (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     host_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     room_code VARCHAR(12) UNIQUE NOT NULL,
@@ -46,11 +60,11 @@ CREATE TABLE rooms (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_rooms_code ON rooms(room_code);
-CREATE INDEX idx_rooms_status ON rooms(status);
+CREATE INDEX IF NOT EXISTS idx_rooms_code ON rooms(room_code);
+CREATE INDEX IF NOT EXISTS idx_rooms_status ON rooms(status);
 
 -- MEMBERS
-CREATE TABLE members (
+CREATE TABLE IF NOT EXISTS members (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -62,10 +76,10 @@ CREATE TABLE members (
     CONSTRAINT uq_room_guest_token UNIQUE (room_id, guest_token)
 );
 
-CREATE INDEX idx_members_room ON members(room_id);
+CREATE INDEX IF NOT EXISTS idx_members_room ON members(room_id);
 
 -- ITEMS
-CREATE TABLE items (
+CREATE TABLE IF NOT EXISTS items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
     name VARCHAR(150) NOT NULL,
@@ -77,7 +91,7 @@ CREATE TABLE items (
 );
 
 -- ITEM_CLAIMS
-CREATE TABLE item_claims (
+CREATE TABLE IF NOT EXISTS item_claims (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     item_id UUID NOT NULL REFERENCES items(id) ON DELETE CASCADE,
     member_id UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
@@ -87,7 +101,7 @@ CREATE TABLE item_claims (
 );
 
 -- PAYMENTS
-CREATE TABLE payments (
+CREATE TABLE IF NOT EXISTS payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
     member_id UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
@@ -104,7 +118,7 @@ CREATE TABLE payments (
 );
 
 -- ROOM_EVENTS
-CREATE TABLE room_events (
+CREATE TABLE IF NOT EXISTS room_events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
     member_id UUID REFERENCES members(id) ON DELETE SET NULL,
@@ -115,7 +129,7 @@ CREATE TABLE room_events (
 );
 
 -- TIPS & DONATIONS
-CREATE TABLE tips (
+CREATE TABLE IF NOT EXISTS tips (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     room_id UUID REFERENCES rooms(id) ON DELETE SET NULL,
     member_id UUID REFERENCES members(id) ON DELETE SET NULL,
