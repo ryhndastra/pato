@@ -21,6 +21,7 @@ import { PersonalSettlementCard } from "./PersonalSettlementCard";
 import { HostPaymentTargetCard } from "./HostPaymentTargetCard";
 import { HostPaymentMonitorCard } from "./HostPaymentMonitorCard";
 import { StepProgressCard } from "./StepProgressCard";
+import { TippingCard } from "./TippingCard";
 import { ChatDrawer } from "./ChatDrawer";
 import { ReceiptExportModal } from "./ReceiptExportModal";
 import { ReceiptImageModal } from "./ReceiptImageModal";
@@ -55,6 +56,7 @@ export function RoomJoin() {
     if (!code) return null;
     return getJoinedSession(code);
   });
+  const [selectedMemberFilter, setSelectedMemberFilter] = useState<string | null>(null);
   const [nameNotice, setNameNotice] = useState<string | null>(null);
 
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
@@ -550,6 +552,8 @@ export function RoomJoin() {
                       closeError={closeError}
                     />
 
+                    <TippingCard />
+
                     {/* Delete room action link */}
                     <div className="flex flex-col items-center gap-1 pt-3">
                       {deleteError && (
@@ -570,11 +574,14 @@ export function RoomJoin() {
                   </>
                 ) : me ? (
                   /* GUEST PAYMENT CARD */
-                  <PersonalSettlementCard
-                    room={room}
-                    me={me}
-                    onSubmitProof={handleSubmitProof}
-                  />
+                  <div className="flex flex-col gap-3.5">
+                    <PersonalSettlementCard
+                      room={room}
+                      me={me}
+                      onSubmitProof={handleSubmitProof}
+                    />
+                    <TippingCard />
+                  </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-6 text-center shadow-2xs">
                     <p className="text-xs font-semibold text-slate-600">
@@ -617,6 +624,8 @@ export function RoomJoin() {
                   members={members}
                   currentMemberId={currentMemberId}
                   roomStatus={room.status}
+                  selectedMemberId={selectedMemberFilter}
+                  onSelectMember={setSelectedMemberFilter}
                 />
 
                 <section className="flex flex-col gap-2.5">
@@ -637,6 +646,9 @@ export function RoomJoin() {
                     pendingItemId={pendingItemId}
                     onClaim={handleClaim}
                     onUnclaim={handleUnclaim}
+                    onJoinPrompt={scrollToJoin}
+                    selectedMemberId={selectedMemberFilter}
+                    onClearMemberFilter={() => setSelectedMemberFilter(null)}
                   />
                 </section>
 
@@ -653,6 +665,8 @@ export function RoomJoin() {
               members={members}
               currentMemberId={currentMemberId}
               roomStatus={room.status}
+              selectedMemberId={selectedMemberFilter}
+              onSelectMember={setSelectedMemberFilter}
             />
 
             {!joined && (
@@ -700,6 +714,9 @@ export function RoomJoin() {
                 pendingItemId={pendingItemId}
                 onClaim={handleClaim}
                 onUnclaim={handleUnclaim}
+                onJoinPrompt={scrollToJoin}
+                selectedMemberId={selectedMemberFilter}
+                onClearMemberFilter={() => setSelectedMemberFilter(null)}
               />
             </section>
 

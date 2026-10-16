@@ -5,6 +5,7 @@ import {
   Check,
   CheckCircle,
   Clock,
+  Copy,
   Eye,
   LockKeyOpen,
   WarningCircle,
@@ -13,6 +14,7 @@ import {
   XCircle,
 } from "@phosphor-icons/react";
 import { safeIDR } from "./money";
+import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 import type { RoomDetail, RoomMember } from "./types";
 
 interface HostPaymentMonitorCardProps {
@@ -57,6 +59,43 @@ export function HostPaymentMonitorCard({
 
   const hostShare = host?.share_amount ?? 0;
   const friendsTarget = Math.max(0, room.grand_total - hostShare);
+
+  const { copied: copiedSummary, copy: copySummary } = useCopyToClipboard();
+
+  function handleCopyGroupSummary() {
+    const lines = [
+      `🧾 *REKAP TAGIHAN PATO: ${room.title}*`,
+      `Total Tagihan: ${safeIDR(room.grand_total)}`,
+      `Status: ${verifiedFriendsCount}/${friends.length} Teman Lunas`,
+      ``,
+      `*Daftar Patungan Teman:*`,
+    ];
+
+    friends.forEach((f, idx) => {
+      const statusLabel =
+        f.payment_status === "VERIFIED"
+          ? "[LUNAS ✅]"
+          : f.payment_status === "PENDING"
+            ? "[BUKTI DIKIRIM ⏳]"
+            : "[BELUM BAYAR ⏳]";
+      lines.push(`${idx + 1}. *${f.display_name}*: ${safeIDR(f.share_amount)} ${statusLabel}`);
+    });
+
+    if (host) {
+      lines.push(`• *${host.display_name}* (Host): ${safeIDR(hostShare)} [TALANGAN KASIR 👑]`);
+    }
+
+    if (room.bank_account_no) {
+      lines.push(``);
+      lines.push(`💳 *Info Transfer Rekening/QRIS Host:*`);
+      lines.push(`${room.bank_name ?? "Bank"} ${room.bank_account_no} a.n. ${room.bank_account_name ?? "Host"}`);
+    }
+
+    lines.push(``);
+    lines.push(`👉 Cek detail & bukti meja di: ${window.location.href}`);
+
+    copySummary(lines.join("\n"));
+  }
 
   const verifiedFromFriends = friends
     .filter((m) => m.payment_status === "VERIFIED")
@@ -191,9 +230,21 @@ export function HostPaymentMonitorCard({
             )}
           </div>
 
-          <span className="text-[11px] text-slate-400">
-            {verifiedFriendsCount}/{friends.length} Lunas
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCopyGroupSummary}
+              title="Salin rekap tagihan untuk di-paste ke grup WhatsApp"
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition-all"
+            >
+              <Copy size={12} weight="bold" />
+              <span>{copiedSummary ? "Tersalin! ✅" : "Salin Rekap Grup"}</span>
+            </button>
+
+            <span className="text-[11px] text-slate-400 hidden sm:inline">
+              {verifiedFriendsCount}/{friends.length} Lunas
+            </span>
+          </div>
         </div>
 
         {actionError && (

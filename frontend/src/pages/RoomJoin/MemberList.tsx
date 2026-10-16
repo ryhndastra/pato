@@ -11,6 +11,8 @@ interface MemberListProps {
   members: RoomMember[];
   currentMemberId: string | null;
   roomStatus: RoomStatus;
+  selectedMemberId?: string | null;
+  onSelectMember?: (memberId: string | null) => void;
 }
 
 function getInitials(name: string): string {
@@ -38,12 +40,14 @@ export function MemberList({
   members,
   currentMemberId,
   roomStatus,
+  selectedMemberId,
+  onSelectMember,
 }: MemberListProps) {
   if (members.length === 0) return null;
   const isSettlement = roomStatus === "LOCKED" || roomStatus === "CLOSED";
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-2xs">
+    <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs">
       <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
         <div className="flex items-center gap-2">
           <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
@@ -56,31 +60,59 @@ export function MemberList({
             {members.length} orang
           </span>
         </div>
+
+        {onSelectMember && !isSettlement && (
+          <span className="text-[10px] text-slate-400">
+            Tap nama untuk filter pesanan
+          </span>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-2">
         {members.map((member) => {
           const isMe = member.id === currentMemberId;
+          const isSelected = selectedMemberId === member.id;
           const initials = getInitials(member.display_name);
           const colorClass = getAvatarColor(member.display_name);
           const portionCount = member.claimed_item_ids?.length ?? 0;
 
+          const PillElement = onSelectMember && !isSettlement ? "button" : "div";
+
           return (
-            <div
+            <PillElement
               key={member.id}
+              type={onSelectMember && !isSettlement ? "button" : undefined}
+              onClick={
+                onSelectMember && !isSettlement
+                  ? () => onSelectMember(isSelected ? null : member.id)
+                  : undefined
+              }
+              title={
+                onSelectMember && !isSettlement
+                  ? isSelected
+                    ? "Hapus filter pesanan"
+                    : `Lihat pesanan ${member.display_name}`
+                  : undefined
+              }
               className={`inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs transition-all ${
-                isMe
-                  ? "border-blue-200 bg-blue-50/70 text-ink ring-1 ring-blue-100"
-                  : "border-slate-200/80 bg-slate-50/60 text-ink"
+                onSelectMember && !isSettlement ? "cursor-pointer active:scale-95" : ""
+              } ${
+                isSelected
+                  ? "border-blue-500 bg-blue-100 text-blue-900 ring-2 ring-blue-400 shadow-2xs font-extrabold"
+                  : isMe
+                    ? "border-blue-200 bg-blue-50/70 text-slate-900 ring-1 ring-blue-100"
+                    : "border-slate-200/80 bg-slate-50/60 text-slate-800 hover:bg-slate-100"
               }`}
             >
               <span
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${colorClass}`}
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${
+                  isSelected ? "bg-blue-600 text-white" : colorClass
+                }`}
               >
                 {initials}
               </span>
 
-              <span className="truncate max-w-[120px] font-bold text-ink">
+              <span className="truncate max-w-[120px] font-bold">
                 {member.display_name}
               </span>
 
@@ -98,7 +130,9 @@ export function MemberList({
               )}
 
               {portionCount > 0 && (
-                <span className="rounded-full bg-slate-200/80 px-1.5 py-0.2 font-mono text-[10px] font-bold text-slate-700">
+                <span className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] font-bold ${
+                  isSelected ? "bg-blue-200 text-blue-900" : "bg-slate-200/80 text-slate-700"
+                }`}>
                   {portionCount}
                 </span>
               )}
@@ -131,7 +165,7 @@ export function MemberList({
                   )}
                 </span>
               )}
-            </div>
+            </PillElement>
           );
         })}
       </div>
