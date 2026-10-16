@@ -46,8 +46,7 @@ export function ItemList({
   selectedMemberId,
   onClearMemberFilter,
 }: ItemListProps) {
-  const [tabFilter, setTabFilter] = useState<"all" | "mine">("all");
-  const [subFilter, setSubFilter] = useState<"all" | "unclaimed" | "shared">("all");
+  const [filterMode, setFilterMode] = useState<"all" | "unclaimed" | "shared" | "mine">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const claimsLocked = roomStatus === "LOCKED" || roomStatus === "CLOSED";
@@ -105,7 +104,7 @@ export function ItemList({
     return items.filter((i) => i.is_shared).length;
   }, [items]);
 
-  // Filtered items based on active tab, friend selection, sub-filter, and search query
+  // Filtered items based on active filter, friend selection, and search query
   const displayedItems = useMemo(() => {
     let result = items;
 
@@ -119,26 +118,23 @@ export function ItemList({
       return result;
     }
 
-    // 2. Tab filter: All vs Mine
-    if (tabFilter === "mine") {
+    // 2. Filter mode
+    if (filterMode === "mine") {
       result = myClaimedItems;
-    } else {
-      // 3. Sub filter (only on "all" tab)
-      if (subFilter === "unclaimed") {
-        result = result.filter((i) => !i.is_shared && i.claimed_quantity < i.quantity);
-      } else if (subFilter === "shared") {
-        result = result.filter((i) => i.is_shared);
-      }
+    } else if (filterMode === "unclaimed") {
+      result = result.filter((i) => !i.is_shared && i.claimed_quantity < i.quantity);
+    } else if (filterMode === "shared") {
+      result = result.filter((i) => i.is_shared);
     }
 
-    // 4. Search query
+    // 3. Search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       result = result.filter((i) => i.name.toLowerCase().includes(q));
     }
 
     return result;
-  }, [items, selectedMemberId, tabFilter, myClaimedItems, subFilter, searchQuery]);
+  }, [items, selectedMemberId, filterMode, myClaimedItems, searchQuery]);
 
   function handleClaimWithSound(itemId: string) {
     soundFX.playClaim();
@@ -189,126 +185,124 @@ export function ItemList({
           </button>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
-          {/* Tab Filter: Semua Menu vs Punya Saya */}
-          {currentMemberId && (
-            <div className="grid grid-cols-2 rounded-xl bg-slate-100 p-1 border border-slate-200/70 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setTabFilter("all")}
-                className={`flex h-9 items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all ${
-                  tabFilter === "all"
-                    ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold"
-                    : "text-slate-500 hover:text-slate-800"
+        <div className="flex flex-col gap-1.5">
+          {items.length > 5 && (
+            <div className="relative flex items-center">
+              <MagnifyingGlass
+                size={14}
+                weight="bold"
+                className="absolute left-3 text-slate-400 pointer-events-none"
+              />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari makanan / minuman..."
+                className="h-8.5 w-full rounded-xl border border-slate-200 bg-white pl-8 pr-7 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-100 shadow-2xs"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:text-slate-700"
+                >
+                  <X size={11} weight="bold" />
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Single clean row of filter pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+            <button
+              type="button"
+              onClick={() => setFilterMode("all")}
+              className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 font-bold transition-all ${
+                filterMode === "all"
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "border border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              <span>Semua</span>
+              <span
+                className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] font-bold ${
+                  filterMode === "all" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
                 }`}
               >
-                <span>Semua Menu</span>
-                <span className="rounded-md bg-slate-100 px-1.5 py-0.2 font-mono text-[10px] font-bold text-slate-700">
-                  {items.length}
-                </span>
-              </button>
+                {items.length}
+              </span>
+            </button>
 
+            {unclaimedCount > 0 && (
               <button
                 type="button"
-                onClick={() => setTabFilter("mine")}
-                className={`flex h-9 items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all ${
-                  tabFilter === "mine"
-                    ? "bg-blue-600 text-white shadow-xs font-extrabold"
-                    : "text-slate-500 hover:text-slate-800"
+                onClick={() => setFilterMode("unclaimed")}
+                className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 font-bold transition-all ${
+                  filterMode === "unclaimed"
+                    ? "bg-amber-600 text-white shadow-2xs"
+                    : "border border-amber-200/80 bg-amber-50/70 text-amber-900 hover:bg-amber-100/60"
+                }`}
+              >
+                <span>Belum Lengkap</span>
+                <span
+                  className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] font-bold ${
+                    filterMode === "unclaimed" ? "bg-white/20 text-white" : "bg-amber-100 text-amber-800"
+                  }`}
+                >
+                  {unclaimedCount}
+                </span>
+              </button>
+            )}
+
+            {sharedCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setFilterMode("shared")}
+                className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 font-bold transition-all ${
+                  filterMode === "shared"
+                    ? "bg-indigo-600 text-white shadow-2xs"
+                    : "border border-indigo-200/80 bg-indigo-50/70 text-indigo-800 hover:bg-indigo-100/60"
+                }`}
+              >
+                <span>Makan Bareng</span>
+                <span
+                  className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] font-bold ${
+                    filterMode === "shared" ? "bg-white/20 text-white" : "bg-indigo-100 text-indigo-800"
+                  }`}
+                >
+                  {sharedCount}
+                </span>
+              </button>
+            )}
+
+            {currentMemberId && (
+              <button
+                type="button"
+                onClick={() => setFilterMode("mine")}
+                className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 font-bold transition-all ${
+                  filterMode === "mine"
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "border border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50"
                 }`}
               >
                 <span>Pesanan Saya</span>
                 {myClaimedItems.length > 0 && (
                   <span
-                    className={`rounded-md px-1.5 py-0.2 font-mono text-[10px] font-bold ${
-                      tabFilter === "mine" ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700"
+                    className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] font-bold ${
+                      filterMode === "mine" ? "bg-white/20 text-white" : "bg-blue-50 text-blue-700"
                     }`}
                   >
                     {myClaimedItems.length}
                   </span>
                 )}
               </button>
-            </div>
-          )}
-
-          {/* Search bar & sub-filters */}
-          {tabFilter === "all" && (
-            <div className="flex flex-col gap-1.5">
-              {items.length > 4 && (
-                <div className="relative flex items-center">
-                  <MagnifyingGlass
-                    size={14}
-                    weight="bold"
-                    className="absolute left-3 text-slate-400 pointer-events-none"
-                  />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Cari makanan / minuman..."
-                    className="h-8.5 w-full rounded-xl border border-slate-200 bg-white pl-8 pr-7 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-100 shadow-2xs"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery("")}
-                      className="absolute right-2 flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:text-slate-700"
-                    >
-                      <X size={11} weight="bold" />
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Sub-filters */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setSubFilter("all")}
-                  className={`shrink-0 rounded-lg px-2.5 py-1 font-bold text-[11px] transition-all ${
-                    subFilter === "all"
-                      ? "bg-slate-900 text-white shadow-2xs"
-                      : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
-                  }`}
-                >
-                  Semua ({items.length})
-                </button>
-
-                {unclaimedCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setSubFilter("unclaimed")}
-                    className={`shrink-0 rounded-lg px-2.5 py-1 font-bold text-[11px] transition-all ${
-                      subFilter === "unclaimed"
-                        ? "bg-amber-600 text-white shadow-2xs"
-                        : "bg-amber-50 text-amber-800 border border-amber-200/80 hover:bg-amber-100/60"
-                    }`}
-                  >
-                    Belum Lengkap ({unclaimedCount})
-                  </button>
-                )}
-
-                {sharedCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setSubFilter("shared")}
-                    className={`shrink-0 rounded-lg px-2.5 py-1 font-bold text-[11px] transition-all ${
-                      subFilter === "shared"
-                        ? "bg-indigo-600 text-white shadow-2xs"
-                        : "bg-indigo-50 text-indigo-700 border border-indigo-200/80 hover:bg-indigo-100/60"
-                    }`}
-                  >
-                    Makan Bareng ({sharedCount})
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
       {/* 2. PESANAN SAYA SUMMARY BANNER */}
-      {tabFilter === "mine" && myClaimedItems.length > 0 && (
+      {filterMode === "mine" && myClaimedItems.length > 0 && (
         <div className="flex items-center justify-between rounded-xl border border-blue-200/80 bg-blue-50/70 p-3 shadow-2xs">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-2xs">
@@ -336,18 +330,18 @@ export function ItemList({
       {/* 3. EMPTY STATE */}
       {displayedItems.length === 0 && (
         <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-2xs">
-          {tabFilter === "mine" ? (
+          {filterMode === "mine" ? (
             <>
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
                 <ForkKnife size={18} weight="bold" />
               </span>
               <p className="text-xs font-bold text-slate-800">Kamu belum memilih menu apa pun</p>
               <p className="max-w-[28ch] text-[11px] text-slate-500">
-                Pilih menu yang kamu makan pada tab &quot;Semua Menu&quot;.
+                Pilih menu yang kamu makan pada filter &quot;Semua&quot;.
               </p>
               <button
                 type="button"
-                onClick={() => setTabFilter("all")}
+                onClick={() => setFilterMode("all")}
                 className="mt-1 rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs active:scale-95 transition-all"
               >
                 Buka Semua Menu
@@ -362,7 +356,7 @@ export function ItemList({
                 type="button"
                 onClick={() => {
                   setSearchQuery("");
-                  setSubFilter("all");
+                  setFilterMode("all");
                 }}
                 className="mt-1 text-xs font-bold text-blue-600 hover:underline"
               >

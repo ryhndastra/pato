@@ -34,17 +34,17 @@ export function StepProgressCard({ status }: StepProgressCardProps) {
   return (
     <nav
       aria-label="Tahapan Meja"
-      className="flex w-full items-center justify-between gap-1 rounded-xl border border-slate-200/60 bg-white/70 p-1 shadow-2xs backdrop-blur-xs"
+      className="flex w-full items-center justify-between gap-1 rounded-full border border-slate-200/70 bg-white/80 p-0.5 shadow-2xs backdrop-blur-xs"
     >
       {steps.map((step) => {
-        let containerStyle = "text-slate-400 bg-transparent";
+        let containerStyle = "text-slate-400";
         let badgeStyle = "bg-slate-100 text-slate-400";
-        let indicator = <span className="font-mono text-[10px] font-bold">{step.id}</span>;
+        let indicator = <span className="font-mono text-[9px] font-bold">{step.id}</span>;
 
         if (isClosed) {
-          containerStyle = "text-emerald-900 bg-emerald-50/60 font-bold";
+          containerStyle = "text-emerald-900 font-bold";
           badgeStyle = "bg-emerald-600 text-white";
-          indicator = <Check size={11} weight="bold" />;
+          indicator = <Check size={10} weight="bold" />;
         } else if (step.isCurrent) {
           containerStyle = "text-slate-900 bg-white font-extrabold shadow-2xs border border-slate-200/70";
           badgeStyle = "bg-blue-600 text-white";
@@ -57,20 +57,20 @@ export function StepProgressCard({ status }: StepProgressCardProps) {
         } else if (step.isDone) {
           containerStyle = "text-slate-700 font-semibold";
           badgeStyle = "bg-emerald-100 text-emerald-800";
-          indicator = <Check size={11} weight="bold" />;
+          indicator = <Check size={10} weight="bold" />;
         }
 
         return (
           <div
             key={step.id}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 px-2 transition-all select-none ${containerStyle}`}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1 px-1.5 transition-all select-none ${containerStyle}`}
           >
             <span
-              className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full transition-colors ${badgeStyle}`}
+              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full transition-colors ${badgeStyle}`}
             >
               {indicator}
             </span>
-            <span className="text-[11px] truncate tracking-tight">{step.label}</span>
+            <span className="text-[10px] sm:text-[11px] truncate tracking-tight">{step.label}</span>
           </div>
         );
       })}

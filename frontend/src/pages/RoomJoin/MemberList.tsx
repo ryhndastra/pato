@@ -33,156 +33,130 @@ export function MemberList({
   const isSettlement = roomStatus === "LOCKED" || roomStatus === "CLOSED";
 
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-slate-200/70 bg-white p-3 shadow-2xs">
-      {/* Header bar */}
-      <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-slate-100">
-        <div className="flex items-center gap-1.5 min-w-0 shrink-0">
-          <UsersThree size={14} weight="bold" className="text-slate-500 shrink-0" />
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-            Peserta Meja
-          </span>
-          <span className="whitespace-nowrap shrink-0 rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] font-bold text-slate-600">
-            {members.length} orang
-          </span>
-        </div>
-
-        {onSelectMember && !isSettlement && (
-          <div className="min-w-0 text-right">
-            {selectedMemberId ? (
-              <button
-                type="button"
-                onClick={() => onSelectMember(null)}
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 active:scale-95"
-              >
-                <span>Hapus Filter</span>
-                <X size={11} weight="bold" />
-              </button>
-            ) : (
-              <span className="text-[10px] text-slate-400 truncate block">
-                Tap nama untuk filter
-              </span>
-            )}
-          </div>
-        )}
+    <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar">
+      {/* Small participant count indicator */}
+      <div className="inline-flex h-7.5 shrink-0 items-center gap-1 rounded-full bg-slate-200/70 px-2.5 text-[11px] font-bold text-slate-700">
+        <UsersThree size={13} weight="bold" />
+        <span>{members.length}</span>
       </div>
+
+      {selectedMemberId && onSelectMember && !isSettlement && (
+        <button
+          type="button"
+          onClick={() => onSelectMember(null)}
+          className="inline-flex h-7.5 shrink-0 items-center gap-1 rounded-full bg-blue-600 px-2.5 text-[11px] font-bold text-white shadow-2xs hover:bg-blue-700 active:scale-95 transition-all"
+        >
+          <span>Semua</span>
+          <X size={11} weight="bold" />
+        </button>
+      )}
 
       {/* Member Chips */}
-      <div className="flex flex-wrap gap-1.5">
-        {members.map((member) => {
-          const isMe = member.id === currentMemberId;
-          const isSelected = selectedMemberId === member.id;
-          const initials = getInitials(member.display_name);
-          const portionCount = member.claimed_item_ids?.length ?? 0;
+      {members.map((member) => {
+        const isMe = member.id === currentMemberId;
+        const isSelected = selectedMemberId === member.id;
+        const initials = getInitials(member.display_name);
+        const portionCount = member.claimed_item_ids?.length ?? 0;
 
-          const PillElement = onSelectMember && !isSettlement ? "button" : "div";
+        const PillElement = onSelectMember && !isSettlement ? "button" : "div";
 
-          return (
-            <PillElement
-              key={member.id}
-              type={onSelectMember && !isSettlement ? "button" : undefined}
-              onClick={
-                onSelectMember && !isSettlement
-                  ? () => onSelectMember(isSelected ? null : member.id)
-                  : undefined
-              }
-              title={
-                onSelectMember && !isSettlement
-                  ? isSelected
-                    ? "Hapus filter pesanan"
-                    : `Lihat menu ${member.display_name}`
-                  : undefined
-              }
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs transition-all ${
-                onSelectMember && !isSettlement ? "cursor-pointer active:scale-95" : ""
-              } ${
-                isSelected
-                  ? "border-slate-900 bg-slate-900 text-white font-extrabold shadow-xs"
-                  : isMe
-                    ? "border-blue-200 bg-blue-50/60 text-slate-900 font-semibold hover:border-blue-300"
-                    : "border-slate-200/80 bg-slate-50/60 text-slate-700 hover:bg-slate-100 hover:border-slate-300 font-medium"
+        return (
+          <PillElement
+            key={member.id}
+            type={onSelectMember && !isSettlement ? "button" : undefined}
+            onClick={
+              onSelectMember && !isSettlement
+                ? () => onSelectMember(isSelected ? null : member.id)
+                : undefined
+            }
+            title={
+              onSelectMember && !isSettlement
+                ? isSelected
+                  ? "Hapus filter pesanan"
+                  : `Lihat menu ${member.display_name}`
+                : undefined
+            }
+            className={`inline-flex h-7.5 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-xs transition-all ${
+              onSelectMember && !isSettlement ? "cursor-pointer active:scale-95" : ""
+            } ${
+              isSelected
+                ? "border-slate-900 bg-slate-900 text-white font-extrabold shadow-xs"
+                : isMe
+                  ? "border-blue-200 bg-blue-50/70 text-slate-900 font-bold"
+                  : "border-slate-200/80 bg-white text-slate-700 font-medium hover:border-slate-300"
+            }`}
+          >
+            <span
+              className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full font-mono text-[8px] font-bold ${
+                isSelected ? "bg-white/20 text-white" : "bg-slate-100 text-slate-700"
               }`}
             >
+              {initials}
+            </span>
+
+            <span className="truncate max-w-[100px] text-[11px]">
+              {member.display_name}
+            </span>
+
+            {member.is_host && (
+              <Crown size={11} weight="fill" className="text-amber-500 shrink-0" />
+            )}
+
+            {isMe && !member.is_host && (
               <span
-                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md font-mono text-[9px] font-bold ${
-                  isSelected ? "bg-white/20 text-white" : "bg-slate-200/80 text-slate-700"
+                className={`rounded px-1 py-0.2 text-[9px] font-bold ${
+                  isSelected ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700"
                 }`}
               >
-                {initials}
+                Kamu
               </span>
+            )}
 
-              <span className="truncate max-w-[110px]">
-                {member.display_name}
+            {portionCount > 0 && !isSettlement && (
+              <span
+                className={`rounded px-1.5 py-0.2 font-mono text-[9px] font-bold tabular-nums ${
+                  isSelected ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
+                }`}
+              >
+                {portionCount}
               </span>
+            )}
 
-              {member.is_host && (
-                <span
-                  className={`inline-flex items-center gap-0.5 rounded px-1 py-0.2 text-[9px] font-bold ${
-                    isSelected
-                      ? "bg-amber-400 text-amber-950"
-                      : "bg-amber-50 text-amber-800 border border-amber-200/60"
-                  }`}
-                >
-                  <Crown size={10} weight="fill" className={isSelected ? "text-amber-950" : "text-amber-500"} />
-                  Host
-                </span>
-              )}
+            {isSelected && (
+              <X size={11} weight="bold" className="text-white/80 shrink-0 ml-0.5" />
+            )}
 
-              {isMe && !member.is_host && (
-                <span
-                  className={`rounded px-1 py-0.2 text-[9px] font-bold ${
-                    isSelected ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700"
-                  }`}
-                >
-                  Kamu
-                </span>
-              )}
-
-              {portionCount > 0 && (
-                <span
-                  className={`rounded px-1.5 py-0.2 font-mono text-[9px] font-bold tabular-nums ${
-                    isSelected ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
-                  }`}
-                >
-                  {portionCount}
-                </span>
-              )}
-
-              {isSelected && (
-                <X size={11} weight="bold" className="text-white/80 shrink-0 ml-0.5" />
-              )}
-
-              {isSettlement && (
-                <span className="ml-0.5">
-                  {member.is_host ? (
-                    <span className="inline-flex items-center rounded bg-slate-100 px-1 py-0.2 text-[9px] font-bold text-slate-700">
-                      Talangan
-                    </span>
-                  ) : member.payment_status === "VERIFIED" ? (
-                    <span className="inline-flex items-center gap-0.5 rounded bg-emerald-50 px-1.5 py-0.2 text-[9px] font-bold text-emerald-700 border border-emerald-200/60">
-                      <CheckCircle size={10} weight="fill" />
-                      Lunas
-                    </span>
-                  ) : member.payment_status === "PENDING" ? (
-                    <span className="inline-flex items-center gap-0.5 rounded bg-amber-50 px-1.5 py-0.2 text-[9px] font-bold text-amber-700 border border-amber-200/60">
-                      <Clock size={10} weight="bold" />
-                      Dicek
-                    </span>
-                  ) : member.payment_status === "REJECTED" ? (
-                    <span className="inline-flex items-center gap-0.5 rounded bg-rose-50 px-1.5 py-0.2 text-[9px] font-bold text-rose-700 border border-rose-200/60">
-                      <WarningCircle size={10} weight="bold" />
-                      Ditolak
-                    </span>
-                  ) : (
-                    <span className="rounded bg-slate-100 px-1.5 py-0.2 text-[9px] font-semibold text-slate-500">
-                      Belum
-                    </span>
-                  )}
-                </span>
-              )}
-            </PillElement>
-          );
-        })}
-      </div>
+            {isSettlement && (
+              <span className="ml-0.5">
+                {member.is_host ? (
+                  <span className="inline-flex items-center rounded bg-slate-100 px-1 py-0.2 text-[9px] font-bold text-slate-700">
+                    Talangan
+                  </span>
+                ) : member.payment_status === "VERIFIED" ? (
+                  <span className="inline-flex items-center gap-0.5 rounded bg-emerald-50 px-1.5 py-0.2 text-[9px] font-bold text-emerald-700 border border-emerald-200/60">
+                    <CheckCircle size={10} weight="fill" />
+                    Lunas
+                  </span>
+                ) : member.payment_status === "PENDING" ? (
+                  <span className="inline-flex items-center gap-0.5 rounded bg-amber-50 px-1.5 py-0.2 text-[9px] font-bold text-amber-700 border border-amber-200/60">
+                    <Clock size={10} weight="bold" />
+                    Dicek
+                  </span>
+                ) : member.payment_status === "REJECTED" ? (
+                  <span className="inline-flex items-center gap-0.5 rounded bg-rose-50 px-1.5 py-0.2 text-[9px] font-bold text-rose-700 border border-rose-200/60">
+                    <WarningCircle size={10} weight="bold" />
+                    Ditolak
+                  </span>
+                ) : (
+                  <span className="rounded bg-slate-100 px-1.5 py-0.2 text-[9px] font-semibold text-slate-500">
+                    Belum
+                  </span>
+                )}
+              </span>
+            )}
+          </PillElement>
+        );
+      })}
     </div>
   );
 }

@@ -18,6 +18,7 @@ import { HostGodModeCard } from "./HostGodModeCard";
 import { PersonalSettlementCard } from "./PersonalSettlementCard";
 import { HostPaymentTargetCard } from "./HostPaymentTargetCard";
 import { HostPaymentMonitorCard } from "./HostPaymentMonitorCard";
+import { ConfirmModal } from "../../components/ConfirmModal";
 import { StepProgressCard } from "./StepProgressCard";
 import { TippingCard } from "./TippingCard";
 import { ChatDrawer } from "./ChatDrawer";
@@ -358,13 +359,10 @@ export function RoomJoin() {
     await fetchRoom();
   }
 
-  async function handleDeleteRoom() {
-    if (!code) return;
-    const confirmed = window.confirm(
-      "Hapus meja ini? Semua klaim dan data pembayaran ikut terhapus permanen.",
-    );
-    if (!confirmed) return;
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  async function handleConfirmDeleteRoom() {
+    if (!code) return;
     setDeleting(true);
     setDeleteError(null);
     try {
@@ -373,6 +371,7 @@ export function RoomJoin() {
         { guest_token: getGuestToken(code) },
         authToken,
       );
+      setShowDeleteModal(false);
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setDeleteError(err instanceof ApiError ? err.message : "Gagal menghapus room.");
@@ -439,13 +438,13 @@ export function RoomJoin() {
       {/* 2. MAIN NATIVE APP CANVAS */}
       <main className="mx-auto w-full max-w-md sm:max-w-xl lg:max-w-3xl flex-1 px-4 pt-3 pb-32 sm:px-6">
         {/* Slim native horizontal step progress indicator */}
-        <div className="mb-3">
+        <div className="mb-2">
           <StepProgressCard status={room.status} />
         </div>
 
         {/* F01: Smart duplicate name notification banner */}
         {nameNotice && (
-          <div className="mb-3 flex items-start justify-between gap-3 rounded-2xl bg-amber-50 p-3.5 text-xs font-semibold text-amber-900 border border-amber-200/90 shadow-2xs">
+          <div className="mb-2 flex items-start justify-between gap-3 rounded-2xl bg-amber-50 p-3 text-xs font-semibold text-amber-900 border border-amber-200/90 shadow-2xs">
             <div className="flex items-start gap-2.5">
               <Info size={18} weight="bold" className="shrink-0 text-amber-600 mt-0.5" />
               <div>
@@ -465,7 +464,7 @@ export function RoomJoin() {
         )}
 
         {/* Room Visual Hub: Struk Kasir, QRIS Host, Foto Barengan */}
-        <div className="mb-3">
+        <div className="mb-2">
           <RoomMediaGalleryCard room={room} onPhotoUpdated={fetchRoom} />
         </div>
 
@@ -537,7 +536,7 @@ export function RoomJoin() {
                       )}
                       <button
                         type="button"
-                        onClick={handleDeleteRoom}
+                        onClick={() => setShowDeleteModal(true)}
                         disabled={deleting}
                         className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline disabled:opacity-50"
                       >
@@ -634,7 +633,7 @@ export function RoomJoin() {
           /* ------------------------------------------------------------- */
           /* B. CLAIMING STAGE (OPEN MEJA)                                 */
           /* ------------------------------------------------------------- */
-          <div className="flex flex-col gap-3.5">
+          <div className="flex flex-col gap-2.5">
             <MemberList
               members={members}
               currentMemberId={currentMemberId}
@@ -705,7 +704,7 @@ export function RoomJoin() {
                 )}
                 <button
                   type="button"
-                  onClick={handleDeleteRoom}
+                  onClick={() => setShowDeleteModal(true)}
                   disabled={deleting}
                   className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline disabled:opacity-50"
                 >
@@ -795,6 +794,25 @@ export function RoomJoin() {
         isOpen={celebrationOpen}
         onClose={() => setCelebrationOpen(false)}
         onOpenReceipt={() => setAestheticReceiptOpen(true)}
+      />
+
+      {/* Delete Room Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          if (!deleting) setShowDeleteModal(false);
+        }}
+        onConfirm={handleConfirmDeleteRoom}
+        title="Hapus Meja Permanen?"
+        description={
+          <span>
+            Hapus meja <strong className="font-bold text-slate-800">"{room.title}"</strong> ({room.room_code})? Semua klaim dan data pembayaran di dalamnya akan ikut terhapus permanen dan tidak bisa dikembalikan.
+          </span>
+        }
+        confirmText="Hapus Meja"
+        cancelText="Batal"
+        isDestructive
+        isLoading={deleting}
       />
     </div>
   );

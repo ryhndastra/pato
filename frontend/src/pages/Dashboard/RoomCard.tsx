@@ -13,6 +13,7 @@ import { useAuth } from "../../auth/useAuth";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 import { apiDelete, ApiError } from "../../lib/api";
 import { formatIDR } from "../../lib/format";
+import { ConfirmModal } from "../../components/ConfirmModal";
 import { STATUS_STYLE, formatRoomDate, type MyRoom } from "./roomStatus";
 import type { NudgeInitialData } from "./WhatsAppNudgeModal";
 
@@ -29,19 +30,16 @@ export function RoomCard({ room, onOpenNudge, onDeleted }: RoomCardProps) {
   const status = STATUS_STYLE[room.status];
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const shareUrl = `${window.location.origin}/room/${room.room_code}`;
 
-  async function handleDelete() {
-    const confirmed = window.confirm(
-      `Hapus meja "${room.title}" (${room.room_code})? Semua klaim dan data pembayaran di dalamnya ikut terhapus permanen, tidak bisa dibalikin.`,
-    );
-    if (!confirmed) return;
-
+  async function handleConfirmDelete() {
     setDeleting(true);
     setDeleteError(null);
     try {
       await apiDelete(`/api/rooms/${room.room_code}`, undefined, token);
+      setShowDeleteModal(false);
       onDeleted(room.room_code);
     } catch (err) {
       setDeleteError(err instanceof ApiError ? err.message : "Gagal menghapus room.");
@@ -143,7 +141,7 @@ export function RoomCard({ room, onOpenNudge, onDeleted }: RoomCardProps) {
             {/* Delete button */}
             <button
               type="button"
-              onClick={handleDelete}
+              onClick={() => setShowDeleteModal(true)}
               disabled={deleting}
               title="Hapus meja"
               className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-600/20 transition-all hover:bg-rose-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
@@ -173,6 +171,25 @@ export function RoomCard({ room, onOpenNudge, onDeleted }: RoomCardProps) {
           <p className="mt-2 text-[11px] font-semibold text-rose-600">{deleteError}</p>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          if (!deleting) setShowDeleteModal(false);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Meja Patungan?"
+        description={
+          <span>
+            Hapus meja <strong className="font-bold text-slate-800">"{room.title}"</strong> ({room.room_code})? Semua klaim dan data pembayaran di dalamnya akan ikut terhapus permanen dan tidak bisa dikembalikan.
+          </span>
+        }
+        confirmText="Hapus Meja"
+        cancelText="Batal"
+        isDestructive
+        isLoading={deleting}
+      />
     </div>
   );
 }
