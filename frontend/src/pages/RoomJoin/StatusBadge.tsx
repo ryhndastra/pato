@@ -1,57 +1,45 @@
-import { CheckCircle, CircleDashed, LockSimple } from "@phosphor-icons/react";
+import { CheckCircle, LockSimple, PencilSimple } from "@phosphor-icons/react";
 import type { RoomStatus } from "./types";
 
-interface StatusConfig {
-  label: string;
-  className: string;
-  icon?: React.ReactNode;
+interface StatusBadgeProps {
+  status: RoomStatus;
 }
 
-export function StatusBadge({ status }: { status: RoomStatus }) {
-  let config: StatusConfig;
-
+export function StatusBadge({ status }: StatusBadgeProps) {
   switch (status) {
     case "CLAIMING":
-      config = {
-        label: "Live Klaim",
-        className: "bg-emerald-500 text-white border-emerald-400 shadow-xs",
-        icon: (
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-100 backdrop-blur-sm shadow-2xs">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-75" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-300" />
           </span>
-        ),
-      };
-      break;
-    case "LOCKED":
-      config = {
-        label: "Tagihan Dikunci",
-        className: "bg-amber-400 text-slate-900 border-amber-300 shadow-xs font-black",
-        icon: <LockSimple size={12} weight="bold" />,
-      };
-      break;
-    case "CLOSED":
-      config = {
-        label: "Selesai",
-        className: "bg-white/20 text-white border-white/30 backdrop-blur-sm",
-        icon: <CheckCircle size={12} weight="fill" className="text-emerald-300" />,
-      };
-      break;
-    default:
-      config = {
-        label: "Draft",
-        className: "bg-white/20 text-white border-white/30 backdrop-blur-sm",
-        icon: <CircleDashed size={12} weight="bold" />,
-      };
-      break;
-  }
+          <span>Live Klaim</span>
+        </span>
+      );
 
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-[11px] font-extrabold tracking-tight ${config.className}`}
-    >
-      {config.icon}
-      <span>{config.label}</span>
-    </span>
-  );
+    case "LOCKED":
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/20 px-2.5 py-0.5 text-[10px] font-bold text-amber-100 backdrop-blur-sm shadow-2xs">
+          <LockSimple size={11} weight="fill" className="text-amber-300" />
+          <span>Tagihan Dikunci</span>
+        </span>
+      );
+
+    case "CLOSED":
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/40 bg-emerald-500/30 px-2.5 py-0.5 text-[10px] font-black text-white backdrop-blur-sm shadow-2xs">
+          <CheckCircle size={12} weight="fill" className="text-emerald-300" />
+          <span>Selesai</span>
+        </span>
+      );
+
+    default:
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/12 px-2.5 py-0.5 text-[10px] font-bold text-blue-100 backdrop-blur-sm shadow-2xs">
+          <PencilSimple size={11} weight="bold" className="text-blue-200" />
+          <span>Draft Klaim</span>
+        </span>
+      );
+  }
 }

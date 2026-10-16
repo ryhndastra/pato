@@ -1,9 +1,8 @@
-import { CaretRight, CheckCircle, CircleDashed } from "@phosphor-icons/react";
+import { Check } from "@phosphor-icons/react";
 import type { RoomStatus } from "./types";
 
 interface StepProgressCardProps {
   status: RoomStatus;
-  isHost?: boolean;
 }
 
 export function StepProgressCard({ status }: StepProgressCardProps) {
@@ -11,75 +10,67 @@ export function StepProgressCard({ status }: StepProgressCardProps) {
   const isLocked = status === "LOCKED";
   const isClosed = status === "CLOSED";
 
-  const stages = [
+  const steps = [
     {
       id: 1,
-      name: "1. Klaim Menu",
-      done: isLocked || isClosed,
-      current: isClaiming,
+      label: "Klaim Menu",
+      isCurrent: isClaiming,
+      isDone: isLocked || isClosed,
     },
     {
       id: 2,
-      name: "2. Pelunasan",
-      done: isClosed,
-      current: isLocked,
+      label: "Pelunasan",
+      isCurrent: isLocked,
+      isDone: isClosed,
     },
     {
       id: 3,
-      name: "3. Selesai",
-      done: isClosed,
-      current: isClosed,
+      label: "Selesai",
+      isCurrent: isClosed,
+      isDone: isClosed,
     },
   ];
 
   return (
     <nav
-      aria-label="Progress Tahapan Meja"
-      className="flex w-full items-center justify-between gap-1 rounded-2xl bg-white/90 p-1.5 shadow-2xs border border-slate-200/70 backdrop-blur-sm"
+      aria-label="Tahapan Meja"
+      className="flex w-full items-center justify-between gap-1.5 rounded-xl border border-slate-200/80 bg-white/95 p-1 shadow-2xs backdrop-blur-sm"
     >
-      {stages.map((stage, idx) => {
-        let pillClass = "bg-slate-100/80 text-slate-400";
-        let icon: React.ReactNode = (
-          <CircleDashed size={12} weight="bold" className="shrink-0 text-slate-300" />
-        );
+      {steps.map((step) => {
+        let containerStyle = "text-slate-400 bg-transparent hover:text-slate-600";
+        let badgeStyle = "bg-slate-100 text-slate-400";
+        let indicator = <span className="font-mono text-[10px] font-bold">{step.id}</span>;
 
         if (isClosed) {
-          // When all is done, all steps celebrate completion
-          pillClass =
-            stage.id === 3
-              ? "bg-emerald-600 text-white font-black shadow-xs ring-1 ring-emerald-500"
-              : "bg-emerald-50 text-emerald-700 font-bold border border-emerald-100";
-          icon = (
-            <CheckCircle
-              size={13}
-              weight="fill"
-              className={stage.id === 3 ? "text-white shrink-0" : "text-emerald-600 shrink-0"}
-            />
+          containerStyle = "text-emerald-800 bg-emerald-50/70 font-bold";
+          badgeStyle = "bg-emerald-600 text-white";
+          indicator = <Check size={11} weight="bold" />;
+        } else if (step.isCurrent) {
+          containerStyle = "text-blue-900 bg-blue-50/80 font-black shadow-2xs ring-1 ring-blue-100";
+          badgeStyle = "bg-blue-600 text-white";
+          indicator = (
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+            </span>
           );
-        } else if (stage.current) {
-          pillClass = "bg-blue-600 text-white font-extrabold shadow-xs ring-1 ring-blue-500";
-          icon = <span className="flex h-1.5 w-1.5 rounded-full bg-white animate-pulse shrink-0" />;
-        } else if (stage.done) {
-          pillClass = "bg-emerald-50 text-emerald-700 font-bold border border-emerald-100";
-          icon = <CheckCircle size={13} weight="fill" className="text-emerald-600 shrink-0" />;
+        } else if (step.isDone) {
+          containerStyle = "text-slate-700 font-semibold";
+          badgeStyle = "bg-emerald-100 text-emerald-700";
+          indicator = <Check size={11} weight="bold" />;
         }
 
         return (
-          <div key={stage.id} className="flex flex-1 items-center gap-1">
-            <div
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-1.5 px-2 text-[11px] transition-all select-none ${pillClass}`}
+          <div
+            key={step.id}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 px-2 transition-all select-none ${containerStyle}`}
+          >
+            <span
+              className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full transition-colors ${badgeStyle}`}
             >
-              {icon}
-              <span className="truncate">{stage.name}</span>
-            </div>
-
-            {idx < stages.length - 1 && (
-              <CaretRight
-                size={12}
-                weight="bold"
-                className="text-slate-300 shrink-0 select-none"
-              />
-            )}
+              {indicator}
+            </span>
+            <span className="text-[11px] truncate tracking-tight">{step.label}</span>
           </div>
         );
       })}

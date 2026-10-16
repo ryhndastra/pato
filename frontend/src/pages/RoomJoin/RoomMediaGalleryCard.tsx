@@ -1,11 +1,12 @@
 import { useState, useRef } from "react";
 import {
+  Bank,
   Camera,
   CircleNotch,
   DownloadSimple,
   Eye,
   Images,
-  MagnifyingGlassPlus,
+  Plus,
   QrCode,
   Receipt,
   Trash,
@@ -33,6 +34,7 @@ export function RoomMediaGalleryCard({
   const hasReceipt = Boolean(room.receipt_image_url);
   const hasQris = Boolean(room.qris_image_url);
   const hasGroupPhoto = Boolean(room.group_photo_url);
+  const mediaCount = (hasReceipt ? 1 : 0) + (hasQris ? 1 : 0) + (hasGroupPhoto ? 1 : 0);
 
   async function handleGroupPhotoSelected(file: File) {
     setUploadError(null);
@@ -70,198 +72,152 @@ export function RoomMediaGalleryCard({
   }
 
   return (
-    <section className="rounded-3xl border border-slate-200/90 bg-white p-4.5 shadow-2xs sm:p-5">
-      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 shadow-2xs">
-            <Images size={18} weight="bold" />
+    <section className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-2xs">
+      <div className="flex items-center justify-between pb-2.5">
+        <div className="flex items-center gap-2">
+          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            <Images size={14} weight="bold" />
           </span>
-          <div>
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-800 sm:text-sm">
-              Media & Foto Meja
-            </h2>
-            <p className="text-[11px] text-slate-400">
-              Foto struk belanja, QRIS pembayaran, dan foto kenangan nongkrong
-            </p>
-          </div>
+          <h2 className="text-xs font-bold text-slate-800">
+            Media & Foto Meja
+          </h2>
         </div>
 
         <span className="rounded-full bg-slate-100 px-2 py-0.5 font-mono text-[10px] font-bold text-slate-600">
-          {(hasReceipt ? 1 : 0) + (hasQris ? 1 : 0) + (hasGroupPhoto ? 1 : 0)}/3 Foto
+          {mediaCount}/3 Tersedia
         </span>
       </div>
 
       {uploadError && (
-        <div className="mt-2.5 rounded-xl bg-rose-50 p-2.5 text-xs font-semibold text-rose-700 border border-rose-100">
+        <div className="mb-2.5 rounded-xl bg-rose-50 p-2 text-xs font-semibold text-rose-700 border border-rose-100">
           {uploadError}
         </div>
       )}
 
-      {/* Grid of 3 Media Cards */}
-      <div className="mt-3.5 grid grid-cols-3 gap-2.5 sm:gap-3">
-        {/* 1. Struk Kasir Card */}
-        <div className="flex flex-col items-center rounded-2xl border border-slate-100 bg-slate-50/80 p-2.5 text-center transition-all hover:border-slate-200">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-700">
-            <Receipt size={14} weight="bold" className="text-blue-600" />
-            <span>Struk Kasir</span>
-          </div>
+      {/* Hidden file input for camera/photo upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleGroupPhotoSelected(file);
+        }}
+      />
 
-          {hasReceipt && room.receipt_image_url ? (
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => setActiveModal("receipt")}
-              className="group relative mt-2 flex h-24 w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-black/5 shadow-2xs"
-            >
+      {/* Modern Compact 3-Column Visual Strip */}
+      <div className="grid grid-cols-3 gap-2">
+        {/* 1. Struk Kasir */}
+        {hasReceipt && room.receipt_image_url ? (
+          <button
+            type="button"
+            onClick={() => setActiveModal("receipt")}
+            className="group flex flex-col items-center justify-center rounded-xl border border-blue-100 bg-blue-50/50 p-2 text-center transition-all hover:bg-blue-100/50 hover:border-blue-200 active:scale-95"
+          >
+            <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-slate-200 shadow-2xs">
               <img
                 src={room.receipt_image_url}
                 alt="Struk Kasir"
                 className="h-full w-full object-cover transition-transform group-hover:scale-105"
               />
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                <MagnifyingGlassPlus size={18} weight="bold" className="text-white drop-shadow" />
-                <span className="text-[9px] font-bold text-white drop-shadow">Lihat</span>
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
+                <Eye size={14} weight="bold" className="text-white drop-shadow" />
               </div>
             </div>
-          ) : (
-            <div className="mt-2 flex h-24 w-full flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white/70 p-1 text-center">
-              <span className="text-[10px] font-semibold text-slate-400">
-                Tidak ada struk
-              </span>
-            </div>
-          )}
-
-          {hasReceipt && (
-            <button
-              type="button"
-              onClick={() => setActiveModal("receipt")}
-              className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:underline"
-            >
-              <Eye size={12} weight="bold" />
-              <span>Perbesar</span>
-            </button>
-          )}
-        </div>
-
-        {/* 2. QRIS Host Card */}
-        <div className="flex flex-col items-center rounded-2xl border border-slate-100 bg-slate-50/80 p-2.5 text-center transition-all hover:border-slate-200">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-700">
-            <QrCode size={14} weight="bold" className="text-purple-600" />
-            <span>QRIS Host</span>
+            <span className="mt-1 text-[11px] font-bold text-slate-800 truncate w-full">
+              Struk Kasir
+            </span>
+            <span className="text-[10px] font-bold text-blue-600">Lihat Foto</span>
+          </button>
+        ) : (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/70 p-2 text-center">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+              <Receipt size={16} weight="regular" />
+            </span>
+            <span className="mt-1 text-[11px] font-semibold text-slate-600 truncate w-full">
+              Struk Kasir
+            </span>
+            <span className="text-[10px] text-slate-400">Tanpa Struk</span>
           </div>
+        )}
 
-          {hasQris && room.qris_image_url ? (
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => setActiveModal("qris")}
-              className="group relative mt-2 flex h-24 w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-white p-1 shadow-2xs border border-slate-200"
-            >
+        {/* 2. QRIS Host / Rekening */}
+        {hasQris && room.qris_image_url ? (
+          <button
+            type="button"
+            onClick={() => setActiveModal("qris")}
+            className="group flex flex-col items-center justify-center rounded-xl border border-purple-100 bg-purple-50/50 p-2 text-center transition-all hover:bg-purple-100/50 hover:border-purple-200 active:scale-95"
+          >
+            <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-white p-0.5 border border-purple-200 shadow-2xs">
               <img
                 src={room.qris_image_url}
                 alt="QRIS Host"
                 className="h-full w-full object-contain transition-transform group-hover:scale-105"
               />
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                <MagnifyingGlassPlus size={18} weight="bold" className="text-white drop-shadow" />
-                <span className="text-[9px] font-bold text-white drop-shadow">Scan</span>
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
+                <Eye size={14} weight="bold" className="text-white drop-shadow" />
               </div>
             </div>
-          ) : (
-            <div className="mt-2 flex h-24 w-full flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white/70 p-1 text-center">
-              <span className="text-[10px] font-semibold text-slate-400">
-                Transfer Rekening
-              </span>
-            </div>
-          )}
-
-          {hasQris && (
-            <button
-              type="button"
-              onClick={() => setActiveModal("qris")}
-              className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-purple-600 hover:underline"
-            >
-              <Eye size={12} weight="bold" />
-              <span>Buka QRIS</span>
-            </button>
-          )}
-        </div>
-
-        {/* 3. Foto Barengan / Custom Memory Card */}
-        <div className="flex flex-col items-center rounded-2xl border border-slate-100 bg-slate-50/80 p-2.5 text-center transition-all hover:border-slate-200">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-700">
-            <Camera size={14} weight="bold" className="text-emerald-600" />
-            <span>Foto Bareng</span>
+            <span className="mt-1 text-[11px] font-bold text-slate-800 truncate w-full">
+              QRIS Host
+            </span>
+            <span className="text-[10px] font-bold text-purple-600">Scan QR</span>
+          </button>
+        ) : (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/70 p-2 text-center">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+              <Bank size={16} weight="regular" />
+            </span>
+            <span className="mt-1 text-[11px] font-semibold text-slate-600 truncate w-full">
+              Pembayaran
+            </span>
+            <span className="text-[10px] text-slate-500 font-medium">Rekening</span>
           </div>
+        )}
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleGroupPhotoSelected(file);
-            }}
-          />
-
-          {isUploadingPhoto ? (
-            <div className="mt-2 flex h-24 w-full flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-2">
-              <CircleNotch size={20} weight="bold" className="animate-spin text-emerald-600" />
-              <span className="mt-1 text-[9px] font-bold text-slate-500">Mengunggah...</span>
-            </div>
-          ) : hasGroupPhoto && room.group_photo_url ? (
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => setActiveModal("group")}
-              className="group relative mt-2 flex h-24 w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-black/5 shadow-2xs"
-            >
+        {/* 3. Foto Barengan */}
+        {isUploadingPhoto ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-slate-100 bg-slate-50/70 p-2 text-center">
+            <CircleNotch size={18} weight="bold" className="animate-spin text-emerald-600" />
+            <span className="mt-1 text-[10px] font-bold text-slate-500">Mengunggah...</span>
+          </div>
+        ) : hasGroupPhoto && room.group_photo_url ? (
+          <button
+            type="button"
+            onClick={() => setActiveModal("group")}
+            className="group flex flex-col items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50/50 p-2 text-center transition-all hover:bg-emerald-100/50 hover:border-emerald-200 active:scale-95"
+          >
+            <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-slate-200 shadow-2xs">
               <img
                 src={room.group_photo_url}
                 alt="Foto Barengan"
                 className="h-full w-full object-cover transition-transform group-hover:scale-105"
               />
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                <MagnifyingGlassPlus size={18} weight="bold" className="text-white drop-shadow" />
-                <span className="text-[9px] font-bold text-white drop-shadow">Lihat</span>
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
+                <Eye size={14} weight="bold" className="text-white drop-shadow" />
               </div>
             </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="group mt-2 flex h-24 w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/50 p-2 text-center transition-all hover:bg-emerald-100/50 active:scale-95"
-            >
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-2xs group-hover:scale-110 transition-transform">
-                <UploadSimple size={14} weight="bold" />
-              </div>
-              <span className="mt-1 text-[9px] font-black text-emerald-800">
-                + Pasang Foto
-              </span>
-            </button>
-          )}
-
-          {hasGroupPhoto && !isUploadingPhoto && (
-            <div className="mt-2 flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveModal("group")}
-                className="text-[10px] font-bold text-emerald-600 hover:underline"
-              >
-                Lihat
-              </button>
-              <span className="text-slate-300">•</span>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="text-[10px] font-bold text-slate-600 hover:underline"
-              >
-                Ganti
-              </button>
-            </div>
-          )}
-        </div>
+            <span className="mt-1 text-[11px] font-bold text-slate-800 truncate w-full">
+              Foto Meja
+            </span>
+            <span className="text-[10px] font-bold text-emerald-600">Lihat Foto</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="group flex flex-col items-center justify-center rounded-xl border border-dashed border-emerald-300 bg-emerald-50/40 p-2 text-center transition-all hover:bg-emerald-100/50 active:scale-95"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-2xs group-hover:scale-105 transition-transform">
+              <Plus size={16} weight="bold" />
+            </span>
+            <span className="mt-1 text-[11px] font-bold text-emerald-900 truncate w-full">
+              Foto Meja
+            </span>
+            <span className="text-[10px] font-bold text-emerald-700">+ Tambah</span>
+          </button>
+        )}
       </div>
 
       {/* Lightbox Modal: Struk Kasir */}
@@ -417,4 +373,3 @@ export function RoomMediaGalleryCard({
     </section>
   );
 }
-
