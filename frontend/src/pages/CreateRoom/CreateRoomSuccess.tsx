@@ -5,8 +5,9 @@ import {
   Check,
   Copy,
   House,
+  Lightbulb,
+  MapPin,
   ShareNetwork,
-  Sparkle,
   WhatsappLogo,
 } from "@phosphor-icons/react";
 import { useNavigate } from "react-router";
@@ -78,7 +79,7 @@ export function CreateRoomSuccess({
 
         <div className="relative z-10 mx-auto max-w-md">
           {/* Top navigation */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center">
             <button
               type="button"
               onClick={() => navigate("/dashboard", { replace: true })}
@@ -87,10 +88,6 @@ export function CreateRoomSuccess({
               <ArrowLeft size={14} weight="bold" />
               <span>Beranda</span>
             </button>
-            <div className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2.5 py-1 text-[11px] font-bold text-emerald-100 backdrop-blur-md">
-              <Sparkle size={13} weight="fill" className="text-emerald-300" />
-              <span>Room Aktif</span>
-            </div>
           </div>
 
           {/* Celebratory Hero Header */}
@@ -155,7 +152,7 @@ export function CreateRoomSuccess({
 
               {title ? (
                 <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-slate-200/60 px-3 py-1 text-xs font-semibold text-slate-700">
-                  <span>📍</span>
+                  <MapPin size={13} weight="fill" className="shrink-0 text-blue-600" />
                   <span className="truncate max-w-[220px]">{title}</span>
                 </div>
               ) : null}
@@ -227,7 +224,7 @@ export function CreateRoomSuccess({
 
           {/* Friendly Tip Box for everyday non-tech users */}
           <div className="flex items-start gap-2.5 rounded-2xl border border-blue-100 bg-blue-50/70 p-3.5 text-xs text-blue-900/90">
-            <span className="text-base select-none">💡</span>
+            <Lightbulb size={18} weight="fill" className="shrink-0 text-amber-500 mt-0.5" />
             <p className="leading-relaxed">
               <strong className="font-semibold text-blue-950">Tanpa ribet install:</strong> Teman kamu bisa langsung buka link lewat browser HP dan klaim pesanan masing-masing.
             </p>
