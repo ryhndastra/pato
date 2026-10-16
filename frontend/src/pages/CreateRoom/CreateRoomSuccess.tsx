@@ -1,9 +1,12 @@
 import { useState } from "react";
 import {
+  ArrowLeft,
   ArrowRight,
   Check,
   Copy,
   House,
+  ShareNetwork,
+  Sparkle,
   WhatsappLogo,
 } from "@phosphor-icons/react";
 import { useNavigate } from "react-router";
@@ -21,109 +24,217 @@ export function CreateRoomSuccess({
   title,
 }: CreateRoomSuccessProps) {
   const navigate = useNavigate();
-  const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
 
-  async function handleCopy() {
-    await navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  async function handleCopyLink() {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch {
+      // fallback
+    }
+  }
+
+  async function handleCopyCode() {
+    try {
+      await navigator.clipboard.writeText(roomCode);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    } catch {
+      // fallback
+    }
   }
 
   function handleWhatsapp() {
-    const text = `Kuy gabung room split bill "${title}" di PaTo: ${shareUrl}`;
+    const text = `Kuy gabung room split bill "${title || "Patungan"}" di PaTo: ${shareUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   }
 
+  async function handleShare() {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: `Split Bill: ${title || "Patungan"}`,
+          text: `Kuy gabung meja split bill "${title || "Patungan"}" di PaTo:`,
+          url: shareUrl,
+        });
+        return;
+      } catch {
+        // user aborted or not supported
+      }
+    }
+    handleCopyLink();
+  }
+
   return (
-    <div className="flex min-h-dvh flex-col bg-slate-50">
-      {/* Decorative top curved hero */}
-      <div className="relative overflow-hidden bg-linear-to-br from-blue-700 via-blue-600 to-blue-500 px-4 pt-10 pb-20 sm:px-6 sm:pb-24 text-center">
-        <div className="pointer-events-none absolute -top-12 -right-12 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-12 -left-12 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
+    <div className="flex min-h-dvh flex-col bg-slate-100/70">
+      {/* Top blue gradient header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500 px-4 pt-[calc(max(env(safe-area-inset-top,0px),0px)+1rem)] pb-14 text-white sm:px-6 sm:pb-16">
+        {/* Ambient background glows */}
+        <div className="pointer-events-none absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
 
         <div className="relative z-10 mx-auto max-w-md">
-          <p className="font-mono text-xs font-bold tracking-widest text-blue-200 uppercase">
-            BERHASIL DIBUAT
-          </p>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-            Room Siap Dibagikan!
-          </h1>
-          <p className="mt-1.5 text-xs text-blue-100 sm:text-sm">
-            Kirim link ke teman-teman agar mereka bisa klaim porsi masing-masing.
-          </p>
-        </div>
-      </div>
+          {/* Top navigation */}
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard", { replace: true })}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md transition-all hover:bg-white/25 active:scale-95"
+            >
+              <ArrowLeft size={14} weight="bold" />
+              <span>Beranda</span>
+            </button>
+            <div className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/20 px-2.5 py-1 text-[11px] font-bold text-emerald-100 backdrop-blur-md">
+              <Sparkle size={13} weight="fill" className="text-emerald-300" />
+              <span>Room Aktif</span>
+            </div>
+          </div>
 
-      {/* Main card */}
-      <div className="relative z-10 mx-auto -mt-10 w-full max-w-md flex-1 px-4 pb-12 sm:-mt-12 sm:px-6">
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-xl shadow-blue-600/5 sm:p-8">
-          {/* Celebrating Mascot */}
-          <div className="relative mx-auto -mt-12 mb-5 flex justify-center">
-            <div className="relative">
-              <div className="h-24 w-24 overflow-hidden rounded-3xl border-3 border-white bg-white p-1 shadow-lg shadow-blue-600/15 ring-4 ring-blue-50">
+          {/* Celebratory Hero Header */}
+          <div className="mt-5 flex flex-col items-center text-center">
+            {/* Mascot Avatar with glowing aura */}
+            <div className="relative mb-3">
+              <div className="h-20 w-20 overflow-hidden rounded-full border-3 border-white bg-white p-1 shadow-xl shadow-blue-900/30 ring-4 ring-white/20 sm:h-22 sm:w-22">
                 <img
                   src={patoMascotCelebrating}
-                  alt="Pato Mascot"
-                  className="h-full w-full object-contain"
+                  alt="Pato Mascot Merayakan"
+                  className="h-full w-full object-cover"
                 />
               </div>
               <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md ring-2 ring-white">
                 <Check size={14} weight="bold" />
               </div>
             </div>
+
+            <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+              Meja Siap Dipakai!
+            </h1>
+            <p className="mt-1 max-w-xs text-xs font-medium text-blue-100/90 sm:text-sm">
+              Bagikan link atau kode ini ke teman semeja agar bisa langsung klaim pesanan.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="relative z-10 mx-auto -mt-6 w-full max-w-md flex-1 px-4 pb-8 sm:px-6">
+        <div className="space-y-4">
+          {/* Ticket Card: Access Code & Link */}
+          <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xl shadow-slate-900/5">
+            {/* Ticket Header */}
+            <div className="border-b border-dashed border-slate-200 bg-slate-50/80 px-5 py-4 text-center">
+              <span className="text-[11px] font-extrabold tracking-widest text-slate-400 uppercase">
+                KODE AKSES MEJA
+              </span>
+              <div className="mt-1 flex items-center justify-center gap-3">
+                <p className="font-mono text-3xl font-black tracking-widest text-blue-600 sm:text-4xl">
+                  {roomCode}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleCopyCode}
+                  aria-label="Salin Kode Akses"
+                  className="inline-flex h-8 items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 text-xs font-bold text-blue-700 transition-all hover:bg-blue-100 active:scale-95"
+                >
+                  {copiedCode ? (
+                    <>
+                      <Check size={13} weight="bold" className="text-emerald-600" />
+                      <span className="text-emerald-700">Tersalin!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={13} weight="bold" />
+                      <span>Salin</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {title ? (
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-slate-200/60 px-3 py-1 text-xs font-semibold text-slate-700">
+                  <span>📍</span>
+                  <span className="truncate max-w-[220px]">{title}</span>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Quick Link Row */}
+            <div className="p-4 sm:p-5">
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+                Link Langsung
+              </label>
+              <div className="mt-1.5 flex items-center rounded-2xl border border-slate-200 bg-slate-50 p-1 pl-3.5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+                <span className="truncate text-xs font-mono text-slate-600 flex-1">
+                  {shareUrl}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="flex h-9 shrink-0 items-center gap-1 rounded-xl bg-white px-3 text-xs font-bold text-slate-700 shadow-xs border border-slate-200 hover:bg-slate-100 transition-all active:scale-95"
+                >
+                  {copiedLink ? (
+                    <>
+                      <Check size={14} weight="bold" className="text-emerald-600" />
+                      <span className="text-emerald-700">Tersalin</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={14} weight="bold" />
+                      <span>Salin</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-5 space-y-2.5">
+                {/* Primary CTA: Open Room */}
+                <button
+                  type="button"
+                  onClick={() => navigate(`/room/${roomCode}`)}
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 font-bold text-white shadow-lg shadow-blue-600/25 transition-all hover:from-blue-700 hover:to-blue-800 active:scale-[0.98]"
+                >
+                  <span>Buka Meja Sekarang</span>
+                  <ArrowRight size={18} weight="bold" />
+                </button>
+
+                {/* Secondary 2-column actions: WhatsApp + Share */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={handleWhatsapp}
+                    className="flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-emerald-600 text-xs font-bold text-white shadow-sm shadow-emerald-600/20 transition-all hover:bg-emerald-700 active:scale-[0.98] sm:text-sm"
+                  >
+                    <WhatsappLogo size={18} weight="fill" />
+                    <span>WhatsApp</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white text-xs font-bold text-slate-700 shadow-xs transition-all hover:bg-slate-50 active:scale-[0.98] sm:text-sm"
+                  >
+                    <ShareNetwork size={18} weight="bold" className="text-blue-600" />
+                    <span>{copiedLink ? "Link Tersalin!" : "Bagikan"}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Room Code Box */}
-          <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4 text-center">
-            <span className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
-              KODE AKSES ROOM
-            </span>
-            <div className="mt-1 flex items-center justify-center">
-              <p className="font-mono text-3xl font-black tracking-wider text-blue-600">
-                {roomCode}
-              </p>
-            </div>
-            <p className="mt-1 text-xs text-slate-600">
-              Acara: <span className="font-bold text-slate-900">{title}</span>
+          {/* Friendly Tip Box for everyday non-tech users */}
+          <div className="flex items-start gap-2.5 rounded-2xl border border-blue-100 bg-blue-50/70 p-3.5 text-xs text-blue-900/90">
+            <span className="text-base select-none">💡</span>
+            <p className="leading-relaxed">
+              <strong className="font-semibold text-blue-950">Tanpa ribet install:</strong> Teman kamu bisa langsung buka link lewat browser HP dan klaim pesanan masing-masing.
             </p>
           </div>
 
-          {/* Action Buttons */}
-          <div className="mt-6 flex flex-col gap-2.5">
-            <button
-              type="button"
-              onClick={handleWhatsapp}
-              className="flex h-12 w-full items-center justify-center gap-2.5 rounded-2xl bg-emerald-600 font-bold text-white shadow-md shadow-emerald-600/20 transition-all hover:bg-emerald-700 active:scale-[0.98]"
-            >
-              <WhatsappLogo size={22} weight="fill" />
-              <span>Bagikan ke WhatsApp</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="flex h-12 w-full items-center justify-center gap-2.5 rounded-2xl border border-slate-200 bg-white font-bold text-slate-800 transition-all hover:bg-slate-50 active:scale-[0.98]"
-            >
-              <Copy
-                size={20}
-                weight={copied ? "fill" : "regular"}
-                className={copied ? "text-emerald-600" : ""}
-              />
-              <span>{copied ? "Link Tersalin!" : "Salin Link Room"}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate(`/room/${roomCode}`)}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 font-bold text-white shadow-md shadow-blue-600/20 transition-all hover:bg-blue-700 active:scale-[0.98]"
-            >
-              <span>Buka Room Sekarang</span>
-              <ArrowRight size={18} weight="bold" />
-            </button>
-          </div>
-
-          {/* Back to Home */}
-          <div className="mt-6 text-center">
+          {/* Back to Home footer */}
+          <div className="pt-2 text-center">
             <button
               type="button"
               onClick={() => navigate("/dashboard", { replace: true })}

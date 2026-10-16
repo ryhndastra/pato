@@ -154,10 +154,10 @@ export function Dashboard() {
         <div className="relative flex items-center rounded-full border border-slate-200/90 bg-white py-1 pl-4 pr-1.5 shadow-[0_2px_8px_rgba(0,0,0,0.02)] focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 sm:py-1.5 sm:pl-5 sm:pr-2">
           <input
             type="text"
-            placeholder="Cari meja patungan kamu (nama resto atau kode meja)..."
+            placeholder="Cari resto atau kode meja..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 w-full bg-transparent text-xs text-ink placeholder:text-ink-muted focus:outline-none sm:text-sm"
+            className="h-9 w-full bg-transparent pr-2 text-xs text-ink placeholder:text-slate-400 focus:outline-none sm:text-sm"
           />
           {searchQuery ? (
             <button
