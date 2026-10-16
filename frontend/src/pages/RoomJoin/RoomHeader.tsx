@@ -52,92 +52,92 @@ export function RoomHeader({
   }
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/70">
-      <div className="mx-auto max-w-md sm:max-w-xl lg:max-w-3xl px-4 pt-[max(env(safe-area-inset-top,0px),0.75rem)] pb-2.5 sm:px-6">
-        {/* Main Navigation Row */}
-        <div className="flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-30 w-full bg-gradient-to-r from-blue-700 via-blue-600 to-blue-600 text-white shadow-xs">
+      <div className="mx-auto max-w-md sm:max-w-xl lg:max-w-3xl px-4 pt-[max(env(safe-area-inset-top,0px),0.75rem)] pb-3 sm:px-6">
+        {/* Top App Bar Navigation Row */}
+        <div className="flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
             <button
               type="button"
               onClick={() => navigate("/dashboard")}
               aria-label="Kembali ke Dashboard"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200/70 bg-white text-slate-700 shadow-2xs transition-all active:scale-95 hover:bg-slate-50 hover:text-slate-900"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/25 shadow-2xs"
             >
-              <ArrowLeft size={17} weight="bold" />
+              <ArrowLeft size={18} weight="bold" />
             </button>
 
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <img src={patoPlain} alt="PaTo" className="h-3.5 w-3.5 object-contain" />
-                <span className="font-mono text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                <span className="font-mono text-[10px] font-bold tracking-wider text-blue-200 uppercase">
                   PATO MEJA
                 </span>
                 {isLive && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.2 text-[9px] font-bold text-emerald-700 border border-emerald-200/60">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/20 px-1.5 py-0.2 text-[9px] font-bold text-emerald-200 ring-1 ring-emerald-300/30">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span>Live</span>
                   </span>
                 )}
               </div>
-              <h1 className="text-base sm:text-lg font-black text-slate-900 leading-tight truncate">
+              <h1 className="text-base sm:text-lg font-black text-white leading-tight truncate">
                 {room.title}
               </h1>
             </div>
           </div>
 
-          {/* Action Icon Group */}
+          {/* Header Action Icons */}
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* Live Chat */}
+            {/* Live Chat Icon Button with Unread Badge */}
             {onOpenChat && (
               <button
                 type="button"
                 onClick={onOpenChat}
                 aria-label="Buka Chat Meja"
-                className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/70 bg-white text-slate-700 shadow-2xs transition-all active:scale-95 hover:bg-slate-50 hover:text-slate-900"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/25 shadow-2xs"
               >
                 <ChatCircleDots size={18} weight="bold" />
                 {chatCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 font-mono text-[9px] font-black text-white ring-2 ring-white shadow-2xs">
+                  <span className="absolute -top-1 -right-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-rose-500 px-1 font-mono text-[9px] font-black text-white ring-2 ring-blue-600 shadow-xs">
                     {chatCount > 99 ? "99+" : chatCount}
                   </span>
                 )}
               </button>
             )}
 
-            {/* Foto Struk Asli */}
+            {/* Foto struk fisik asli (jika tersedia) */}
             {room.receipt_image_url && onOpenReceiptImage && (
               <button
                 type="button"
                 onClick={onOpenReceiptImage}
                 title="Lihat foto fisik struk kasir"
                 aria-label="Lihat Foto Struk Asli"
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/70 bg-white text-slate-700 shadow-2xs transition-all active:scale-95 hover:bg-slate-50 hover:text-slate-900"
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/25 shadow-2xs"
               >
                 <Camera size={18} weight="bold" />
               </button>
             )}
 
-            {/* Struk Patungan PaTo */}
+            {/* Struk digital patungan PaTo */}
             <button
               type="button"
               onClick={onOpenAestheticReceipt}
               title="Lihat struk rincian patungan"
               aria-label="Lihat Struk Patungan"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/70 bg-white text-slate-700 shadow-2xs transition-all active:scale-95 hover:bg-slate-50 hover:text-slate-900"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/25 shadow-2xs"
             >
               <Receipt size={18} weight="bold" />
             </button>
 
-            {/* Share Link */}
+            {/* Share link button */}
             <button
               type="button"
               onClick={handleShare}
               title="Bagikan tautan meja"
               aria-label="Bagikan Tautan Meja"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/70 bg-white text-slate-700 shadow-2xs transition-all active:scale-95 hover:bg-slate-50 hover:text-slate-900"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/25 shadow-2xs"
             >
               {urlCopied ? (
-                <Check size={16} weight="bold" className="text-emerald-600" />
+                <Check size={16} weight="bold" className="text-emerald-300" />
               ) : (
                 <ShareNetwork size={17} weight="bold" />
               )}
@@ -145,20 +145,20 @@ export function RoomHeader({
           </div>
         </div>
 
-        {/* Micro Sub-Bar: Clean Room Code Chip & Status Badge */}
-        <div className="mt-2.5 flex items-center justify-between border-t border-slate-100 pt-2 text-xs">
+        {/* Micro Sub-Bar: Room Code pill + Status badge */}
+        <div className="mt-2.5 flex items-center justify-between border-t border-white/15 pt-2 text-xs">
           <button
             type="button"
             onClick={() => copyCode(room.room_code)}
             title="Salin kode meja"
-            className="group flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50/80 px-2.5 py-1 font-mono text-[11px] font-bold text-slate-800 transition-all hover:bg-slate-100 hover:border-slate-300 active:scale-95 shadow-2xs"
+            className="group flex items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1 font-mono text-[11px] font-bold text-white transition-all hover:bg-white/25 active:scale-95 shadow-2xs"
           >
-            <span className="text-slate-400">KODE:</span>
+            <span className="text-blue-200">KODE:</span>
             <span>{room.room_code}</span>
             {codeCopied ? (
-              <Check size={12} weight="bold" className="text-emerald-600" />
+              <Check size={12} weight="bold" className="text-emerald-300" />
             ) : (
-              <Copy size={12} weight="bold" className="text-slate-400 group-hover:text-slate-700 transition-colors" />
+              <Copy size={12} weight="bold" className="text-blue-200 group-hover:text-white transition-colors" />
             )}
           </button>
 

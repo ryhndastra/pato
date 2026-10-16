@@ -49,6 +49,8 @@ export function ChatDrawer({
       .catch(() => {});
   }, [roomCode]);
 
+  const seenEventIdsRef = useRef<Set<string>>(new Set());
+
   useRoomWebSocket({
     roomCode,
     onRoomUpdated: () => {
@@ -58,6 +60,9 @@ export function ChatDrawer({
     onChatMessage: (newChat) => {
       if (newChat && typeof newChat === "object" && "id" in newChat) {
         const ev = newChat as RoomEvent;
+        if (!ev.id || seenEventIdsRef.current.has(ev.id)) return;
+        seenEventIdsRef.current.add(ev.id);
+
         if (ev.event_type === "CHAT_MESSAGE" && ev.sender_type !== "SYSTEM") {
           soundFX.playMessage();
         }

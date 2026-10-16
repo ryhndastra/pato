@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import {
+  Check,
   CheckCircle,
   ForkKnife,
   MagnifyingGlass,
   Minus,
   Plus,
   Sparkle,
+  Trash,
   UsersThree,
   X,
 } from "@phosphor-icons/react";
@@ -30,21 +32,6 @@ function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[1][0]).toUpperCase();
-}
-
-const AVATAR_BG_COLORS = [
-  "bg-blue-100 text-blue-800",
-  "bg-emerald-100 text-emerald-800",
-  "bg-purple-100 text-purple-800",
-  "bg-amber-100 text-amber-800",
-  "bg-rose-100 text-rose-800",
-  "bg-indigo-100 text-indigo-800",
-];
-
-function getAvatarColor(name: string): string {
-  let sum = 0;
-  for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
-  return AVATAR_BG_COLORS[sum % AVATAR_BG_COLORS.length];
 }
 
 export function ItemList({
@@ -165,11 +152,11 @@ export function ItemList({
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2.5 rounded-3xl border border-slate-200/80 bg-white px-6 py-12 text-center shadow-xs">
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-2xs">
-          <ForkKnife size={26} weight="regular" />
+      <div className="flex flex-col items-center gap-2.5 rounded-2xl border border-slate-200/80 bg-white px-6 py-10 text-center shadow-2xs">
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-2xs">
+          <ForkKnife size={24} weight="regular" />
         </span>
-        <h3 className="text-sm font-black text-slate-900">Belum ada menu di meja ini</h3>
+        <h3 className="text-sm font-bold text-slate-900">Belum ada menu di meja ini</h3>
         <p className="max-w-[32ch] text-xs text-slate-500 leading-relaxed">
           Host belum menambahkan pesanan makanan atau minuman. Scan struk kasir atau input menu manual untuk mulai.
         </p>
@@ -179,52 +166,44 @@ export function ItemList({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* 1. FILTER & SEGMENTED CONTROL HEADER */}
+      {/* 1. FILTER & SEGMENTED TABS */}
       {selectedMember ? (
         /* Filtered by Friend Banner */
-        <div className="flex items-center justify-between gap-2 rounded-2xl border border-blue-200 bg-blue-50/90 px-3.5 py-2.5 text-xs shadow-2xs animate-fade-in">
-          <div className="flex items-center gap-2">
-            <span
-              className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${getAvatarColor(
-                selectedMember.display_name,
-              )}`}
-            >
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-blue-200 bg-blue-50/80 px-3 py-2 text-xs shadow-2xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-blue-600 text-white font-mono text-[9px] font-bold">
               {getInitials(selectedMember.display_name)}
             </span>
-            <span className="font-bold text-blue-950">
-              Pesanan <span className="underline decoration-blue-400">{selectedMember.display_name}</span> ({displayedItems.length} menu)
+            <span className="font-bold text-blue-950 truncate">
+              Pesanan {selectedMember.display_name} ({displayedItems.length} menu)
             </span>
           </div>
 
           <button
             type="button"
             onClick={onClearMemberFilter}
-            className="flex items-center gap-1 rounded-xl bg-white px-2.5 py-1 text-[11px] font-bold text-blue-700 shadow-2xs hover:bg-blue-100/70 active:scale-95"
+            className="flex shrink-0 items-center gap-1 rounded-lg bg-white px-2.5 py-1 text-[11px] font-bold text-blue-700 shadow-2xs hover:bg-blue-100 active:scale-95"
           >
-            <X size={12} weight="bold" />
+            <X size={11} weight="bold" />
             <span>Semua Menu</span>
           </button>
         </div>
       ) : (
-        /* Native Segmented Control: Semua Menu vs Pesanan Saya */
         <div className="flex flex-col gap-2">
+          {/* Tab Filter: Semua Menu vs Punya Saya */}
           {currentMemberId && (
-            <div className="grid grid-cols-2 rounded-2xl bg-slate-200/70 p-1 shadow-inner">
+            <div className="grid grid-cols-2 rounded-xl bg-slate-100 p-1 border border-slate-200/70 shadow-2xs">
               <button
                 type="button"
                 onClick={() => setTabFilter("all")}
-                className={`flex h-9 items-center justify-center gap-1.5 rounded-xl text-xs font-black transition-all ${
+                className={`flex h-9 items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all ${
                   tabFilter === "all"
-                    ? "bg-white text-slate-900 shadow-xs scale-[0.99]"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold"
+                    : "text-slate-500 hover:text-slate-800"
                 }`}
               >
                 <span>Semua Menu</span>
-                <span
-                  className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] font-bold ${
-                    tabFilter === "all" ? "bg-slate-100 text-slate-800" : "bg-slate-300/60 text-slate-600"
-                  }`}
-                >
+                <span className="rounded-md bg-slate-100 px-1.5 py-0.2 font-mono text-[10px] font-bold text-slate-700">
                   {items.length}
                 </span>
               </button>
@@ -232,16 +211,16 @@ export function ItemList({
               <button
                 type="button"
                 onClick={() => setTabFilter("mine")}
-                className={`flex h-9 items-center justify-center gap-1.5 rounded-xl text-xs font-black transition-all ${
+                className={`flex h-9 items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all ${
                   tabFilter === "mine"
-                    ? "bg-blue-600 text-white shadow-xs scale-[0.99]"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "bg-blue-600 text-white shadow-xs font-extrabold"
+                    : "text-slate-500 hover:text-slate-800"
                 }`}
               >
                 <span>Pesanan Saya</span>
                 {myClaimedItems.length > 0 && (
                   <span
-                    className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] font-bold ${
+                    className={`rounded-md px-1.5 py-0.2 font-mono text-[10px] font-bold ${
                       tabFilter === "mine" ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700"
                     }`}
                   >
@@ -252,14 +231,13 @@ export function ItemList({
             </div>
           )}
 
-          {/* Search & Sub-filter pills (Shown when on "all" tab) */}
+          {/* Search bar & sub-filters */}
           {tabFilter === "all" && (
-            <div className="flex flex-col gap-2">
-              {/* Compact search input if items > 4 */}
+            <div className="flex flex-col gap-1.5">
               {items.length > 4 && (
                 <div className="relative flex items-center">
                   <MagnifyingGlass
-                    size={15}
+                    size={14}
                     weight="bold"
                     className="absolute left-3 text-slate-400 pointer-events-none"
                   />
@@ -267,14 +245,14 @@ export function ItemList({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Cari menu makanan / minuman..."
-                    className="h-9 w-full rounded-xl border border-slate-200/90 bg-white pl-8.5 pr-8 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-100"
+                    placeholder="Cari makanan / minuman..."
+                    className="h-8.5 w-full rounded-xl border border-slate-200 bg-white pl-8 pr-7 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-hidden focus:ring-1 focus:ring-blue-100 shadow-2xs"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:text-slate-700"
+                      className="absolute right-2 flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:text-slate-700"
                     >
                       <X size={11} weight="bold" />
                     </button>
@@ -282,15 +260,15 @@ export function ItemList({
                 </div>
               )}
 
-              {/* Sub-filter pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs scrollbar-none">
+              {/* Sub-filters */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs">
                 <button
                   type="button"
                   onClick={() => setSubFilter("all")}
-                  className={`shrink-0 rounded-full px-3 py-1 font-bold text-[11px] transition-all ${
+                  className={`shrink-0 rounded-lg px-2.5 py-1 font-bold text-[11px] transition-all ${
                     subFilter === "all"
                       ? "bg-slate-900 text-white shadow-2xs"
-                      : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                      : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
                   }`}
                 >
                   Semua ({items.length})
@@ -300,7 +278,7 @@ export function ItemList({
                   <button
                     type="button"
                     onClick={() => setSubFilter("unclaimed")}
-                    className={`shrink-0 rounded-full px-3 py-1 font-bold text-[11px] transition-all ${
+                    className={`shrink-0 rounded-lg px-2.5 py-1 font-bold text-[11px] transition-all ${
                       subFilter === "unclaimed"
                         ? "bg-amber-600 text-white shadow-2xs"
                         : "bg-amber-50 text-amber-800 border border-amber-200/80 hover:bg-amber-100/60"
@@ -314,7 +292,7 @@ export function ItemList({
                   <button
                     type="button"
                     onClick={() => setSubFilter("shared")}
-                    className={`shrink-0 rounded-full px-3 py-1 font-bold text-[11px] transition-all ${
+                    className={`shrink-0 rounded-lg px-2.5 py-1 font-bold text-[11px] transition-all ${
                       subFilter === "shared"
                         ? "bg-indigo-600 text-white shadow-2xs"
                         : "bg-indigo-50 text-indigo-700 border border-indigo-200/80 hover:bg-indigo-100/60"
@@ -331,48 +309,46 @@ export function ItemList({
 
       {/* 2. PESANAN SAYA SUMMARY BANNER */}
       {tabFilter === "mine" && myClaimedItems.length > 0 && (
-        <div className="flex items-center justify-between rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50/50 p-3.5 shadow-2xs">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-2xs">
-              <Sparkle size={18} weight="fill" />
+        <div className="flex items-center justify-between rounded-xl border border-blue-200/80 bg-blue-50/70 p-3 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-2xs">
+              <Sparkle size={16} weight="fill" />
             </span>
             <div>
-              <p className="text-[11px] font-bold text-blue-900 leading-tight">
-                Ringkasan Pilihanmu
+              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-800">
+                Total Pilihanmu
               </p>
               <p className="text-xs font-black text-slate-900">
-                {mySummary.totalPortions} Porsi dari {myClaimedItems.length} Menu
+                {mySummary.totalPortions} Porsi ({myClaimedItems.length} Menu)
               </p>
             </div>
           </div>
 
           <div className="text-right">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Subtotal Kamu
-            </span>
-            <p className="font-mono text-sm font-black text-blue-700">
+            <span className="text-[10px] font-bold text-slate-400 block uppercase">Subtotal</span>
+            <p className="font-mono text-sm font-black text-blue-700 tabular-nums">
               {safeIDR(mySummary.totalSubtotal)}
             </p>
           </div>
         </div>
       )}
 
-      {/* 3. EMPTY STATE IN TAB OR SEARCH */}
+      {/* 3. EMPTY STATE */}
       {displayedItems.length === 0 && (
-        <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-8 text-center">
+        <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-2xs">
           {tabFilter === "mine" ? (
             <>
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                <ForkKnife size={20} weight="bold" />
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                <ForkKnife size={18} weight="bold" />
               </span>
-              <p className="text-xs font-black text-slate-900">Kamu belum memilih menu apa pun</p>
-              <p className="max-w-[32ch] text-[11px] text-slate-500 leading-relaxed">
-                Pilih porsi makanan atau minuman yang kamu makan di tab &quot;Semua Menu&quot;.
+              <p className="text-xs font-bold text-slate-800">Kamu belum memilih menu apa pun</p>
+              <p className="max-w-[28ch] text-[11px] text-slate-500">
+                Pilih menu yang kamu makan pada tab &quot;Semua Menu&quot;.
               </p>
               <button
                 type="button"
                 onClick={() => setTabFilter("all")}
-                className="mt-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 active:scale-95 transition-all"
+                className="mt-1 rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs active:scale-95 transition-all"
               >
                 Buka Semua Menu
               </button>
@@ -397,7 +373,7 @@ export function ItemList({
         </div>
       )}
 
-      {/* 4. LIST OF ITEM CARDS */}
+      {/* 4. MODERN MOBILE ITEM CARDS (GoFood / GrabFood Ergonomics) */}
       <div className="flex flex-col gap-2.5">
         {displayedItems.map((item) => {
           const qty = Number.isFinite(item.quantity) && item.quantity > 0 ? item.quantity : 1;
@@ -422,221 +398,175 @@ export function ItemList({
           const isPending = pendingItemId === item.id;
           const remainingQty = Math.max(0, qty - item.claimed_quantity);
 
+          // Friends who claimed (excluding "me" if needed, or including all with clear tags)
+          const allClaims = item.claims ?? [];
+
           return (
             <div
               key={item.id}
-              className={`relative flex flex-col gap-3 rounded-2xl border p-4 transition-all duration-150 ${
+              className={`flex flex-col gap-2.5 rounded-2xl border p-3.5 transition-all duration-150 ${
                 myPortions > 0
-                  ? "border-blue-400 bg-gradient-to-r from-blue-50/60 to-white ring-1 ring-blue-300 shadow-xs"
+                  ? "border-blue-400 bg-blue-50/25 ring-1.5 ring-blue-400/80 shadow-xs"
                   : isFull
-                    ? "border-slate-200/70 bg-slate-50/70 opacity-95"
-                    : "border-slate-200/90 bg-white hover:border-slate-300 shadow-2xs"
+                    ? "border-slate-200/70 bg-slate-50/70 opacity-90"
+                    : "border-slate-200/80 bg-white shadow-2xs hover:border-slate-300"
               }`}
             >
-              {/* Left visual accent indicator for items I claimed */}
-              {myPortions > 0 && (
-                <div className="absolute left-0 top-3 bottom-3 w-1.2 rounded-r-full bg-blue-600" />
-              )}
-
-              {/* Top Row: Food Name & Pricing Breakdown */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1 pl-1">
-                  <h3 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug break-words">
+              {/* Top Row: Food Name & Pricing */}
+              <div className="flex items-start justify-between gap-2.5">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
                     {item.name}
                   </h3>
 
-                  {/* Badges: unit price, portion, availability */}
-                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-                    <span className="font-mono font-medium text-slate-600">{safeIDR(item.unit_price)}</span>
-                    <span className="text-slate-400">× {qty} porsi</span>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+                    <span className="font-mono font-bold text-slate-600 tabular-nums">
+                      {safeIDR(item.unit_price)}
+                    </span>
+                    <span className="text-slate-400 text-[11px]">/ porsi</span>
                     <span className="text-slate-300">·</span>
 
                     {item.is_shared ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 ring-1 ring-indigo-200/60">
-                        <UsersThree size={12} weight="bold" />
-                        <span>Makan Bareng (Bagi Rata)</span>
+                      <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 border border-indigo-200/70">
+                        <UsersThree size={11} weight="bold" />
+                        <span>Makan Bareng</span>
                       </span>
                     ) : isFull ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-200/60">
-                        <CheckCircle size={12} weight="fill" />
+                      <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200/70">
+                        <CheckCircle size={11} weight="fill" />
                         <span>Lengkap ({qty}/{qty})</span>
                       </span>
                     ) : item.claimed_quantity > 0 ? (
-                      <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800 ring-1 ring-amber-200/60">
+                      <span className="inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200/70">
                         Sisa {remainingQty} Porsi
                       </span>
                     ) : (
-                      <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
-                        Tersedia {qty} Porsi
+                      <span className="text-[11px] font-medium text-slate-400">
+                        Tersedia {qty} porsi
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Right: Total Price & My Share */}
+                {/* Right: Total Price */}
                 <div className="shrink-0 text-right">
-                  <span className="font-mono text-sm sm:text-base font-black text-slate-900">
+                  <span className="font-mono text-sm font-black text-slate-900 tabular-nums">
                     {safeIDR(totalItemPrice)}
                   </span>
-                  {myPortions > 0 && (
-                    <div className="mt-0.5">
-                      <span className="font-mono text-xs font-black text-blue-700 block">
-                        Bagianmu: {safeIDR(mySharePrice)}
-                      </span>
-                      {item.is_shared && totalClaimers > 1 && (
-                        <span className="text-[10px] font-semibold text-slate-400 block">
-                          (÷ {totalClaimers} orang)
-                        </span>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
 
-              {/* Bottom Row: Who Claimed + Touch-Friendly Action Buttons */}
-              <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-slate-100/90 pt-3 pl-1">
-                {/* Claimer Friends Chips */}
-                <div className="flex flex-wrap items-center gap-1.5 text-[11px] min-h-8">
-                  {item.claims && item.claims.length > 0 ? (
-                    item.claims.map((claim) => {
-                      const m = membersById.get(claim.member_id);
-                      const name = m?.display_name ?? "Tamu";
-                      const isThisMe = claim.member_id === currentMemberId;
-                      const portionText = claim.portion_quantity > 1 ? ` (${claim.portion_quantity}x)` : "";
+              {/* Middle Row: My Active Claim Summary Banner (Clean, no weird lines!) */}
+              {myPortions > 0 && (
+                <div className="flex items-center justify-between rounded-lg bg-blue-100/60 px-2.5 py-1 text-xs">
+                  <div className="flex items-center gap-1.5 text-blue-900 font-bold text-[11px]">
+                    <Check size={12} weight="bold" className="text-blue-600" />
+                    <span>
+                      Kamu ambil: {myPortions} porsi {item.is_shared && `(÷ ${totalClaimers} orang)`}
+                    </span>
+                  </div>
+                  <span className="font-mono text-xs font-black text-blue-800 tabular-nums">
+                    {safeIDR(mySharePrice)}
+                  </span>
+                </div>
+              )}
 
-                      return (
-                        <span
-                          key={claim.member_id}
-                          className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.8 text-[11px] font-bold transition-all ${
-                            isThisMe
-                              ? "bg-blue-600 text-white shadow-2xs"
-                              : "bg-slate-100 text-slate-700 border border-slate-200/60"
-                          }`}
-                        >
+              {/* Bottom Row: Social Claimers (Left) + Thumb Stepper (Right) */}
+              <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
+                {/* Left: Who ordered this */}
+                <div className="flex items-center gap-1 min-w-0 flex-1 overflow-x-auto text-[11px]">
+                  {allClaims.length > 0 ? (
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-0.5">
+                        Dipesan:
+                      </span>
+                      {allClaims.map((claim) => {
+                        const m = membersById.get(claim.member_id);
+                        const name = m?.display_name ?? "Tamu";
+                        const isThisMe = claim.member_id === currentMemberId;
+                        const countText = claim.portion_quantity > 1 ? ` (${claim.portion_quantity})` : "";
+
+                        return (
                           <span
-                            className={`flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-black ${
-                              isThisMe ? "bg-white text-blue-700" : "bg-slate-300 text-slate-800"
+                            key={claim.member_id}
+                            className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold whitespace-nowrap ${
+                              isThisMe
+                                ? "bg-blue-100 text-blue-800 font-bold"
+                                : "bg-slate-100 text-slate-700"
                             }`}
                           >
-                            {getInitials(name)}
+                            <span>{isThisMe ? "Kamu" : name}{countText}</span>
                           </span>
-                          <span>
-                            {isThisMe ? "Kamu" : name}
-                            {portionText}
-                          </span>
-                        </span>
-                      );
-                    })
-                  ) : item.claimed_by_member_ids && item.claimed_by_member_ids.length > 0 ? (
-                    item.claimed_by_member_ids.map((memberId) => {
-                      const m = membersById.get(memberId);
-                      const name = m?.display_name ?? "Tamu";
-                      const isThisMe = memberId === currentMemberId;
-
-                      return (
-                        <span
-                          key={memberId}
-                          className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.8 text-[11px] font-bold ${
-                            isThisMe
-                              ? "bg-blue-600 text-white shadow-2xs"
-                              : "bg-slate-100 text-slate-700 border border-slate-200/60"
-                          }`}
-                        >
-                          <span
-                            className={`flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-black ${
-                              isThisMe ? "bg-white text-blue-700" : "bg-slate-300 text-slate-800"
-                            }`}
-                          >
-                            {getInitials(name)}
-                          </span>
-                          <span>{isThisMe ? "Kamu" : name}</span>
-                        </span>
-                      );
-                    })
+                        );
+                      })}
+                    </div>
                   ) : (
-                    <span className="text-[11px] text-slate-400 italic">
+                    <span className="text-[11px] text-slate-400">
                       Belum ada yang memilih
                     </span>
                   )}
                 </div>
 
-                {/* Touch-Friendly Action Area (Min 40-44px touch targets!) */}
-                <div className="shrink-0 ml-auto">
+                {/* Right: Universal Thumb-Friendly Mobile Stepper (GoFood-style) */}
+                <div className="shrink-0">
                   {!currentMemberId ? (
-                    /* Guest hasn't joined yet prompt */
                     <button
                       type="button"
                       onClick={onJoinPrompt}
-                      className="inline-flex h-9.5 items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 text-xs font-bold text-blue-700 hover:bg-blue-100 active:scale-95 transition-all shadow-2xs"
+                      className="inline-flex h-9 items-center gap-1 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white shadow-2xs hover:bg-blue-700 active:scale-95 transition-all"
                     >
-                      <Plus size={14} weight="bold" />
+                      <Plus size={13} weight="bold" />
                       <span>Gabung untuk Klaim</span>
                     </button>
                   ) : claimsLocked ? (
-                    /* Claims are locked */
-                    <span className="inline-flex h-8 items-center rounded-lg bg-slate-100 px-2.5 text-xs font-bold text-slate-500">
-                      Klaim Dikunci
+                    <span className="inline-flex h-8 items-center rounded-lg bg-slate-100 px-2.5 text-[11px] font-bold text-slate-400">
+                      Terkunci
                     </span>
                   ) : myPortions > 0 ? (
-                    /* Already claimed: Stepper or Unclaim */
-                    item.quantity > 1 && !item.is_shared ? (
-                      /* Multi-portion stepper */
-                      <div className="inline-flex items-center gap-1 rounded-2xl border border-blue-300 bg-white p-1 shadow-2xs">
-                        {/* Minus button */}
-                        <button
-                          type="button"
-                          disabled={isPending}
-                          onClick={() => handleUnclaimWithSound(item.id)}
-                          aria-label={myPortions > 1 ? "Kurangi 1 porsi" : "Batalkan pilihan"}
-                          title={myPortions > 1 ? "Kurangi 1 porsi" : "Batalkan pilihan"}
-                          className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700 transition-colors hover:bg-rose-50 hover:text-rose-600 active:scale-90 disabled:opacity-50"
-                        >
-                          <Minus size={15} weight="bold" />
-                        </button>
+                    /* Active Stepper */
+                    <div className="inline-flex items-center gap-1 rounded-xl border border-slate-200/90 bg-white p-0.5 shadow-2xs">
+                      {/* Minus or Trash button */}
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => handleUnclaimWithSound(item.id)}
+                        aria-label="Kurangi porsi"
+                        title={myPortions === 1 ? "Batalkan pilihan" : "Kurangi 1 porsi"}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700 hover:bg-rose-50 hover:text-rose-600 active:scale-90 transition-all disabled:opacity-50"
+                      >
+                        {myPortions === 1 ? (
+                          <Trash size={14} weight="bold" className="text-rose-600" />
+                        ) : (
+                          <Minus size={14} weight="bold" />
+                        )}
+                      </button>
 
-                        {/* Portion text */}
-                        <div className="flex flex-col items-center px-2">
-                          <span className="font-mono text-xs font-black text-blue-700 leading-none">
-                            {myPortions} Porsi
-                          </span>
-                          <span className="text-[9px] font-bold text-blue-500 leading-none mt-0.5">
-                            Pilihanmu
-                          </span>
-                        </div>
+                      {/* Portion counter */}
+                      <span className="font-mono text-xs font-black text-slate-900 px-2 min-w-6 text-center tabular-nums">
+                        {myPortions}
+                      </span>
 
-                        {/* Plus button */}
+                      {/* Plus button (only if not full or shared) */}
+                      {!item.is_shared && (
                         <button
                           type="button"
                           disabled={!canClaimMore || isPending}
                           onClick={() => handleClaimWithSound(item.id)}
-                          aria-label="Tambah 1 porsi lagi"
+                          aria-label="Tambah 1 porsi"
                           title="Tambah 1 porsi lagi"
-                          className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white transition-colors hover:bg-blue-700 active:scale-90 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:scale-90 transition-all disabled:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed"
                         >
-                          <Plus size={15} weight="bold" />
+                          <Plus size={14} weight="bold" />
                         </button>
-                      </div>
-                    ) : (
-                      /* Single portion or shared: Toggle button with checkmark & unclaim */
-                      <div className="inline-flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          disabled={isPending}
-                          onClick={() => handleUnclaimWithSound(item.id)}
-                          className="inline-flex h-9.5 items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-3 text-xs font-bold text-rose-700 shadow-2xs hover:bg-rose-50 active:scale-95 transition-all"
-                        >
-                          <X size={14} weight="bold" />
-                          <span>Batalkan</span>
-                        </button>
-                      </div>
-                    )
+                      )}
+                    </div>
                   ) : (
-                    /* Not claimed yet: Claim Button */
+                    /* Initial Claim Button */
                     <button
                       type="button"
                       disabled={!canClaimMore || isPending}
                       onClick={() => handleClaimWithSound(item.id)}
-                      className={`inline-flex h-9.5 items-center gap-1.5 rounded-xl px-4 text-xs font-bold transition-all shadow-xs active:scale-95 disabled:cursor-not-allowed ${
+                      className={`inline-flex h-9 items-center gap-1.5 rounded-xl px-3.5 text-xs font-bold transition-all shadow-2xs active:scale-95 disabled:cursor-not-allowed ${
                         isFull
                           ? "bg-slate-100 text-slate-400 border border-slate-200"
                           : item.is_shared
@@ -647,16 +577,11 @@ export function ItemList({
                       {isPending ? (
                         <span>Menyimpan...</span>
                       ) : isFull ? (
-                        <span>Porsi Habis</span>
-                      ) : item.is_shared ? (
-                        <>
-                          <UsersThree size={15} weight="bold" />
-                          <span>Ikut Makan Bareng</span>
-                        </>
+                        <span>Habis</span>
                       ) : (
                         <>
-                          <Plus size={15} weight="bold" />
-                          <span>Klaim Porsi</span>
+                          <Plus size={13} weight="bold" />
+                          <span>{item.is_shared ? "Ikut Patungan" : "Ambil"}</span>
                         </>
                       )}
                     </button>

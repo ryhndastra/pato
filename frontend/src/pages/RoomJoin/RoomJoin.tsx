@@ -78,24 +78,26 @@ export function RoomJoin() {
   const [celebrationOpen, setCelebrationOpen] = useState(false);
   const [showPaymentInfoModal, setShowPaymentInfoModal] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
-  const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [unreadMessageIds, setUnreadMessageIds] = useState<string[]>([]);
+  const unreadChatCount = unreadMessageIds.length;
 
   const handleOpenChat = useCallback(() => {
     setChatOpen(true);
-    setUnreadChatCount(0);
+    setUnreadMessageIds([]);
   }, []);
 
-  const handleNewChatActivity = useCallback((_ev: RoomEvent) => {
+  const handleNewChatActivity = useCallback((ev: RoomEvent) => {
+    if (!ev || !ev.id) return;
     setChatOpen((open) => {
       if (!open) {
-        setUnreadChatCount((prev) => prev + 1);
+        setUnreadMessageIds((prev) => (prev.includes(ev.id) ? prev : [...prev, ev.id]));
       }
       return open;
     });
   }, []);
 
   const handleResetUnread = useCallback(() => {
-    setUnreadChatCount(0);
+    setUnreadMessageIds([]);
   }, []);
 
   // Native Segmented Control state: settlement vs menu
