@@ -21,7 +21,7 @@ import { useAuth } from "../../auth/useAuth";
 import { useMyRooms } from "../Dashboard/useMyRooms";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 import { formatIDR } from "../../lib/format";
-import mascotHelper from "../../assets/pato_mascot_helper.jpg";
+import patoLogo from "../../assets/pato.png";
 import { EditProfileModal } from "./EditProfileModal";
 
 const PAYOUT_STORAGE_KEY = "pato_default_payout_info";
@@ -628,12 +628,12 @@ export function Profile() {
           </div>
         </section>
 
-        {/* Section: Maskot PaTo Info Card */}
+        {/* Section: PaTo App Brand Card */}
         <section className="flex flex-col sm:flex-row items-center gap-4 rounded-3xl border border-blue-100 bg-gradient-to-r from-blue-50/80 to-indigo-50/60 p-5 shadow-2xs animate-fade-up stagger-4">
-          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-white p-1 shadow-xs ring-2 ring-blue-100">
-            <img src={mascotHelper} alt="Pato Mascot" className="h-full w-full object-contain" />
-            <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-amber-400 text-slate-900 shadow-xs">
-              <Sparkle size={12} weight="fill" />
+          <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white p-2.5 shadow-xs ring-2 ring-blue-100">
+            <img src={patoLogo} alt="PaTo Logo" className="h-full w-full object-contain" />
+            <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white shadow-xs">
+              <Sparkle size={11} weight="fill" />
             </span>
           </div>
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import patoMascot from "../assets/pato.png";
+import patoLogo from "../assets/pato.png";
 
 interface SplashScreenProps {
   onFinish?: () => void;
@@ -73,11 +73,11 @@ export function SplashScreen({ onFinish, minDuration = 1850 }: SplashScreenProps
           {/* Soft Glow Disc */}
           <div className="absolute h-32 w-32 rounded-full bg-white/20 blur-xl pointer-events-none" />
 
-          {/* Animated Mascot Card */}
+          {/* Animated Logo Card */}
           <div className="relative flex h-28 w-28 sm:h-32 sm:w-32 items-center justify-center rounded-[36px] border-4 border-white/95 bg-white shadow-[0_24px_50px_rgba(26,54,138,0.45)] animate-splash-pop">
             <div className="animate-splash-float">
               <img
-                src={patoMascot}
+                src={patoLogo}
                 alt="PaTo"
                 className="h-20 w-20 sm:h-22 sm:w-22 object-contain drop-shadow-md"
               />

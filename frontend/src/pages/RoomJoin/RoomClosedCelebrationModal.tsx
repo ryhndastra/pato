@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router";
-import { CheckCircle, DownloadSimple, House, Sparkle, X } from "@phosphor-icons/react";
+import { CheckCircle, DownloadSimple, House, X } from "@phosphor-icons/react";
 import confetti from "canvas-confetti";
 import { safeIDR } from "./money";
 import type { RoomDetail } from "./types";
-import mascotCelebrating from "../../assets/pato_mascot_celebrating.jpg";
+import patoLogo from "../../assets/pato.png";
 
 interface RoomClosedCelebrationModalProps {
   room: RoomDetail;
@@ -99,19 +99,19 @@ export function RoomClosedCelebrationModal({
           <X size={16} weight="bold" />
         </button>
 
-        {/* Celebrating Mascot Illustration */}
-        <div className="relative mt-1 mb-3">
-          <div className="absolute -inset-2 rounded-full bg-gradient-to-tr from-emerald-400/30 to-blue-400/30 blur-md" />
-          <div className="relative h-28 w-28 overflow-hidden rounded-2xl bg-white p-1 shadow-md ring-4 ring-white">
+        {/* Celebratory Brand Badge */}
+        <div className="relative mt-2 mb-3">
+          <div className="absolute -inset-3 rounded-full bg-gradient-to-tr from-emerald-400/30 via-blue-400/20 to-amber-300/30 blur-lg" />
+          <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl border border-slate-100 bg-white p-3.5 shadow-xl ring-4 ring-slate-50">
             <img
-              src={mascotCelebrating}
-              alt="Pato Mascot Celebrating"
-              className="h-full w-full object-contain"
+              src={patoLogo}
+              alt="PaTo"
+              className="h-full w-full object-contain drop-shadow-xs"
             />
+            <span className="absolute -bottom-1.5 -right-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md ring-2 ring-white">
+              <CheckCircle size={18} weight="fill" />
+            </span>
           </div>
-          <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-slate-900 shadow-md">
-            <Sparkle size={18} weight="fill" />
-          </span>
         </div>
 
         {/* Pill Badge */}

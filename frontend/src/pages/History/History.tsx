@@ -16,7 +16,6 @@ import { useMyRooms } from "../Dashboard/useMyRooms";
 import { RoomCard } from "../Dashboard/RoomCard";
 import { WhatsAppNudgeModal, type NudgeInitialData } from "../Dashboard/WhatsAppNudgeModal";
 import { formatIDR } from "../../lib/format";
-import mascotCelebrating from "../../assets/pato_mascot_celebrating.jpg";
 
 export function History() {
   const navigate = useNavigate();
@@ -248,12 +247,8 @@ export function History() {
           </div>
         ) : filteredRooms.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-3xl border border-slate-100 bg-white p-8 text-center shadow-xs sm:p-12">
-            <div className="relative mb-3 h-20 w-20 overflow-hidden rounded-2xl bg-white border border-slate-100 p-1 shadow-2xs">
-              <img
-                src={mascotCelebrating}
-                alt="Pato Mascot"
-                className="h-full w-full object-contain"
-              />
+            <div className="relative mb-3 flex h-16 w-16 items-center justify-center rounded-3xl border border-slate-100 bg-slate-50 text-slate-400 shadow-2xs">
+              <ClockCounterClockwise size={32} weight="duotone" className="text-slate-400" />
             </div>
             <h3 className="text-base font-extrabold text-slate-900">
               {searchQuery ? "Tidak Ada Riwayat yang Cocok" : "Belum Ada Riwayat Selesai"}

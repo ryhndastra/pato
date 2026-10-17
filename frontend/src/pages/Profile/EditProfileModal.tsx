@@ -14,9 +14,6 @@ import { useAuth } from "../../auth/useAuth";
 import { compressImageFile } from "../../lib/imageCompression";
 import { ApiError } from "../../lib/api";
 
-import mascotHelper from "../../assets/pato_mascot_helper.jpg";
-import mascotCelebrating from "../../assets/pato_mascot_celebrating.jpg";
-import mascotWallet from "../../assets/pato_mascot_wallet.jpg";
 import patoPlain from "../../assets/pato.png";
 
 interface EditProfileModalProps {
@@ -26,10 +23,7 @@ interface EditProfileModalProps {
 }
 
 const AVATAR_PRESETS = [
-  { id: "mascot-wallet", label: "Pato Semangat", src: mascotWallet },
-  { id: "mascot-helper", label: "Pato Pintar", src: mascotHelper },
-  { id: "mascot-celebrating", label: "Pato Selebrasi", src: mascotCelebrating },
-  { id: "pato-plain", label: "Logo Pato", src: patoPlain },
+  { id: "pato-plain", label: "Logo PaTo", src: patoPlain },
 ];
 
 export function EditProfileModal({ isOpen, onClose, onSuccess }: EditProfileModalProps) {
@@ -262,7 +256,7 @@ export function EditProfileModal({ isOpen, onClose, onSuccess }: EditProfileModa
             {/* Avatar Presets */}
             <div className="mt-3 flex flex-col items-center gap-1.5">
               <span className="text-[11px] font-semibold text-slate-400">
-                Atau pilih avatar karakter:
+                Atau gunakan logo resmi PaTo:
               </span>
               <div className="flex items-center gap-2.5">
                 {AVATAR_PRESETS.map((preset) => (
@@ -270,14 +264,14 @@ export function EditProfileModal({ isOpen, onClose, onSuccess }: EditProfileModa
                     key={preset.id}
                     type="button"
                     onClick={() => setAvatarUrl(preset.src)}
-                    className={`h-9 w-9 overflow-hidden rounded-full border-2 transition-all active:scale-95 ${
+                    className={`h-10 w-10 overflow-hidden rounded-full border-2 transition-all active:scale-95 ${
                       avatarUrl === preset.src
                         ? "border-blue-600 ring-2 ring-blue-300 scale-105"
                         : "border-slate-200 opacity-80 hover:opacity-100 hover:border-slate-400"
                     }`}
                     title={preset.label}
                   >
-                    <img src={preset.src} alt={preset.label} className="h-full w-full object-contain bg-white p-0.5" />
+                    <img src={preset.src} alt={preset.label} className="h-full w-full object-contain bg-white p-1" />
                   </button>
                 ))}
               </div>

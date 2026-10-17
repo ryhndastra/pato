@@ -1,6 +1,5 @@
-import { MagnifyingGlass, Plus, Sparkle } from "@phosphor-icons/react";
+import { MagnifyingGlass, Plus, Receipt, Sparkle } from "@phosphor-icons/react";
 import { useNavigate } from "react-router";
-import mascotCelebrating from "../../assets/pato_mascot_celebrating.jpg";
 import { RoomCard } from "./RoomCard";
 import type { MyRoom, RoomStatus } from "./roomStatus";
 import type { NudgeInitialData } from "./WhatsAppNudgeModal";
@@ -55,18 +54,14 @@ export function RoomList({
   if (rooms.length === 0) {
     return (
       <div className="rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-[0_4px_24px_rgba(0,0,0,0.02)] sm:p-10 animate-fade-up">
-        {/* Mascot illustration */}
+        {/* Clean Native Empty State Icon */}
         <div className="relative mx-auto mb-4 inline-block">
-          <div className="relative h-28 w-28 overflow-hidden rounded-3xl border-2 border-blue-100 bg-white p-1.5 shadow-sm sm:h-32 sm:w-32">
-            <img
-              src={mascotCelebrating}
-              alt="Pato Mascot Celebrating"
-              className="h-full w-full object-contain"
-            />
+          <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl border border-blue-100/80 bg-gradient-to-tr from-blue-50 to-indigo-50/50 shadow-xs sm:h-24 sm:w-24">
+            <Receipt size={36} weight="duotone" className="text-blue-600" />
+            <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-white shadow-md shadow-blue-600/30">
+              <Sparkle size={13} weight="fill" />
+            </span>
           </div>
-          <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-white shadow-md shadow-blue-600/30">
-            <Sparkle size={14} weight="fill" />
-          </span>
         </div>
 
         <h3 className="text-lg font-bold text-slate-900 sm:text-xl">Belum Ada Meja Patungan</h3>

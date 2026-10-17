@@ -11,7 +11,7 @@ import {
   WhatsappLogo,
 } from "@phosphor-icons/react";
 import { useNavigate } from "react-router";
-import patoMascotCelebrating from "../../assets/pato_mascot_celebrating.jpg";
+import patoLogo from "../../assets/pato.png";
 
 interface CreateRoomSuccessProps {
   roomCode: string;
@@ -92,12 +92,12 @@ export function CreateRoomSuccess({
 
           {/* Celebratory Hero Header */}
           <div className="mt-5 flex flex-col items-center text-center">
-            {/* Mascot Avatar with glowing aura */}
-            <div className="relative mb-3">
-              <div className="h-20 w-20 overflow-hidden rounded-full border-3 border-white bg-white p-1 shadow-xl shadow-blue-900/30 ring-4 ring-white/20 sm:h-22 sm:w-22">
+            {/* Celebratory Brand & Success Icon */}
+            <div className="relative mb-3.5">
+              <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl border-2 border-white/60 bg-white p-3 shadow-xl shadow-blue-950/30 ring-4 ring-white/20 sm:h-22 sm:w-22">
                 <img
-                  src={patoMascotCelebrating}
-                  alt="Pato Mascot Merayakan"
+                  src={patoLogo}
+                  alt="PaTo Logo"
                   className="h-full w-full object-contain"
                 />
               </div>

@@ -1,6 +1,6 @@
 import { ArrowLeft } from "@phosphor-icons/react";
 import { useNavigate } from "react-router";
-import patoMascotHelper from "../../assets/pato_mascot_helper.jpg";
+import patoLogo from "../../assets/pato.png";
 
 interface CreateRoomHeaderProps {
   hasQris: boolean;
@@ -28,7 +28,7 @@ export function CreateRoomHeader({ hasQris }: CreateRoomHeaderProps) {
           </button>
         </div>
 
-        {/* Hero content: Title, Tip & Mascot */}
+        {/* Hero content: Title, Tip & Brand Badge */}
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0 max-w-[560px] animate-fade-up">
             <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl lg:text-4xl">
@@ -41,13 +41,13 @@ export function CreateRoomHeader({ hasQris }: CreateRoomHeaderProps) {
             </p>
           </div>
 
-          {/* Pato Mascot Avatar */}
+          {/* PaTo Brand Badge */}
           <div className="shrink-0 animate-fade-up stagger-1">
-            <div className="relative h-20 w-20 overflow-hidden rounded-3xl border-2 border-white/60 bg-white p-1.5 shadow-lg shadow-blue-900/20 ring-4 ring-white/20 sm:h-24 sm:w-24 sm:rounded-[28px]">
+            <div className="relative flex h-16 w-16 items-center justify-center rounded-3xl border border-white/40 bg-white/20 p-2.5 shadow-lg shadow-blue-950/20 backdrop-blur-md ring-4 ring-white/10 sm:h-20 sm:w-20">
               <img
-                src={patoMascotHelper}
-                alt="Pato Mascot"
-                className="h-full w-full object-contain"
+                src={patoLogo}
+                alt="PaTo Logo"
+                className="h-full w-full object-contain drop-shadow-sm"
               />
             </div>
           </div>

@@ -1,6 +1,6 @@
-import { ArrowUpRight } from "@phosphor-icons/react";
+import { ArrowUpRight, Sparkle } from "@phosphor-icons/react";
 import { useNavigate } from "react-router";
-import mascotHelper from "../../assets/pato_mascot_helper.jpg";
+import patoLogo from "../../assets/pato.png";
 
 export function DashboardFeatureBanner() {
   const navigate = useNavigate();
@@ -31,14 +31,18 @@ export function DashboardFeatureBanner() {
           </button>
         </div>
 
-        {/* Right Column: Pato Mascot Showcase */}
-        <div className="relative shrink-0">
-          <div className="relative h-24 w-24 overflow-hidden rounded-2xl bg-white/95 p-1.5 shadow-lg ring-4 ring-white/20 sm:h-32 sm:w-32 sm:rounded-3xl">
+        {/* Right Column: Clean Native PaTo Card */}
+        <div className="relative shrink-0 hidden sm:flex">
+          <div className="relative flex h-24 w-24 flex-col items-center justify-center rounded-3xl border border-white/30 bg-white/15 p-3 backdrop-blur-md shadow-lg shadow-blue-950/20 ring-4 ring-white/10 sm:h-28 sm:w-28">
             <img
-              src={mascotHelper}
-              alt="Pato Mascot"
-              className="h-full w-full object-contain"
+              src={patoLogo}
+              alt="PaTo Logo"
+              className="h-12 w-12 object-contain drop-shadow-sm sm:h-14 sm:w-14"
             />
+            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white">
+              <Sparkle size={10} weight="fill" />
+              <span>Split Adil</span>
+            </span>
           </div>
         </div>
       </div>

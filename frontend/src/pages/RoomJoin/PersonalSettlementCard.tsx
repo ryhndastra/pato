@@ -15,7 +15,6 @@ import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 import { compressImageFile } from "../../lib/imageCompression";
 import { safeIDR } from "./money";
 import type { RoomDetail, RoomMember } from "./types";
-import mascotCelebrating from "../../assets/pato_mascot_celebrating.jpg";
 
 interface PersonalSettlementCardProps {
   room: RoomDetail;
@@ -277,13 +276,9 @@ export function PersonalSettlementCard({
 
       {/* 4. FORMULIR UPLOAD BUKTI / STATUS LUNAS */}
       {paymentStatus === "VERIFIED" ? (
-        <div className="flex flex-col items-center gap-2 rounded-xl bg-emerald-50/70 p-4 text-center border border-emerald-100">
-          <div className="h-16 w-16 overflow-hidden rounded-2xl bg-white p-1 shadow-2xs border border-emerald-200/60">
-            <img
-              src={mascotCelebrating}
-              alt="Pato Celebrating"
-              className="h-full w-full object-contain"
-            />
+        <div className="flex flex-col items-center gap-2 rounded-2xl bg-emerald-50/80 p-5 text-center border border-emerald-100">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-md shadow-emerald-500/20 ring-4 ring-emerald-100">
+            <CheckCircle size={28} weight="fill" />
           </div>
           <div>
             <p className="text-xs font-bold text-emerald-900">
