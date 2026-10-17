@@ -47,14 +47,14 @@ export function ConfirmModal({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity duration-200"
+        className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity duration-200 animate-backdrop-fade"
         onClick={() => {
           if (!isLoading) onClose();
         }}
       />
 
       {/* Modal Card */}
-      <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-900/10 animate-in fade-in zoom-in-95 duration-150">
+      <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-900/10 animate-modal-spring">
         <button
           type="button"
           onClick={onClose}

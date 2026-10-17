@@ -19,14 +19,14 @@ export function ReceiptImageModal({ imageUrl, onClose }: ReceiptImageModalProps)
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm animate-backdrop-fade"
       role="dialog"
       aria-modal="true"
       aria-label="Foto Struk Asli"
       onClick={onClose}
     >
       <div
-        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-shell shadow-2xl"
+        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-shell shadow-2xl animate-modal-spring"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-hairline px-5 py-3.5">

@@ -138,7 +138,7 @@ export function CreateRoomSuccess({
                 >
                   {copiedCode ? (
                     <>
-                      <Check size={13} weight="bold" className="text-emerald-600" />
+                      <Check size={13} weight="bold" className="text-emerald-600 animate-check-pop" />
                       <span className="text-emerald-700">Tersalin!</span>
                     </>
                   ) : (
@@ -174,7 +174,7 @@ export function CreateRoomSuccess({
                 >
                   {copiedLink ? (
                     <>
-                      <Check size={14} weight="bold" className="text-emerald-600" />
+                      <Check size={14} weight="bold" className="text-emerald-600 animate-check-pop" />
                       <span className="text-emerald-700">Tersalin</span>
                     </>
                   ) : (

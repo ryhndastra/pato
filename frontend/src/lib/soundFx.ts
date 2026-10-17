@@ -136,6 +136,32 @@ class SoundFX {
       osc.stop(now + 0.16);
     } catch {}
   }
+
+  // Subtle tactile tap / click feedback
+  playTap() {
+    if (!this.isSoundEnabled()) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      const now = ctx.currentTime;
+      osc.frequency.setValueAtTime(480, now);
+      osc.frequency.exponentialRampToValueAtTime(750, now + 0.035);
+
+      gain.gain.setValueAtTime(0.09, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.035);
+    } catch {}
+  }
 }
 
 export const soundFX = new SoundFX();

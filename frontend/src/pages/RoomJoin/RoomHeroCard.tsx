@@ -123,7 +123,7 @@ export function RoomHeroCard({
               <span className="text-blue-200">KODE:</span>
               <span className="tracking-wide">{room.room_code}</span>
               {copied ? (
-                <Check size={11} weight="bold" className="text-emerald-300" />
+                <Check size={11} weight="bold" className="text-emerald-300 animate-check-pop" />
               ) : (
                 <Copy size={11} weight="bold" className="text-blue-200 group-hover:text-white transition-colors" />
               )}

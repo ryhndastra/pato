@@ -236,16 +236,179 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-button {
+/* =========================================================================
+   Universal Tactile Press & Click Physics (iOS/Fintech Native Experience)
+   ========================================================================= */
+
+button,
+[role="button"],
+.touch-press,
+a[class*="rounded"] {
   touch-action: manipulation;
-  transition: transform var(--spring-duration) var(--spring-curve),
-    background-color var(--spring-duration) ease,
-    border-color var(--spring-duration) ease,
-    box-shadow var(--spring-duration) ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+  transform: translateZ(0);
+  will-change: transform, filter, box-shadow;
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 140ms ease,
+              box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 140ms ease,
+              border-color 140ms ease,
+              opacity 140ms ease;
 }
 
-button:active {
-  transform: scale(0.97);
+/* Press state: Immediate snappy compression, subtle brightness drop, atmospheric halo */
+button:active:not(:disabled),
+[role="button"]:active:not(:disabled),
+.touch-press:active,
+a[class*="rounded"]:active {
+  transform: scale(0.955) translateZ(0);
+  filter: brightness(0.94);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
+  transition-duration: 45ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Atmospheric halos tailored to button color themes */
+.bg-blue-600:active:not(:disabled),
+.bg-blue-700:active:not(:disabled),
+.bg-indigo-600:active:not(:disabled),
+[class*="from-blue"]:active:not(:disabled),
+.bg-slate-900:active:not(:disabled) {
+  box-shadow: 0 0 0 3.5px rgba(255, 255, 255, 0.3) !important;
+}
+
+.bg-emerald-600:active:not(:disabled),
+.bg-emerald-500:active:not(:disabled) {
+  box-shadow: 0 0 0 3.5px rgba(16, 185, 129, 0.35) !important;
+}
+
+.bg-rose-600:active:not(:disabled),
+.bg-rose-500:active:not(:disabled) {
+  box-shadow: 0 0 0 3.5px rgba(244, 63, 94, 0.35) !important;
+}
+
+/* Desktop Hover Lift */
+@media (hover: hover) and (pointer: fine) {
+  button:hover:not(:disabled):not(:active),
+  [role="button"]:hover:not(:disabled):not(:active),
+  .touch-press:hover:not(:active) {
+    filter: brightness(1.03);
+    transform: translateY(-1px);
+  }
+}
+
+/* Disabled state */
+button:disabled,
+[role="button"][aria-disabled="true"],
+button[disabled] {
+  pointer-events: none !important;
+  opacity: 0.55;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Focus indicator for keyboard navigation */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4);
+}
+
+/* Inputs & Textareas Tactile Focus */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  transition: border-color 160ms ease,
+              box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 160ms ease,
+              transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus,
+textarea:focus,
+select:focus {
+  transform: translateY(-1px);
+}
+
+/* Checkbox Spring Bounce */
+input[type="checkbox"] {
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              background-color 140ms ease,
+              border-color 140ms ease;
+}
+
+input[type="checkbox"]:active {
+  transform: scale(0.85);
+}
+
+input[type="checkbox"]:checked {
+  animation: checkbox-bounce 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes checkbox-bounce {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Copy Checkmark Pop Animation */
+@keyframes check-pop {
+  0% {
+    transform: scale(0) rotate(-20deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.25) rotate(4deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-check-pop {
+  animation: check-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Stepper Number Bump Animation */
+@keyframes number-bump {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.26); color: #2563eb; }
+  100% { transform: scale(1); }
+}
+
+.animate-number-bump {
+  animation: number-bump 220ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Modal Spring In */
+@keyframes modal-spring-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.93) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal-spring {
+  animation: modal-spring-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Backdrop Fade */
+@keyframes backdrop-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-backdrop-fade {
+  animation: backdrop-fade 200ms ease-out both;
 }
 
 /* Hide scrollbars globally across all elements for authentic native app feel */

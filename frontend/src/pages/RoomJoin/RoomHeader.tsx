@@ -77,7 +77,7 @@ export function RoomHeader({
                   <span className="text-blue-500 font-semibold">KODE:</span>
                   <span>{room.room_code}</span>
                   {codeCopied ? (
-                    <Check size={10} weight="bold" className="text-emerald-600" />
+                    <Check size={10} weight="bold" className="text-emerald-600 animate-check-pop" />
                   ) : (
                     <Copy size={10} weight="bold" className="text-blue-500 group-hover:text-blue-700 transition-colors" />
                   )}
@@ -139,7 +139,7 @@ export function RoomHeader({
               className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-90 transition-all shadow-2xs"
             >
               {urlCopied ? (
-                <Check size={16} weight="bold" className="text-emerald-600" />
+                <Check size={16} weight="bold" className="text-emerald-600 animate-check-pop" />
               ) : (
                 <ShareNetwork size={17} weight="bold" />
               )}

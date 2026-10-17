@@ -10,13 +10,11 @@ export function CreateRoomHeader({ hasQris }: CreateRoomHeaderProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="relative w-full overflow-hidden rounded-b-[40px] bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500 px-5 pt-[calc(max(env(safe-area-inset-top,0px),0px)+1.5rem)] pb-20 sm:rounded-b-[54px] sm:px-8 sm:pt-9 sm:pb-24 lg:rounded-b-[64px] lg:px-12 lg:pt-11 lg:pb-28">
-      {/* Ambient animated glow orbs */}
+    <div className="relative w-full overflow-hidden rounded-b-[40px] bg-linear-to-br from-blue-700 via-blue-600 to-blue-500 px-5 pt-[calc(max(env(safe-area-inset-top,0px),0px)+1.5rem)] pb-20 sm:rounded-b-[54px] sm:px-8 sm:pt-9 sm:pb-24 lg:rounded-b-[64px] lg:px-12 lg:pt-11 lg:pb-28">
       <div className="pointer-events-none absolute -top-16 -right-16 h-72 w-72 rounded-full bg-white/15 blur-3xl animate-float-slow" />
       <div className="pointer-events-none absolute -bottom-16 left-10 h-72 w-72 rounded-full bg-white/10 blur-3xl animate-float-reverse" />
 
-      <div className="relative z-10 mx-auto max-w-[1120px]">
-        {/* Top bar with back button */}
+      <div className="relative z-10 mx-auto max-w-280">
         <div className="mb-3.5 flex items-center">
           <button
             type="button"

@@ -98,12 +98,12 @@ export function WhatsAppNudgeModal({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-200"
+        className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-200 animate-backdrop-fade"
         onClick={onClose}
       />
 
       {/* Clean Native Modal Card */}
-      <div className="relative z-10 flex w-full max-w-[500px] max-h-[92dvh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-slate-900/10">
+      <div className="relative z-10 flex w-full max-w-[500px] max-h-[92dvh] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-slate-900/10 animate-modal-spring">
         {/* 1. STICKY HEADER */}
         <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white px-5 py-4">
           <div className="flex items-center gap-3 min-w-0">

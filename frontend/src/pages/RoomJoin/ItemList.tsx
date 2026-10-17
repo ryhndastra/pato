@@ -535,8 +535,11 @@ export function ItemList({
                         )}
                       </button>
 
-                      {/* Portion counter */}
-                      <span className="font-mono text-xs font-black text-slate-900 px-2 min-w-6 text-center tabular-nums">
+                      {/* Portion counter with spring number bump */}
+                      <span
+                        key={myPortions}
+                        className="font-mono text-xs font-black text-slate-900 px-2 min-w-6 text-center tabular-nums inline-block animate-number-bump"
+                      >
                         {myPortions}
                       </span>
 

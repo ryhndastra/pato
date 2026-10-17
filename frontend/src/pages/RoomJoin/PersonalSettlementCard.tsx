@@ -138,7 +138,7 @@ export function PersonalSettlementCard({
           >
             {copiedNominal ? (
               <>
-                <Check size={13} weight="bold" className="text-emerald-300" />
+                <Check size={13} weight="bold" className="text-emerald-300 animate-check-pop" />
                 <span>Tersalin</span>
               </>
             ) : (
@@ -219,7 +219,7 @@ export function PersonalSettlementCard({
                 >
                   {copiedRekening ? (
                     <>
-                      <Check size={11} weight="bold" className="text-emerald-600" />
+                      <Check size={11} weight="bold" className="text-emerald-600 animate-check-pop" />
                       <span className="text-emerald-600">Tersalin</span>
                     </>
                   ) : (

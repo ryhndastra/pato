@@ -148,14 +148,14 @@ export function EditProfileModal({ isOpen, onClose, onSuccess }: EditProfileModa
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity duration-200"
+        className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity duration-200 animate-backdrop-fade"
         onClick={() => {
           if (!saving && !compressing) onClose();
         }}
       />
 
       {/* Modal Dialog Card */}
-      <div className="relative z-10 w-full max-w-md max-h-[92dvh] overflow-y-auto rounded-t-[32px] sm:rounded-3xl bg-white p-5 sm:p-6 shadow-2xl ring-1 ring-slate-900/10 animate-in fade-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-150">
+      <div className="relative z-10 w-full max-w-md max-h-[92dvh] overflow-y-auto rounded-t-[32px] sm:rounded-3xl bg-white p-5 sm:p-6 shadow-2xl ring-1 ring-slate-900/10 animate-modal-spring">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
           <div className="flex items-center gap-2">
