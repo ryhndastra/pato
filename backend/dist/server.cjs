@@ -189,11 +189,11 @@ async function registerWithEmail(name, email, password) {
   const passwordHash = await import_bcryptjs.default.hash(password, SALT_ROUNDS);
   const { rows } = await pool.query(`INSERT INTO users (email, password_hash, name, auth_provider)
      VALUES ($1, $2, $3, 'local')
-     RETURNING id, email, name, avatar_url, password_hash`, [email, passwordHash, name]);
+     RETURNING id, email, name, avatar_url, password_hash, default_bank_name, default_bank_account_no, default_bank_account_name, default_round_mode`, [email, passwordHash, name]);
   return toAuthUser(rows[0]);
 }
 async function loginWithEmail(email, password) {
-  const { rows } = await pool.query("SELECT id, email, name, avatar_url, password_hash FROM users WHERE email = $1", [email]);
+  const { rows } = await pool.query("SELECT id, email, name, avatar_url, password_hash, default_bank_name, default_bank_account_no, default_bank_account_name, default_round_mode FROM users WHERE email = $1", [email]);
   const user = rows[0];
   if (!user || !user.password_hash) {
     throw new InvalidCredentialsError("Email atau kata sandi salah.");
@@ -227,7 +227,7 @@ async function loginWithGoogle(idToken) {
      VALUES ($1, $2, $3, 'google')
      ON CONFLICT (email) DO UPDATE
        SET name = EXCLUDED.name, avatar_url = EXCLUDED.avatar_url, updated_at = NOW()
-     RETURNING id, email, name, avatar_url, password_hash`, [payload.email, payload.name ?? payload.email.split("@")[0], payload.picture ?? null]);
+     RETURNING id, email, name, avatar_url, password_hash, default_bank_name, default_bank_account_no, default_bank_account_name, default_round_mode`, [payload.email, payload.name ?? payload.email.split("@")[0], payload.picture ?? null]);
   return toAuthUser(rows[0]);
 }
 function toAuthUser(row) {
@@ -236,11 +236,15 @@ function toAuthUser(row) {
     email: row.email,
     name: row.name,
     avatarUrl: row.avatar_url,
-    hasPassword: Boolean(row.password_hash)
+    hasPassword: Boolean(row.password_hash),
+    defaultBankName: row.default_bank_name ?? null,
+    defaultBankAccountNo: row.default_bank_account_no ?? null,
+    defaultBankAccountName: row.default_bank_account_name ?? null,
+    defaultRoundMode: row.default_round_mode ?? "hundred"
   };
 }
 async function getUserById(userId) {
-  const { rows } = await pool.query("SELECT id, email, name, avatar_url, password_hash FROM users WHERE id = $1", [userId]);
+  const { rows } = await pool.query("SELECT id, email, name, avatar_url, password_hash, default_bank_name, default_bank_account_no, default_bank_account_name, default_round_mode FROM users WHERE id = $1", [userId]);
   if (!rows[0])
     return null;
   return toAuthUser(rows[0]);
@@ -275,6 +279,22 @@ async function updateUserProfile(userId, params) {
     updates.push(`avatar_url = $${paramIndex++}`);
     values.push(params.avatarUrl);
   }
+  if (params.defaultBankName !== void 0) {
+    updates.push(`default_bank_name = $${paramIndex++}`);
+    values.push(params.defaultBankName ? params.defaultBankName.trim() : null);
+  }
+  if (params.defaultBankAccountNo !== void 0) {
+    updates.push(`default_bank_account_no = $${paramIndex++}`);
+    values.push(params.defaultBankAccountNo ? params.defaultBankAccountNo.trim() : null);
+  }
+  if (params.defaultBankAccountName !== void 0) {
+    updates.push(`default_bank_account_name = $${paramIndex++}`);
+    values.push(params.defaultBankAccountName ? params.defaultBankAccountName.trim() : null);
+  }
+  if (params.defaultRoundMode !== void 0) {
+    updates.push(`default_round_mode = $${paramIndex++}`);
+    values.push(params.defaultRoundMode ? params.defaultRoundMode.trim() : "hundred");
+  }
   if (newPasswordHash !== null) {
     updates.push(`password_hash = $${paramIndex++}`);
     values.push(newPasswordHash);
@@ -283,7 +303,7 @@ async function updateUserProfile(userId, params) {
     UPDATE users
     SET ${updates.join(", ")}
     WHERE id = $1
-    RETURNING id, email, name, avatar_url, password_hash
+    RETURNING id, email, name, avatar_url, password_hash, default_bank_name, default_bank_account_no, default_bank_account_name, default_round_mode
   `;
   const { rows: updatedRows } = await pool.query(query, values);
   return toAuthUser(updatedRows[0]);
@@ -299,7 +319,11 @@ function sendSession(res, user, status = 200) {
       name: user.name,
       email: user.email,
       avatar_url: user.avatarUrl,
-      has_password: user.hasPassword
+      has_password: user.hasPassword,
+      default_bank_name: user.defaultBankName,
+      default_bank_account_no: user.defaultBankAccountNo,
+      default_bank_account_name: user.defaultBankAccountName,
+      default_round_mode: user.defaultRoundMode
     }
   });
 }
@@ -382,7 +406,11 @@ async function meHandler(req, res) {
       name: user.name,
       email: user.email,
       avatar_url: user.avatarUrl,
-      has_password: user.hasPassword
+      has_password: user.hasPassword,
+      default_bank_name: user.defaultBankName,
+      default_bank_account_no: user.defaultBankAccountNo,
+      default_bank_account_name: user.defaultBankAccountName,
+      default_round_mode: user.defaultRoundMode
     }
   });
 }
@@ -390,7 +418,11 @@ var updateProfileSchema = import_zod.z.object({
   name: import_zod.z.string().trim().min(1).max(100).optional(),
   avatar_url: import_zod.z.string().nullable().optional(),
   current_password: import_zod.z.string().min(1).optional(),
-  new_password: import_zod.z.string().min(8).max(100).optional()
+  new_password: import_zod.z.string().min(8).max(100).optional(),
+  default_bank_name: import_zod.z.string().nullable().optional(),
+  default_bank_account_no: import_zod.z.string().nullable().optional(),
+  default_bank_account_name: import_zod.z.string().nullable().optional(),
+  default_round_mode: import_zod.z.enum(["none", "hundred", "thousand"]).optional()
 });
 async function updateProfileHandler(req, res) {
   if (!req.userId) {
@@ -407,7 +439,11 @@ async function updateProfileHandler(req, res) {
       name: parsed.data.name,
       avatarUrl: parsed.data.avatar_url,
       currentPassword: parsed.data.current_password,
-      newPassword: parsed.data.new_password
+      newPassword: parsed.data.new_password,
+      defaultBankName: parsed.data.default_bank_name,
+      defaultBankAccountNo: parsed.data.default_bank_account_no,
+      defaultBankAccountName: parsed.data.default_bank_account_name,
+      defaultRoundMode: parsed.data.default_round_mode
     });
     res.json({
       user: {
@@ -415,7 +451,11 @@ async function updateProfileHandler(req, res) {
         name: updated.name,
         email: updated.email,
         avatar_url: updated.avatarUrl,
-        has_password: updated.hasPassword
+        has_password: updated.hasPassword,
+        default_bank_name: updated.defaultBankName,
+        default_bank_account_no: updated.defaultBankAccountNo,
+        default_bank_account_name: updated.defaultBankAccountName,
+        default_round_mode: updated.defaultRoundMode
       }
     });
   } catch (error) {
@@ -703,6 +743,7 @@ async function createRoom(input) {
   const hostToken = (0, import_node_crypto2.randomUUID)();
   const subtotal = input.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const grandTotal = Math.max(0, subtotal + input.taxAmount + input.serviceAmount - input.discountAmount);
+  const roundMode = input.roundMode || "hundred";
   for (let attempt = 0; attempt < MAX_ROOM_CODE_ATTEMPTS; attempt++) {
     const roomCode = generateRoomCode(input.title);
     const client = await pool.connect();
@@ -710,9 +751,9 @@ async function createRoom(input) {
       await client.query("BEGIN");
       const { rows: roomRows } = await client.query(`INSERT INTO rooms (
            room_code, title, host_user_id, bank_name, bank_account_no, bank_account_name,
-           subtotal, tax_amount, service_amount, discount_amount, grand_total, qris_image_url, receipt_image_url
+           subtotal, tax_amount, service_amount, discount_amount, grand_total, qris_image_url, receipt_image_url, round_mode
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
          RETURNING id, status`, [
         roomCode,
         input.title,
@@ -726,7 +767,8 @@ async function createRoom(input) {
         input.discountAmount,
         grandTotal,
         input.qrisImageUrl ?? null,
-        input.receiptImageUrl ?? null
+        input.receiptImageUrl ?? null,
+        roundMode
       ]);
       const roomId = roomRows[0].id;
       await client.query(`INSERT INTO members (room_id, user_id, guest_token, display_name, is_host)
@@ -851,6 +893,17 @@ async function joinRoom(roomCode, input, userId) {
   }
   throw new Error("Gagal join room karena konflik bersamaan, coba lagi.");
 }
+function applyRounding(amount, roundMode = "hundred") {
+  if (amount <= 0)
+    return 0;
+  if (roundMode === "thousand") {
+    return Math.ceil(amount / 1e3) * 1e3;
+  }
+  if (roundMode === "none") {
+    return Math.round(amount);
+  }
+  return Math.ceil(amount / 100) * 100;
+}
 function computeMemberShares(members, claims, room) {
   const claimsByItem = /* @__PURE__ */ new Map();
   for (const claim of claims) {
@@ -880,13 +933,15 @@ function computeMemberShares(members, claims, room) {
     const taxShare = room.taxAmount * ratio;
     const serviceShare = room.serviceAmount * ratio;
     const discountShare = room.discountAmount * ratio;
-    const shareAmount = Math.max(0, Math.round(itemSubtotal + taxShare + serviceShare - discountShare));
+    const rawShare = Math.max(0, itemSubtotal + taxShare + serviceShare - discountShare);
+    const shareAmount = applyRounding(rawShare, room.roundMode ?? "hundred");
     return {
       id: member.id,
       userId: member.user_id,
       displayName: member.display_name,
       isHost: member.is_host,
       subtotalShare: Math.round(itemSubtotal),
+      rawShareAmount: Math.round(rawShare),
       shareAmount,
       claimedItemIds: claims.filter((c) => c.member_id === member.id).map((c) => c.item_id)
     };
@@ -896,7 +951,7 @@ async function getRoomByCode(roomCode) {
   const { rows: roomRows } = await pool.query(`SELECT
        r.id, r.room_code, r.title, r.status, r.host_user_id, r.subtotal, r.tax_amount, r.service_amount,
        r.discount_amount, r.grand_total, r.bank_name, r.bank_account_no, r.bank_account_name,
-       r.qris_image_url, r.receipt_image_url, r.group_photo_url,
+       r.qris_image_url, r.receipt_image_url, r.group_photo_url, r.round_mode,
        (
          SELECT COALESCE(json_agg(json_build_object(
            'id', i.id,
@@ -958,7 +1013,8 @@ async function getRoomByCode(roomCode) {
     subtotal: Number(room.subtotal),
     taxAmount: Number(room.tax_amount),
     serviceAmount: Number(room.service_amount),
-    discountAmount: Number(room.discount_amount)
+    discountAmount: Number(room.discount_amount),
+    roundMode: room.round_mode ?? "hundred"
   };
   const rawMembers = computeMemberShares(memberRows, claimRows, roomTotals);
   const members = rawMembers.map((m) => {
@@ -992,6 +1048,7 @@ async function getRoomByCode(roomCode) {
     qrisImageUrl: room.qris_image_url,
     receiptImageUrl: room.receipt_image_url,
     groupPhotoUrl: room.group_photo_url,
+    roundMode: room.round_mode ?? "hundred",
     items: itemRows.map((item) => {
       const itemClaims = claimsByItem.get(item.id) ?? [];
       return {
@@ -1379,6 +1436,7 @@ var createRoomSchema = import_zod2.z.object({
   bank_name: import_zod2.z.string().trim().max(50).optional(),
   bank_account_no: import_zod2.z.string().trim().max(50).optional(),
   bank_account_name: import_zod2.z.string().trim().max(100).optional(),
+  round_mode: import_zod2.z.enum(["none", "hundred", "thousand"]).optional().default("hundred"),
   qris_image_url: import_zod2.z.string().optional(),
   receipt_image_url: import_zod2.z.string().optional(),
   items: import_zod2.z.array(import_zod2.z.object({
@@ -1396,7 +1454,7 @@ async function createRoomHandler(req, res) {
     res.status(400).json({ error: "Data gak valid.", details: parsed.error.flatten() });
     return;
   }
-  const { title, host_name, bank_name, bank_account_no, bank_account_name, qris_image_url, receipt_image_url, items, tax_amount, service_amount, discount_amount } = parsed.data;
+  const { title, host_name, bank_name, bank_account_no, bank_account_name, round_mode, qris_image_url, receipt_image_url, items, tax_amount, service_amount, discount_amount } = parsed.data;
   const room = await createRoom({
     title,
     hostName: host_name,
@@ -1413,7 +1471,8 @@ async function createRoomHandler(req, res) {
     })),
     taxAmount: tax_amount,
     serviceAmount: service_amount,
-    discountAmount: discount_amount
+    discountAmount: discount_amount,
+    roundMode: round_mode
   });
   res.status(201).json({
     room_code: room.roomCode,
@@ -1479,6 +1538,7 @@ async function getRoomHandler(req, res) {
       qris_image_url: room.qrisImageUrl,
       receipt_image_url: room.receiptImageUrl,
       group_photo_url: room.groupPhotoUrl,
+      round_mode: room.roundMode,
       items: room.items.map((item) => ({
         id: item.id,
         name: item.name,
@@ -1498,6 +1558,7 @@ async function getRoomHandler(req, res) {
         display_name: member.displayName,
         is_host: member.isHost,
         subtotal_share: member.subtotalShare,
+        raw_share_amount: member.rawShareAmount,
         share_amount: member.shareAmount,
         claimed_item_ids: member.claimedItemIds,
         payment_status: member.paymentStatus,

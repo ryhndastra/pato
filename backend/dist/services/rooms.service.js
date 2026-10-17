@@ -24,6 +24,7 @@ export async function createRoom(input) {
     const hostToken = randomUUID();
     const subtotal = input.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
     const grandTotal = Math.max(0, subtotal + input.taxAmount + input.serviceAmount - input.discountAmount);
+    const roundMode = input.roundMode || "hundred";
     for (let attempt = 0; attempt < MAX_ROOM_CODE_ATTEMPTS; attempt++) {
         const roomCode = generateRoomCode(input.title);
         const client = await pool.connect();
@@ -31,9 +32,9 @@ export async function createRoom(input) {
             await client.query("BEGIN");
             const { rows: roomRows } = await client.query(`INSERT INTO rooms (
            room_code, title, host_user_id, bank_name, bank_account_no, bank_account_name,
-           subtotal, tax_amount, service_amount, discount_amount, grand_total, qris_image_url, receipt_image_url
+           subtotal, tax_amount, service_amount, discount_amount, grand_total, qris_image_url, receipt_image_url, round_mode
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
          RETURNING id, status`, [
                 roomCode,
                 input.title,
@@ -48,6 +49,7 @@ export async function createRoom(input) {
                 grandTotal,
                 input.qrisImageUrl ?? null,
                 input.receiptImageUrl ?? null,
+                roundMode,
             ]);
             const roomId = roomRows[0].id;
             await client.query(`INSERT INTO members (room_id, user_id, guest_token, display_name, is_host)
@@ -185,6 +187,18 @@ export async function joinRoom(roomCode, input, userId) {
     }
     throw new Error("Gagal join room karena konflik bersamaan, coba lagi.");
 }
+export function applyRounding(amount, roundMode = "hundred") {
+    if (amount <= 0)
+        return 0;
+    if (roundMode === "thousand") {
+        return Math.ceil(amount / 1000) * 1000;
+    }
+    if (roundMode === "none") {
+        return Math.round(amount);
+    }
+    // Default: round up to hundreds
+    return Math.ceil(amount / 100) * 100;
+}
 /** Hitung berapa rupiah tiap member nanggung, proporsional ke porsi yang
  *  benar-benar diklaim - bukan dibagi rata. Item non-shared dibagi per unit
  *  (price-per-unit x porsi), item shared dibagi rata ke semua yang klaim. */
@@ -219,13 +233,15 @@ function computeMemberShares(members, claims, room) {
         const taxShare = room.taxAmount * ratio;
         const serviceShare = room.serviceAmount * ratio;
         const discountShare = room.discountAmount * ratio;
-        const shareAmount = Math.max(0, Math.round(itemSubtotal + taxShare + serviceShare - discountShare));
+        const rawShare = Math.max(0, itemSubtotal + taxShare + serviceShare - discountShare);
+        const shareAmount = applyRounding(rawShare, room.roundMode ?? "hundred");
         return {
             id: member.id,
             userId: member.user_id,
             displayName: member.display_name,
             isHost: member.is_host,
             subtotalShare: Math.round(itemSubtotal),
+            rawShareAmount: Math.round(rawShare),
             shareAmount,
             claimedItemIds: claims
                 .filter((c) => c.member_id === member.id)
@@ -237,7 +253,7 @@ export async function getRoomByCode(roomCode) {
     const { rows: roomRows } = await pool.query(`SELECT
        r.id, r.room_code, r.title, r.status, r.host_user_id, r.subtotal, r.tax_amount, r.service_amount,
        r.discount_amount, r.grand_total, r.bank_name, r.bank_account_no, r.bank_account_name,
-       r.qris_image_url, r.receipt_image_url, r.group_photo_url,
+       r.qris_image_url, r.receipt_image_url, r.group_photo_url, r.round_mode,
        (
          SELECT COALESCE(json_agg(json_build_object(
            'id', i.id,
@@ -300,6 +316,7 @@ export async function getRoomByCode(roomCode) {
         taxAmount: Number(room.tax_amount),
         serviceAmount: Number(room.service_amount),
         discountAmount: Number(room.discount_amount),
+        roundMode: room.round_mode ?? "hundred",
     };
     const rawMembers = computeMemberShares(memberRows, claimRows, roomTotals);
     const members = rawMembers.map((m) => {
@@ -335,6 +352,7 @@ export async function getRoomByCode(roomCode) {
         qrisImageUrl: room.qris_image_url,
         receiptImageUrl: room.receipt_image_url,
         groupPhotoUrl: room.group_photo_url,
+        roundMode: room.round_mode ?? "hundred",
         items: itemRows.map((item) => {
             const itemClaims = claimsByItem.get(item.id) ?? [];
             return {

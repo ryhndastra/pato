@@ -22,6 +22,7 @@ export interface RoomMember {
   display_name: string;
   is_host: boolean;
   subtotal_share: number;
+  raw_share_amount?: number;
   share_amount: number;
   claimed_item_ids: string[];
   payment_status?: "UNPAID" | "PENDING" | "VERIFIED" | "REJECTED";
@@ -45,6 +46,7 @@ export interface RoomDetail {
   qris_image_url?: string | null;
   receipt_image_url?: string | null;
   group_photo_url?: string | null;
+  round_mode?: string | null;
   items: RoomItem[];
   members: RoomMember[];
 }

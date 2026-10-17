@@ -16,6 +16,8 @@ interface BillSummaryCardProps {
   canSubmit: boolean;
   submitting: boolean;
   error: string | null;
+  roundMode?: "none" | "hundred" | "thousand";
+  setRoundMode?: (mode: "none" | "hundred" | "thousand") => void;
 }
 
 export function BillSummaryCard({
@@ -28,6 +30,8 @@ export function BillSummaryCard({
   canSubmit,
   submitting,
   error,
+  roundMode,
+  setRoundMode,
 }: BillSummaryCardProps) {
   const taxNum = Number(taxAmount || 0);
   const serviceNum = Number(serviceAmount || 0);
@@ -88,6 +92,47 @@ export function BillSummaryCard({
             </div>
           </div>
         </div>
+
+        {/* Rounding Mode Option */}
+        {roundMode && setRoundMode && (
+          <div className="mt-4 rounded-2xl bg-slate-50 p-3.5 border border-slate-100">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-slate-800">Pembulatan Tagihan</span>
+              <span className="text-[10px] text-slate-400 font-medium">Per orang</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {[
+                { id: "hundred", label: "Ratusan", tip: "Rp14.300" },
+                { id: "thousand", label: "Ribuan", tip: "Rp15.000" },
+                { id: "none", label: "Pas", tip: "Rp14.285" },
+              ].map((m) => {
+                const active = roundMode === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setRoundMode(m.id as "none" | "hundred" | "thousand")}
+                    className={`rounded-xl py-2 px-1 text-center transition-all ${
+                      active
+                        ? "bg-blue-600 text-white font-bold shadow-2xs"
+                        : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-100"
+                    }`}
+                  >
+                    <div className="text-xs">{m.label}</div>
+                    <div className={`text-[10px] ${active ? "text-blue-100" : "text-slate-400"}`}>
+                      {m.tip}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-[10.5px] text-slate-500 leading-tight">
+              {roundMode === "hundred" && "Dibulatkan ke atas ke Rp 100 terdekat agar teman mudah transfer."}
+              {roundMode === "thousand" && "Dibulatkan ke atas ke Rp 1.000 terdekat (bisa jadi kas/tip)."}
+              {roundMode === "none" && "Nominal dihitung eksak rupiah tanpa pembulatan."}
+            </p>
+          </div>
+        )}
 
         {error && (
           <div className="mt-4 flex items-start gap-2 rounded-2xl bg-rose-50 p-3 text-xs text-rose-700 ring-1 ring-rose-200">

@@ -13,6 +13,10 @@ export interface AuthUser {
   name: string;
   avatarUrl: string | null;
   hasPassword?: boolean;
+  defaultBankName?: string | null;
+  defaultBankAccountNo?: string | null;
+  defaultBankAccountName?: string | null;
+  defaultRoundMode?: string | null;
 }
 
 interface UserRow {
@@ -21,6 +25,10 @@ interface UserRow {
   name: string;
   avatar_url: string | null;
   password_hash: string | null;
+  default_bank_name?: string | null;
+  default_bank_account_no?: string | null;
+  default_bank_account_name?: string | null;
+  default_round_mode?: string | null;
 }
 
 const SALT_ROUNDS = 10;
@@ -43,7 +51,7 @@ export async function registerWithEmail(
   const { rows } = await pool.query<UserRow>(
     `INSERT INTO users (email, password_hash, name, auth_provider)
      VALUES ($1, $2, $3, 'local')
-     RETURNING id, email, name, avatar_url, password_hash`,
+     RETURNING id, email, name, avatar_url, password_hash, default_bank_name, default_bank_account_no, default_bank_account_name, default_round_mode`,
     [email, passwordHash, name],
   );
 
@@ -55,7 +63,7 @@ export async function loginWithEmail(
   password: string,
 ): Promise<AuthUser> {
   const { rows } = await pool.query<UserRow>(
-    "SELECT id, email, name, avatar_url, password_hash FROM users WHERE email = $1",
+    "SELECT id, email, name, avatar_url, password_hash, default_bank_name, default_bank_account_no, default_bank_account_name, default_round_mode FROM users WHERE email = $1",
     [email],
   );
   const user = rows[0];
@@ -99,7 +107,7 @@ export async function loginWithGoogle(idToken: string): Promise<AuthUser> {
      VALUES ($1, $2, $3, 'google')
      ON CONFLICT (email) DO UPDATE
        SET name = EXCLUDED.name, avatar_url = EXCLUDED.avatar_url, updated_at = NOW()
-     RETURNING id, email, name, avatar_url, password_hash`,
+     RETURNING id, email, name, avatar_url, password_hash, default_bank_name, default_bank_account_no, default_bank_account_name, default_round_mode`,
     [payload.email, payload.name ?? payload.email.split("@")[0], payload.picture ?? null],
   );
 
@@ -113,12 +121,16 @@ function toAuthUser(row: UserRow): AuthUser {
     name: row.name,
     avatarUrl: row.avatar_url,
     hasPassword: Boolean(row.password_hash),
+    defaultBankName: row.default_bank_name ?? null,
+    defaultBankAccountNo: row.default_bank_account_no ?? null,
+    defaultBankAccountName: row.default_bank_account_name ?? null,
+    defaultRoundMode: row.default_round_mode ?? "hundred",
   };
 }
 
 export async function getUserById(userId: string): Promise<AuthUser | null> {
   const { rows } = await pool.query<UserRow>(
-    "SELECT id, email, name, avatar_url, password_hash FROM users WHERE id = $1",
+    "SELECT id, email, name, avatar_url, password_hash, default_bank_name, default_bank_account_no, default_bank_account_name, default_round_mode FROM users WHERE id = $1",
     [userId],
   );
   if (!rows[0]) return null;
@@ -132,6 +144,10 @@ export async function updateUserProfile(
     avatarUrl?: string | null;
     currentPassword?: string;
     newPassword?: string;
+    defaultBankName?: string | null;
+    defaultBankAccountNo?: string | null;
+    defaultBankAccountName?: string | null;
+    defaultRoundMode?: string | null;
   },
 ): Promise<AuthUser> {
   const { rows } = await pool.query<UserRow>(
@@ -171,6 +187,26 @@ export async function updateUserProfile(
     values.push(params.avatarUrl);
   }
 
+  if (params.defaultBankName !== undefined) {
+    updates.push(`default_bank_name = $${paramIndex++}`);
+    values.push(params.defaultBankName ? params.defaultBankName.trim() : null);
+  }
+
+  if (params.defaultBankAccountNo !== undefined) {
+    updates.push(`default_bank_account_no = $${paramIndex++}`);
+    values.push(params.defaultBankAccountNo ? params.defaultBankAccountNo.trim() : null);
+  }
+
+  if (params.defaultBankAccountName !== undefined) {
+    updates.push(`default_bank_account_name = $${paramIndex++}`);
+    values.push(params.defaultBankAccountName ? params.defaultBankAccountName.trim() : null);
+  }
+
+  if (params.defaultRoundMode !== undefined) {
+    updates.push(`default_round_mode = $${paramIndex++}`);
+    values.push(params.defaultRoundMode ? params.defaultRoundMode.trim() : "hundred");
+  }
+
   if (newPasswordHash !== null) {
     updates.push(`password_hash = $${paramIndex++}`);
     values.push(newPasswordHash);
@@ -180,7 +216,7 @@ export async function updateUserProfile(
     UPDATE users
     SET ${updates.join(", ")}
     WHERE id = $1
-    RETURNING id, email, name, avatar_url, password_hash
+    RETURNING id, email, name, avatar_url, password_hash, default_bank_name, default_bank_account_no, default_bank_account_name, default_round_mode
   `;
 
   const { rows: updatedRows } = await pool.query<UserRow>(query, values);

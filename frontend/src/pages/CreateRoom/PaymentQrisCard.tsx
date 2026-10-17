@@ -1,7 +1,9 @@
 import { useState, useRef, type ChangeEvent, type DragEvent } from "react";
 import {
   Bank,
+  CheckCircle,
   CreditCard,
+  Info,
   MagnifyingGlassPlus,
   QrCode,
   SpinnerGap,
@@ -23,6 +25,8 @@ interface PaymentQrisCardProps {
   qrisError: string | null;
   onQrisFile: (file: File) => void;
   onRemoveQris: () => void;
+  isProfilePayoutAvailable?: boolean;
+  onSyncFromProfile?: () => void;
 }
 
 const BANK_PRESETS = [
@@ -49,6 +53,8 @@ export function PaymentQrisCard({
   qrisError,
   onQrisFile,
   onRemoveQris,
+  isProfilePayoutAvailable,
+  onSyncFromProfile,
 }: PaymentQrisCardProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [showZoomModal, setShowZoomModal] = useState(false);
@@ -222,6 +228,30 @@ export function PaymentQrisCard({
           Atau Nomor Rekening
         </span>
       </div>
+
+      {/* Profile Payout Auto-Fill Banner */}
+      {isProfilePayoutAvailable ? (
+        <div className="mb-4 flex items-center justify-between rounded-2xl bg-blue-50/80 px-3.5 py-2.5 border border-blue-200/70 text-xs">
+          <div className="flex items-center gap-2 text-blue-700 font-medium">
+            <CheckCircle size={16} weight="fill" className="text-blue-600 shrink-0" />
+            <span>Rekening terisi otomatis dari <b>Profil</b> kamu.</span>
+          </div>
+          {onSyncFromProfile && (
+            <button
+              type="button"
+              onClick={onSyncFromProfile}
+              className="shrink-0 text-[11px] font-bold text-blue-700 underline hover:text-blue-800"
+            >
+              Reset ke Profil
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="mb-4 flex items-center gap-2 rounded-2xl bg-slate-50 px-3.5 py-2.5 border border-slate-200/70 text-xs text-slate-500">
+          <Info size={16} weight="bold" className="text-slate-400 shrink-0" />
+          <span>Tips: Atur rekening di menu <b>Profil</b> agar otomatis terisi tiap membuat room baru.</span>
+        </div>
+      )}
 
       {/* Popular Bank Selector Chips (Horizontal swipe on mobile, wrap on desktop) */}
       <div className="mb-5">

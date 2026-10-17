@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Bank,
   BellRinging,
@@ -10,6 +10,7 @@ import {
   FloppyDisk,
   Heart,
   PencilSimple,
+  Plus,
   ShieldCheck,
   SignOut,
   Sparkle,
@@ -41,7 +42,7 @@ const BANK_OPTIONS = [
 ];
 
 export function Profile() {
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, updateProfile } = useAuth();
   const navigate = useNavigate();
   const { rooms } = useMyRooms(token);
   const { copied, copy } = useCopyToClipboard();
@@ -55,37 +56,41 @@ export function Profile() {
 
   // Default Payout State
   const [bankName, setBankName] = useState(() => {
+    if (user?.defaultBankName) return user.defaultBankName;
     try {
       const saved = localStorage.getItem(PAYOUT_STORAGE_KEY);
       if (saved) return JSON.parse(saved).bankName ?? "BCA";
     } catch {
       // fallback
     }
-    return "BCA";
+    return user?.defaultBankName ?? "BCA";
   });
 
   const [accountNo, setAccountNo] = useState(() => {
+    if (user?.defaultBankAccountNo) return user.defaultBankAccountNo;
     try {
       const saved = localStorage.getItem(PAYOUT_STORAGE_KEY);
-      if (saved) return JSON.parse(saved).accountNo ?? "8820192811";
+      if (saved) return JSON.parse(saved).accountNo ?? "";
     } catch {
       // fallback
     }
-    return "8820192811";
+    return "";
   });
 
   const [accountName, setAccountName] = useState(() => {
+    if (user?.defaultBankAccountName) return user.defaultBankAccountName;
     try {
       const saved = localStorage.getItem(PAYOUT_STORAGE_KEY);
-      if (saved) return JSON.parse(saved).accountName ?? (user?.name ?? "Host Patungan");
+      if (saved) return JSON.parse(saved).accountName ?? (user?.name ?? "");
     } catch {
       // fallback
     }
-    return user?.name ?? "Host Patungan";
+    return user?.name ?? "";
   });
 
   // App Preferences State
   const [roundMode, setRoundMode] = useState<"none" | "hundred" | "thousand">(() => {
+    if (user?.defaultRoundMode) return user.defaultRoundMode as "none" | "hundred" | "thousand";
     try {
       const saved = localStorage.getItem(PREFS_STORAGE_KEY);
       if (saved) return JSON.parse(saved).roundMode ?? "hundred";
@@ -94,6 +99,18 @@ export function Profile() {
     }
     return "hundred";
   });
+
+  // Sync state if user data finishes loading
+  useEffect(() => {
+    if (user) {
+      if (user.defaultBankName) setBankName(user.defaultBankName);
+      if (user.defaultBankAccountNo) setAccountNo(user.defaultBankAccountNo);
+      if (user.defaultBankAccountName) setAccountName(user.defaultBankAccountName);
+      if (user.defaultRoundMode) {
+        setRoundMode(user.defaultRoundMode as "none" | "hundred" | "thousand");
+      }
+    }
+  }, [user]);
 
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
     try {
@@ -114,13 +131,20 @@ export function Profile() {
       ?.filter((r) => r.status === "CLOSED")
       .reduce((sum, r) => sum + r.grand_total, 0) ?? 0;
 
-  function handleSavePayout(e: React.FormEvent) {
+  async function handleSavePayout(e: React.FormEvent) {
     e.preventDefault();
     try {
       localStorage.setItem(
         PAYOUT_STORAGE_KEY,
         JSON.stringify({ bankName, accountNo, accountName }),
       );
+      if (token) {
+        await updateProfile({
+          defaultBankName: bankName.trim() || null,
+          defaultBankAccountNo: accountNo.trim() || null,
+          defaultBankAccountName: accountName.trim() || null,
+        });
+      }
       setPayoutSaved(true);
       setIsEditingPayout(false);
       setTimeout(() => setPayoutSaved(false), 2500);
@@ -129,7 +153,7 @@ export function Profile() {
     }
   }
 
-  function handleUpdateRoundMode(mode: "none" | "hundred" | "thousand") {
+  async function handleUpdateRoundMode(mode: "none" | "hundred" | "thousand") {
     setRoundMode(mode);
     try {
       const saved = localStorage.getItem(PREFS_STORAGE_KEY);
@@ -138,6 +162,9 @@ export function Profile() {
         PREFS_STORAGE_KEY,
         JSON.stringify({ ...prev, roundMode: mode }),
       );
+      if (token) {
+        await updateProfile({ defaultRoundMode: mode });
+      }
     } catch {
       // ignore
     }
@@ -394,45 +421,68 @@ export function Profile() {
               </div>
             </form>
           ) : (
-            <div className="mt-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4 border border-slate-100">
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 font-mono text-xs font-black text-white shadow-2xs">
-                  {bankName.slice(0, 3).toUpperCase()}
-                </span>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-black text-slate-900">{bankName}</p>
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.2 text-[10px] font-bold text-emerald-700">
-                      Utama
-                    </span>
+            accountNo ? (
+              <div className="mt-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-slate-50 p-4 border border-slate-100">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 font-mono text-xs font-black text-white shadow-2xs">
+                    {bankName.slice(0, 3).toUpperCase()}
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-black text-slate-900">{bankName}</p>
+                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-100">
+                        Aktif Tersinkron
+                      </span>
+                    </div>
+                    <p className="mt-0.5 font-mono text-xs font-bold text-slate-700">
+                      {accountNo}{" "}
+                      <span className="font-sans font-normal text-slate-500">
+                        (a.n. {accountName})
+                      </span>
+                    </p>
+                    <p className="mt-1 text-[11px] text-blue-600 font-medium">
+                      ✓ Otomatis terisi saat kamu membuat room baru
+                    </p>
                   </div>
-                  <p className="mt-0.5 font-mono text-xs font-bold text-slate-700">
-                    {accountNo}{" "}
-                    <span className="font-sans font-normal text-slate-500">
-                      (a.n. {accountName})
-                    </span>
-                  </p>
                 </div>
-              </div>
 
-              <button
-                type="button"
-                onClick={() => copy(`${bankName} ${accountNo} a.n. ${accountName}`)}
-                className="flex h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
-              >
-                {copied ? (
-                  <>
-                    <CheckCircle size={14} weight="fill" className="text-emerald-600" />
-                    <span>Disalin</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy size={14} weight="bold" />
-                    <span>Salin Rekening</span>
-                  </>
-                )}
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => copy(`${bankName} ${accountNo} a.n. ${accountName}`)}
+                  className="flex h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
+                >
+                  {copied ? (
+                    <>
+                      <CheckCircle size={14} weight="fill" className="text-emerald-600" />
+                      <span>Disalin</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={14} weight="bold" />
+                      <span>Salin Rekening</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <div className="mt-3.5 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-center">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-2">
+                  <Bank size={22} weight="bold" />
+                </div>
+                <p className="text-sm font-bold text-slate-800">Belum Ada Rekening Payout Default</p>
+                <p className="mt-1 text-xs text-slate-500 max-w-sm">
+                  Simpan rekening bank atau nomor e-wallet kamu di sini agar otomatis terisi tiap kali kamu bikin room patungan baru.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingPayout(true)}
+                  className="mt-3.5 flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 active:scale-95 transition-all"
+                >
+                  <Plus size={14} weight="bold" />
+                  <span>Atur Rekening Sekarang</span>
+                </button>
+              </div>
+            )
           )}
         </section>
 
@@ -444,10 +494,10 @@ export function Profile() {
             </span>
             <div>
               <h2 className="text-xs font-black uppercase tracking-wider text-slate-800 sm:text-sm">
-                Preferensi Pembagian Tagihan
+                Preferensi Pembulatan Tagihan
               </h2>
               <p className="text-[11px] text-slate-400">
-                Kustomisasi cara PaTo membulatkan nominal patungan
+                Pilihan default pembulatan nominal patungan teman saat kamu membuat room
               </p>
             </div>
           </div>
@@ -481,6 +531,70 @@ export function Profile() {
                   </button>
                 );
               })}
+            </div>
+
+            {/* Penjelasan Edukatif & Simulasi Live */}
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+              {roundMode === "hundred" && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 font-bold text-xs text-blue-700">
+                    <Sparkle size={14} weight="fill" />
+                    <span>Bulat Ratusan (Direkomendasikan untuk Nongkrong)</span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Tagihan setiap teman dibulatkan <b>ke atas ke kelipatan Rp 100</b> terdekat (misal: <b>Rp 14.285 → Rp 14.300</b>). Teman tidak ribet mengetik pecahan ganjil saat transfer m-banking/e-wallet, dan kamu sebagai host tidak tombok.
+                  </p>
+                  <div className="mt-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 rounded-xl bg-white p-3 border border-slate-200/60 font-mono text-xs">
+                    <span className="text-slate-500 font-sans">Simulasi perhitungan:</span>
+                    <span className="font-bold text-slate-800">
+                      Porsi asli: Rp 37.420 → <span className="text-blue-600">Rp 37.500</span>{" "}
+                      <span className="text-[11px] text-slate-400 font-normal font-sans">(+Rp 80 selisih)</span>
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {roundMode === "thousand" && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 font-bold text-xs text-purple-700">
+                    <Sparkle size={14} weight="fill" />
+                    <span>Bulat Ribuan (Praktis & Santai)</span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Tagihan setiap teman dibulatkan <b>ke atas ke kelipatan Rp 1.000</b> terdekat (misal: <b>Rp 14.285 → Rp 15.000</b>). Sangat cocok untuk makan bareng santai, atau selisih pembulatan dijadikan uang kas / tips bersama.
+                  </p>
+                  <div className="mt-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 rounded-xl bg-white p-3 border border-slate-200/60 font-mono text-xs">
+                    <span className="text-slate-500 font-sans">Simulasi perhitungan:</span>
+                    <span className="font-bold text-slate-800">
+                      Porsi asli: Rp 37.420 → <span className="text-purple-600">Rp 38.000</span>{" "}
+                      <span className="text-[11px] text-slate-400 font-normal font-sans">(+Rp 580 selisih)</span>
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {roundMode === "none" && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 font-bold text-xs text-slate-800">
+                    <Sparkle size={14} weight="fill" />
+                    <span>Pas Nominal (Eksak Rupiah Tanpa Pembulatan)</span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Tagihan dihitung persis sampai nominal satuan rupiah tanpa pembulatan (misal: <b>Rp 14.285</b>). Teman membayar angka eksak sesuai pembagian menu dan proporsi pajak/diskon.
+                  </p>
+                  <div className="mt-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 rounded-xl bg-white p-3 border border-slate-200/60 font-mono text-xs">
+                    <span className="text-slate-500 font-sans">Simulasi perhitungan:</span>
+                    <span className="font-bold text-slate-800">
+                      Porsi asli: Rp 37.420 → <span className="text-slate-900">Rp 37.420</span>{" "}
+                      <span className="text-[11px] text-slate-400 font-normal font-sans">(tepat murni)</span>
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <p className="mt-2.5 text-[10.5px] text-slate-400">
+                * Pengaturan ini otomatis digunakan saat membuat room baru, dan bisa kamu sesuaikan per room.
+              </p>
             </div>
 
             {/* Audio Celebration Toggle */}

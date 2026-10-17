@@ -429,6 +429,12 @@ export function HostPaymentMonitorCard({
                   <span className="font-mono">-{safeIDR(hostDiscount)}</span>
                 </div>
               )}
+              {Boolean(host.raw_share_amount && host.raw_share_amount !== host.share_amount) && (
+                <div className="flex justify-between text-blue-600 font-medium">
+                  <span>Penyesuaian pembulatan</span>
+                  <span className="font-mono">+{safeIDR(host.share_amount - (host.raw_share_amount ?? host.share_amount))}</span>
+                </div>
+              )}
             </div>
           )}
         </section>

@@ -23,6 +23,10 @@ function sendSession(res: Response, user: AuthUser, status = 200) {
       email: user.email,
       avatar_url: user.avatarUrl,
       has_password: user.hasPassword,
+      default_bank_name: user.defaultBankName,
+      default_bank_account_no: user.defaultBankAccountNo,
+      default_bank_account_name: user.defaultBankAccountName,
+      default_round_mode: user.defaultRoundMode,
     },
   });
 }
@@ -122,6 +126,10 @@ export async function meHandler(req: Request, res: Response) {
       email: user.email,
       avatar_url: user.avatarUrl,
       has_password: user.hasPassword,
+      default_bank_name: user.defaultBankName,
+      default_bank_account_no: user.defaultBankAccountNo,
+      default_bank_account_name: user.defaultBankAccountName,
+      default_round_mode: user.defaultRoundMode,
     },
   });
 }
@@ -131,6 +139,10 @@ const updateProfileSchema = z.object({
   avatar_url: z.string().nullable().optional(),
   current_password: z.string().min(1).optional(),
   new_password: z.string().min(8).max(100).optional(),
+  default_bank_name: z.string().nullable().optional(),
+  default_bank_account_no: z.string().nullable().optional(),
+  default_bank_account_name: z.string().nullable().optional(),
+  default_round_mode: z.enum(["none", "hundred", "thousand"]).optional(),
 });
 
 export async function updateProfileHandler(req: Request, res: Response) {
@@ -151,6 +163,10 @@ export async function updateProfileHandler(req: Request, res: Response) {
       avatarUrl: parsed.data.avatar_url,
       currentPassword: parsed.data.current_password,
       newPassword: parsed.data.new_password,
+      defaultBankName: parsed.data.default_bank_name,
+      defaultBankAccountNo: parsed.data.default_bank_account_no,
+      defaultBankAccountName: parsed.data.default_bank_account_name,
+      defaultRoundMode: parsed.data.default_round_mode,
     });
 
     res.json({
@@ -160,6 +176,10 @@ export async function updateProfileHandler(req: Request, res: Response) {
         email: updated.email,
         avatar_url: updated.avatarUrl,
         has_password: updated.hasPassword,
+        default_bank_name: updated.defaultBankName,
+        default_bank_account_no: updated.defaultBankAccountNo,
+        default_bank_account_name: updated.defaultBankAccountName,
+        default_round_mode: updated.defaultRoundMode,
       },
     });
   } catch (error) {
@@ -170,4 +190,5 @@ export async function updateProfileHandler(req: Request, res: Response) {
     throw error;
   }
 }
+
 

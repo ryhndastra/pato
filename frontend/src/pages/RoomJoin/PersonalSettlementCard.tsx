@@ -125,6 +125,11 @@ export function PersonalSettlementCard({
             <p className="font-mono text-2xl sm:text-3xl font-black text-slate-900">
               {safeIDR(me.share_amount)}
             </p>
+            {Boolean(me.raw_share_amount && me.raw_share_amount !== me.share_amount) && (
+              <p className="mt-0.5 text-[11px] text-slate-500 font-medium">
+                Dibulatkan dari <span className="line-through">{safeIDR(me.raw_share_amount)}</span> ({room.round_mode === "thousand" ? "ke ribuan" : "ke ratusan"}) agar transfer mudah
+              </p>
+            )}
           </div>
 
           <button
@@ -168,6 +173,12 @@ export function PersonalSettlementCard({
             <div className="flex justify-between text-blue-600 font-semibold">
               <span>Potongan diskon</span>
               <span className="font-mono">-{safeIDR(myDiscount)}</span>
+            </div>
+          )}
+          {Boolean(me.raw_share_amount && me.raw_share_amount !== me.share_amount) && (
+            <div className="flex justify-between text-blue-600 font-medium">
+              <span>Penyesuaian pembulatan</span>
+              <span className="font-mono">+{safeIDR(me.share_amount - (me.raw_share_amount ?? me.share_amount))}</span>
             </div>
           )}
         </div>

@@ -22,6 +22,10 @@ export function CreateRoom() {
     setBankAccountNo,
     bankAccountName,
     setBankAccountName,
+    roundMode,
+    setRoundMode,
+    syncFromProfile,
+    isProfilePayoutAvailable,
     qrisImageUrl,
     isProcessingQris,
     qrisError,
@@ -99,6 +103,8 @@ export function CreateRoom() {
               qrisError={qrisError}
               onQrisFile={handleQrisFile}
               onRemoveQris={removeQris}
+              isProfilePayoutAvailable={isProfilePayoutAvailable}
+              onSyncFromProfile={syncFromProfile}
             />
 
             {/* Menu Items List */}
@@ -134,6 +140,8 @@ export function CreateRoom() {
               canSubmit={canSubmit}
               submitting={submitting}
               error={error}
+              roundMode={roundMode}
+              setRoundMode={setRoundMode}
             />
           </div>
 

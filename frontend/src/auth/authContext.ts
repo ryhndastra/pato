@@ -6,6 +6,10 @@ export interface PatoUser {
   email: string;
   avatarUrl?: string | null;
   hasPassword?: boolean;
+  defaultBankName?: string | null;
+  defaultBankAccountNo?: string | null;
+  defaultBankAccountName?: string | null;
+  defaultRoundMode?: "none" | "hundred" | "thousand" | string | null;
 }
 
 export interface UpdateProfileParams {
@@ -13,6 +17,10 @@ export interface UpdateProfileParams {
   avatarUrl?: string | null;
   currentPassword?: string;
   newPassword?: string;
+  defaultBankName?: string | null;
+  defaultBankAccountNo?: string | null;
+  defaultBankAccountName?: string | null;
+  defaultRoundMode?: "none" | "hundred" | "thousand" | string;
 }
 
 export interface AuthContextValue {

@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router";
 import { useAuth } from "../../auth/useAuth";
 import { apiPost, ApiError } from "../../lib/api";
@@ -15,6 +15,7 @@ export function useCreateRoomForm() {
     () => searchParams.get("host") ?? user?.name ?? "",
   );
   const [bankName, setBankName] = useState(() => {
+    if (user?.defaultBankName) return user.defaultBankName;
     try {
       const saved = localStorage.getItem("pato_default_payout_info");
       if (saved) return JSON.parse(saved).bankName ?? "";
@@ -24,6 +25,7 @@ export function useCreateRoomForm() {
     return "";
   });
   const [bankAccountNo, setBankAccountNo] = useState(() => {
+    if (user?.defaultBankAccountNo) return user.defaultBankAccountNo;
     try {
       const saved = localStorage.getItem("pato_default_payout_info");
       if (saved) return JSON.parse(saved).accountNo ?? "";
@@ -33,6 +35,7 @@ export function useCreateRoomForm() {
     return "";
   });
   const [bankAccountName, setBankAccountName] = useState(() => {
+    if (user?.defaultBankAccountName) return user.defaultBankAccountName;
     try {
       const saved = localStorage.getItem("pato_default_payout_info");
       if (saved) return JSON.parse(saved).accountName ?? "";
@@ -41,6 +44,50 @@ export function useCreateRoomForm() {
     }
     return user?.name ?? "";
   });
+
+  const [roundMode, setRoundMode] = useState<"none" | "hundred" | "thousand">(() => {
+    if (user?.defaultRoundMode) return user.defaultRoundMode as "none" | "hundred" | "thousand";
+    try {
+      const saved = localStorage.getItem("pato_user_app_preferences");
+      if (saved) return JSON.parse(saved).roundMode ?? "hundred";
+    } catch {
+      // ignore
+    }
+    return "hundred";
+  });
+
+  // Auto-fill from profile when user data arrives
+  useEffect(() => {
+    if (user) {
+      if (!hostName && user.name) {
+        setHostName(user.name);
+      }
+      if (user.defaultBankName && !bankName) {
+        setBankName(user.defaultBankName);
+      }
+      if (user.defaultBankAccountNo && !bankAccountNo) {
+        setBankAccountNo(user.defaultBankAccountNo);
+      }
+      if (user.defaultBankAccountName && (!bankAccountName || bankAccountName === "Host")) {
+        setBankAccountName(user.defaultBankAccountName);
+      }
+      if (user.defaultRoundMode) {
+        setRoundMode(user.defaultRoundMode as "none" | "hundred" | "thousand");
+      }
+    }
+  }, [user]);
+
+  function syncFromProfile() {
+    if (user?.defaultBankName) setBankName(user.defaultBankName);
+    if (user?.defaultBankAccountNo) setBankAccountNo(user.defaultBankAccountNo);
+    if (user?.defaultBankAccountName) setBankAccountName(user.defaultBankAccountName);
+    if (user?.defaultRoundMode) {
+      setRoundMode(user.defaultRoundMode as "none" | "hundred" | "thousand");
+    }
+  }
+
+  const isProfilePayoutAvailable = Boolean(user?.defaultBankName || user?.defaultBankAccountNo);
+
   const [qrisImageUrl, setQrisImageUrl] = useState<string | null>(null);
   const [receiptImageUrl, setReceiptImageUrl] = useState<string | null>(null);
   const [isProcessingQris, setIsProcessingQris] = useState(false);
@@ -145,6 +192,7 @@ export function useCreateRoomForm() {
           bank_name: bankName.trim() || undefined,
           bank_account_no: bankAccountNo.trim() || undefined,
           bank_account_name: bankAccountName.trim() || undefined,
+          round_mode: roundMode,
           qris_image_url: qrisImageUrl ?? undefined,
           receipt_image_url: receiptImageUrl ?? undefined,
           items: items.map((item) => ({
@@ -178,6 +226,10 @@ export function useCreateRoomForm() {
     setBankAccountNo,
     bankAccountName,
     setBankAccountName,
+    roundMode,
+    setRoundMode,
+    syncFromProfile,
+    isProfilePayoutAvailable,
     qrisImageUrl,
     isProcessingQris,
     qrisError,

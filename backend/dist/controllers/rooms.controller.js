@@ -9,6 +9,7 @@ const createRoomSchema = z.object({
     bank_name: z.string().trim().max(50).optional(),
     bank_account_no: z.string().trim().max(50).optional(),
     bank_account_name: z.string().trim().max(100).optional(),
+    round_mode: z.enum(["none", "hundred", "thousand"]).optional().default("hundred"),
     qris_image_url: z.string().optional(),
     receipt_image_url: z.string().optional(),
     items: z
@@ -29,7 +30,7 @@ export async function createRoomHandler(req, res) {
         res.status(400).json({ error: "Data gak valid.", details: parsed.error.flatten() });
         return;
     }
-    const { title, host_name, bank_name, bank_account_no, bank_account_name, qris_image_url, receipt_image_url, items, tax_amount, service_amount, discount_amount, } = parsed.data;
+    const { title, host_name, bank_name, bank_account_no, bank_account_name, round_mode, qris_image_url, receipt_image_url, items, tax_amount, service_amount, discount_amount, } = parsed.data;
     const room = await createRoom({
         title,
         hostName: host_name,
@@ -47,6 +48,7 @@ export async function createRoomHandler(req, res) {
         taxAmount: tax_amount,
         serviceAmount: service_amount,
         discountAmount: discount_amount,
+        roundMode: round_mode,
     });
     res.status(201).json({
         room_code: room.roomCode,
@@ -113,6 +115,7 @@ export async function getRoomHandler(req, res) {
             qris_image_url: room.qrisImageUrl,
             receipt_image_url: room.receiptImageUrl,
             group_photo_url: room.groupPhotoUrl,
+            round_mode: room.roundMode,
             items: room.items.map((item) => ({
                 id: item.id,
                 name: item.name,
@@ -132,6 +135,7 @@ export async function getRoomHandler(req, res) {
                 display_name: member.displayName,
                 is_host: member.isHost,
                 subtotal_share: member.subtotalShare,
+                raw_share_amount: member.rawShareAmount,
                 share_amount: member.shareAmount,
                 claimed_item_ids: member.claimedItemIds,
                 payment_status: member.paymentStatus,

@@ -13,6 +13,10 @@ interface SessionResponse {
     email: string;
     avatar_url: string | null;
     has_password?: boolean;
+    default_bank_name?: string | null;
+    default_bank_account_no?: string | null;
+    default_bank_account_name?: string | null;
+    default_round_mode?: string | null;
   };
 }
 
@@ -23,6 +27,10 @@ function toPatoUser(raw: SessionResponse["user"]): PatoUser {
     email: raw.email,
     avatarUrl: raw.avatar_url,
     hasPassword: raw.has_password,
+    defaultBankName: raw.default_bank_name ?? null,
+    defaultBankAccountNo: raw.default_bank_account_no ?? null,
+    defaultBankAccountName: raw.default_bank_account_name ?? null,
+    defaultRoundMode: raw.default_round_mode ?? "hundred",
   };
 }
 
@@ -94,6 +102,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         avatar_url: params.avatarUrl,
         current_password: params.currentPassword,
         new_password: params.newPassword,
+        default_bank_name: params.defaultBankName,
+        default_bank_account_no: params.defaultBankAccountNo,
+        default_bank_account_name: params.defaultBankAccountName,
+        default_round_mode: params.defaultRoundMode,
       },
       token,
     );
