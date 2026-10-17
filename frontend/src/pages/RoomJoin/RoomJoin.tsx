@@ -33,6 +33,9 @@ import { useRoomWebSocket } from "../../hooks/useRoomWebSocket";
 import { RoomHeroCard } from "./RoomHeroCard";
 import { soundFX } from "../../lib/soundFx";
 import { haptic } from "../../lib/haptic";
+import { InAppToast, type InAppToastPayload, type ToastType } from "../../components/InAppToast";
+import { NotificationPrimerModal } from "./NotificationPrimerModal";
+import { getNotificationPermissionState, sendBrowserNotification } from "../../lib/notifications";
 import type { JoinResult, RoomDetail, RoomMember, RoomEvent } from "./types";
 
 export function RoomJoin() {
@@ -99,13 +102,119 @@ export function RoomJoin() {
 
   const joinSectionRef = useRef<HTMLDivElement | null>(null);
 
+  const [showNotificationPrimer, setShowNotificationPrimer] = useState(false);
+  const [activeToast, setActiveToast] = useState<InAppToastPayload | null>(null);
+  const prevRoomRef = useRef<RoomDetail | null>(null);
+  const myMemberIdRef = useRef<string | null>(joined?.member_id ?? null);
+  myMemberIdRef.current = joined?.member_id ?? null;
+
+  const showNotification = useCallback((type: ToastType, title: string, message: string) => {
+    setActiveToast({
+      id: Math.random().toString(),
+      type,
+      title,
+      message,
+    });
+    soundFX.playNotification();
+    haptic.medium();
+
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+      sendBrowserNotification({
+        title,
+        body: message,
+        url: window.location.pathname,
+      });
+    }
+  }, []);
+
+  // Show notification primer modal when appropriate
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const dismissedKey = "pato_notif_primer_dismissed";
+    const dismissed = sessionStorage.getItem(dismissedKey);
+    const perm = getNotificationPermissionState();
+
+    if (perm === "default" && !dismissed && (joined || room)) {
+      const timer = window.setTimeout(() => {
+        setShowNotificationPrimer(true);
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [joined, Boolean(room)]);
+
   const fetchRoom = useCallback(() => {
     if (!code) return;
     return apiGet<RoomDetail>(`/api/rooms/${encodeURIComponent(code)}`).then((res) => {
+      const prev = prevRoomRef.current;
+      if (prev && prev.room_code === res.room_code) {
+        // 1. Room status transitions
+        if (prev.status !== res.status) {
+          if (res.status === "LOCKED") {
+            showNotification(
+              "lock",
+              "Meja Telah Dikunci!",
+              "Host telah mengunci pesanan. Silakan periksa rincian tagihan kamu.",
+            );
+          } else if (res.status === "CLOSED") {
+            showNotification(
+              "success",
+              "Meja Selesai!",
+              "Semua tagihan telah diselesaikan. Terima kasih sudah patungan!",
+            );
+          } else if (prev.status === "LOCKED" && res.status === "CLAIMING") {
+            showNotification(
+              "info",
+              "Meja Dibuka Kembali",
+              "Host membuka kembali meja untuk perubahan pesanan.",
+            );
+          }
+        }
+
+        // 2. Personal payment verification status
+        const myId = myMemberIdRef.current;
+        if (myId) {
+          const prevMe = prev.members?.find((m) => m.id === myId);
+          const newMe = res.members?.find((m) => m.id === myId);
+          if (prevMe && newMe && prevMe.payment_status !== newMe.payment_status) {
+            if (newMe.payment_status === "VERIFIED") {
+              showNotification(
+                "success",
+                "Pembayaran Terverifikasi! 🎉",
+                "Host telah mengonfirmasi pembayaran kamu lunas. Terima kasih!",
+              );
+            } else if (newMe.payment_status === "REJECTED") {
+              showNotification(
+                "warning",
+                "Bukti Pembayaran Ditolak",
+                `Host meminta upload ulang: "${newMe.rejection_reason || "Nominal tidak sesuai"}"`,
+              );
+            }
+          }
+        }
+
+        // 3. For Host: New pending proof uploaded by friends
+        const isCurrentHost =
+          Boolean(joined?.is_host) ||
+          Boolean(user?.id && res.host_user_id && user.id === res.host_user_id);
+
+        if (isCurrentHost) {
+          const prevPending = prev.members?.filter((m) => !m.is_host && m.payment_status === "PENDING").length || 0;
+          const newPending = res.members?.filter((m) => !m.is_host && m.payment_status === "PENDING").length || 0;
+          if (newPending > prevPending) {
+            showNotification(
+              "info",
+              "Bukti Transfer Baru!",
+              "Ada teman meja yang baru saja mengunggah bukti transfer untuk dicek.",
+            );
+          }
+        }
+      }
+
+      prevRoomRef.current = res;
       setRoom(res);
       return res;
     });
-  }, [code]);
+  }, [code, showNotification, joined?.is_host, user?.id]);
 
   // Auto-celebration for ALL members when room is officially CLOSED
   useEffect(() => {
@@ -690,6 +799,28 @@ export function RoomJoin() {
         celebrationOpen={celebrationOpen}
         onCloseCelebration={() => setCelebrationOpen(false)}
         onOpenAestheticReceipt={() => setAestheticReceiptOpen(true)}
+      />
+
+      {/* Floating In-App Dynamic Notification Toast */}
+      <InAppToast
+        toast={activeToast}
+        onDismiss={() => setActiveToast(null)}
+      />
+
+      {/* Custom Native Mobile Permission Primer Modal */}
+      <NotificationPrimerModal
+        isOpen={showNotificationPrimer}
+        onClose={() => {
+          sessionStorage.setItem("pato_notif_primer_dismissed", "true");
+          setShowNotificationPrimer(false);
+        }}
+        onPermissionGranted={() => {
+          showNotification(
+            "success",
+            "Notifikasi Berhasil Diaktifkan! 🔔",
+            "Kamu akan mendapatkan pembaruan langsung saat meja dikunci atau pembayaran diverifikasi.",
+          );
+        }}
       />
     </div>
   );

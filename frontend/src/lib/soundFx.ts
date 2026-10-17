@@ -162,6 +162,37 @@ class SoundFX {
       osc.stop(now + 0.035);
     } catch {}
   }
+
+  // Crisp 2-tone notification chime (F5 -> A5)
+  playNotification() {
+    if (!this.isSoundEnabled()) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(698.46, now); // F5
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(880.0, now + 0.09); // A5
+
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc1.start(now);
+      osc1.stop(now + 0.1);
+      osc2.start(now + 0.09);
+      osc2.stop(now + 0.28);
+    } catch {}
+  }
 }
 
 export const soundFX = new SoundFX();
