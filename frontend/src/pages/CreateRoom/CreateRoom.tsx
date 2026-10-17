@@ -66,7 +66,7 @@ export function CreateRoom() {
   }
 
   return (
-    <div className="min-h-dvh bg-slate-50 pb-28 lg:pb-16">
+    <div className="min-h-dvh bg-slate-50 pb-36 lg:pb-16">
       {/* Curved Blue Header matching Dashboard */}
       <CreateRoomHeader hasQris={Boolean(qrisImageUrl)} />
 

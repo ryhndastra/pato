@@ -31,8 +31,8 @@ export function DashboardFeatureBanner() {
           </button>
         </div>
 
-        {/* Right Column: Pato Mascot Showcase with gentle floating animation */}
-        <div className="relative shrink-0 animate-float-slow">
+        {/* Right Column: Pato Mascot Showcase */}
+        <div className="relative shrink-0">
           <div className="relative h-24 w-24 overflow-hidden rounded-2xl bg-white/95 p-1.5 shadow-lg ring-4 ring-white/20 sm:h-32 sm:w-32 sm:rounded-3xl">
             <img
               src={mascotHelper}

@@ -141,11 +141,11 @@ export function BillSummaryCard({
           </div>
         )}
 
-        {/* Primary Submit Button */}
+        {/* Primary Submit Button (Desktop sidebar only; mobile uses the fixed bottom dock to prevent overlapping) */}
         <button
           type="submit"
           disabled={!canSubmit}
-          className="mt-6 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 text-sm font-bold text-white shadow-[0_6px_20px_rgba(37,99,235,0.28)] transition-all hover:opacity-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-none disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
+          className="mt-6 hidden lg:flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 text-sm font-bold text-white shadow-[0_6px_20px_rgba(37,99,235,0.28)] transition-all hover:opacity-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-none disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
         >
           {submitting ? (
             <>
@@ -161,7 +161,7 @@ export function BillSummaryCard({
         </button>
 
         {!canSubmit && !submitting && (
-          <p className="mt-2 text-center text-xs text-slate-400">
+          <p className="mt-2 text-center text-xs text-slate-400 hidden lg:block">
             Lengkapi nama acara dan minimal 1 menu
           </p>
         )}

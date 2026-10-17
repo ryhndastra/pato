@@ -41,9 +41,9 @@ export function CreateRoomHeader({ hasQris }: CreateRoomHeaderProps) {
             </p>
           </div>
 
-          {/* Pato Mascot Avatar with gentle floating animation */}
+          {/* Pato Mascot Avatar */}
           <div className="shrink-0 animate-fade-up stagger-1">
-            <div className="relative h-20 w-20 overflow-hidden rounded-3xl border-2 border-white/60 bg-white p-1.5 shadow-lg shadow-blue-900/20 ring-4 ring-white/20 sm:h-24 sm:w-24 sm:rounded-[28px] animate-float-slow">
+            <div className="relative h-20 w-20 overflow-hidden rounded-3xl border-2 border-white/60 bg-white p-1.5 shadow-lg shadow-blue-900/20 ring-4 ring-white/20 sm:h-24 sm:w-24 sm:rounded-[28px]">
               <img
                 src={patoMascotHelper}
                 alt="Pato Mascot"
