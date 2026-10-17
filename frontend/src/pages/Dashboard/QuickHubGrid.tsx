@@ -90,7 +90,7 @@ export function QuickHubGrid({
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-2 sm:gap-3.5">
+    <div className="grid grid-cols-4 gap-2 sm:gap-3.5 animate-fade-up stagger-3">
       {items.map((item) => {
         const ItemIcon = item.icon;
         return (
@@ -98,14 +98,14 @@ export function QuickHubGrid({
             key={item.key}
             type="button"
             onClick={item.onClick}
-            className="group flex flex-col items-center justify-start rounded-2xl border border-slate-100 bg-white p-2.5 text-center shadow-xs transition-all hover:border-blue-200 hover:shadow-sm active:scale-[0.96] sm:p-4"
+            className="group flex flex-col items-center justify-start rounded-2xl border border-slate-100/80 bg-white p-2.5 text-center shadow-[0_2px_8px_rgba(0,0,0,0.02)] transition-all hover:border-blue-200/80 hover:shadow-sm active:scale-90 sm:p-4"
           >
             <span
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105 sm:h-12 sm:w-12 sm:rounded-2xl ${item.bg} ${item.color}`}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-2xs transition-transform duration-200 group-hover:scale-105 group-active:scale-95 sm:h-12 sm:w-12 sm:rounded-2xl ${item.bg} ${item.color}`}
             >
               <ItemIcon size={22} weight="bold" />
             </span>
-            <span className="mt-1.5 text-[10.5px] font-bold tracking-tight text-ink sm:text-xs whitespace-nowrap truncate max-w-full">
+            <span className="mt-1.5 text-[10.5px] font-bold tracking-tight text-slate-800 sm:text-xs whitespace-nowrap truncate max-w-full">
               {item.label}
             </span>
           </button>

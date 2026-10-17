@@ -153,18 +153,18 @@ export function HostPaymentMonitorCard({
   return (
     <div className="flex flex-col gap-4 w-full">
       {/* 1. NATIVE FINTECH HERO: RINGKASAN TALANGAN KASIR */}
-      <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-2xs">
+      <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sm:p-6 animate-fade-up">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               Total Ditalangi Host ke Kasir
             </span>
-            <p className="font-mono text-2xl sm:text-3xl font-black text-slate-900 mt-0.5">
+            <p className="font-mono tabular-nums text-2xl sm:text-3xl font-black text-slate-900 mt-0.5">
               {safeIDR(room.grand_total)}
             </p>
           </div>
 
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-100">
             <CheckCircle size={14} weight="fill" className="text-emerald-600" />
             Talangan Beres
           </span>
@@ -172,11 +172,11 @@ export function HostPaymentMonitorCard({
 
         {/* 2-Column Split: Porsi Makan Host vs Target Ditagih ke Teman */}
         <div className="grid grid-cols-2 gap-3 pt-3">
-          <div className="flex flex-col rounded-xl bg-slate-50 p-3 border border-slate-100">
+          <div className="flex flex-col rounded-2xl bg-slate-50/80 p-3.5 border border-slate-100">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
               Porsi Makan Kamu
             </span>
-            <span className="font-mono text-sm sm:text-base font-extrabold text-slate-900 mt-0.5">
+            <span className="font-mono tabular-nums text-sm sm:text-base font-extrabold text-slate-900 mt-0.5">
               {safeIDR(hostShare)}
             </span>
             <span className="text-[11px] text-slate-400">
@@ -184,11 +184,11 @@ export function HostPaymentMonitorCard({
             </span>
           </div>
 
-          <div className="flex flex-col rounded-xl bg-blue-50/60 p-3 border border-blue-100/70">
+          <div className="flex flex-col rounded-2xl bg-blue-50/60 p-3.5 border border-blue-100/70">
             <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">
               Target dari Teman
             </span>
-            <span className="font-mono text-sm sm:text-base font-extrabold text-blue-900 mt-0.5">
+            <span className="font-mono tabular-nums text-sm sm:text-base font-extrabold text-blue-900 mt-0.5">
               {safeIDR(friendsTarget)}
             </span>
             <span className="text-[11px] text-blue-700/80">
@@ -198,7 +198,7 @@ export function HostPaymentMonitorCard({
         </div>
 
         {/* Progress bar */}
-        <div className="mt-3 flex flex-col gap-1.5 pt-1">
+        <div className="mt-3.5 flex flex-col gap-1.5 pt-1">
           <div className="flex items-center justify-between text-[11px]">
             <span className="font-semibold text-slate-500">
               Terkumpul: <strong className="font-bold text-slate-900">{safeIDR(verifiedFromFriends)}</strong>
@@ -207,9 +207,9 @@ export function HostPaymentMonitorCard({
               {progressPercent}% Lunas ({verifiedFriendsCount}/{friends.length})
             </span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
             <div
-              className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+              className="h-full rounded-full bg-emerald-500 transition-all duration-500"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -217,7 +217,7 @@ export function HostPaymentMonitorCard({
       </section>
 
       {/* 2. NATIVE INSET GROUPED LIST: DAFTAR TEMAN & STATUS PEMBAYARAN */}
-      <section className="rounded-2xl border border-slate-200/70 bg-white overflow-hidden shadow-2xs">
+      <section className="rounded-3xl border border-slate-100 bg-white overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] animate-fade-up stagger-1">
         <div className="flex items-center justify-between bg-slate-50/80 px-4 py-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-800">

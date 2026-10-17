@@ -152,20 +152,20 @@ export function ChatDrawer({
       />
 
       {/* Drawer Container: Bottom sheet on mobile, floating card on desktop */}
-      <div className="relative z-10 flex h-[520px] max-h-[85vh] w-full flex-col overflow-hidden rounded-t-3xl border border-slate-200 bg-white shadow-2xl sm:w-[380px] sm:rounded-2xl">
+      <div className="relative z-10 flex h-[520px] max-h-[85vh] w-full flex-col overflow-hidden rounded-t-[32px] border border-slate-200/80 bg-white shadow-2xl sm:w-[380px] sm:rounded-3xl animate-scale-in">
         {/* Mobile drag handle */}
-        <div className="flex items-center justify-center pt-2 sm:hidden">
-          <div className="h-1 w-10 rounded-full bg-slate-300" />
+        <div className="flex items-center justify-center pt-2.5 pb-1 sm:hidden">
+          <div className="h-1.5 w-12 rounded-full bg-slate-300" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-hairline/80 px-4 py-3 bg-slate-50/70">
-          <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
-              <ChatCircleDots size={16} weight="bold" />
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 bg-slate-50/70">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <ChatCircleDots size={18} weight="bold" />
             </span>
             <div>
-              <h3 className="text-xs font-bold text-ink leading-tight">Obrolan Meja</h3>
+              <h3 className="text-xs font-bold text-slate-900 leading-tight">Obrolan Meja</h3>
               <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
                 <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 <span>{uniqueEvents.length} aktivitas terdata</span>
@@ -177,7 +177,7 @@ export function ChatDrawer({
             type="button"
             onClick={onClose}
             aria-label="Tutup obrolan"
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 active:scale-95"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 active:scale-90 transition-all"
           >
             <X size={16} weight="bold" />
           </button>
@@ -186,12 +186,12 @@ export function ChatDrawer({
         {/* Messages Stream */}
         <div
           ref={scrollRef}
-          className="flex flex-1 flex-col gap-2 overflow-y-auto p-3.5 text-xs text-ink-soft"
+          className="flex flex-1 flex-col gap-2 overflow-y-auto p-4 text-xs text-slate-700"
         >
           {uniqueEvents.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center py-8 text-center text-slate-400">
-              <ChatCircleDots size={32} weight="regular" className="mb-1 text-slate-300" />
-              <p className="text-xs font-bold text-slate-600">Belum ada obrolan</p>
+              <ChatCircleDots size={36} weight="regular" className="mb-2 text-slate-300" />
+              <p className="text-xs font-bold text-slate-700">Belum ada obrolan</p>
               <p className="mt-0.5 max-w-[24ch] text-[11px] text-slate-400">
                 Ketik pesan untuk bertanya atau berkoordinasi dengan teman semeja.
               </p>
@@ -204,9 +204,9 @@ export function ChatDrawer({
                 return (
                   <div
                     key={ev.id}
-                    className="flex items-start gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1.5 text-[11px] text-slate-600 border border-slate-100"
+                    className="flex items-start gap-1.5 rounded-xl bg-slate-50 px-3 py-2 text-[11px] text-slate-600 border border-slate-100"
                   >
-                    <Info size={13} weight="bold" className="mt-0.5 shrink-0 text-blue-500" />
+                    <Info size={14} weight="bold" className="mt-0.5 shrink-0 text-blue-500" />
                     <span className="flex-1 font-medium">{ev.message}</span>
                     <span className="shrink-0 font-mono text-[9px] text-slate-400">
                       {formatTime(ev.created_at)}
@@ -217,13 +217,13 @@ export function ChatDrawer({
 
               return (
                 <div key={ev.id} className="flex flex-col gap-0.5">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="font-bold text-ink text-[11px]">{ev.display_name}</span>
+                  <div className="flex items-baseline gap-1.5 px-1">
+                    <span className="font-bold text-slate-900 text-[11px]">{ev.display_name}</span>
                     <span className="font-mono text-[9px] text-slate-400">
                       {formatTime(ev.created_at)}
                     </span>
                   </div>
-                  <div className="w-fit max-w-[85%] rounded-2xl rounded-tl-xs bg-blue-50 px-3 py-1.5 text-xs font-medium text-slate-900 border border-blue-100/70">
+                  <div className="w-fit max-w-[85%] rounded-2xl rounded-tl-xs bg-blue-50/80 px-3.5 py-2 text-xs font-medium text-slate-900 border border-blue-100/70 shadow-2xs">
                     {ev.message}
                   </div>
                 </div>
@@ -232,11 +232,11 @@ export function ChatDrawer({
           )}
         </div>
 
-        {/* Send Form */}
+        {/* Send Form with safe-area padding */}
         {isJoined ? (
           <form
             onSubmit={handleSend}
-            className="flex items-center gap-2 border-t border-hairline bg-white p-3"
+            className="flex items-center gap-2 border-t border-slate-100 bg-white px-3.5 pt-3 pb-[calc(max(env(safe-area-inset-bottom,0px),0px)+0.75rem)]"
           >
             <input
               type="text"
@@ -244,19 +244,19 @@ export function ChatDrawer({
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Tulis pesan ke teman..."
               maxLength={300}
-              className="flex-1 rounded-xl border border-hairline bg-slate-50 px-3 py-2 text-xs text-ink placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none"
+              className="flex-1 rounded-full border border-slate-200/90 bg-slate-50/70 px-4 py-2 text-xs text-slate-900 placeholder:text-slate-400 transition-all focus:border-blue-600 focus:bg-white focus:outline-none"
             />
             <button
               type="submit"
               disabled={!message.trim() || sending}
               aria-label="Kirim pesan"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white transition-all hover:bg-blue-700 active:scale-95 disabled:bg-slate-200 disabled:text-slate-400"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-xs transition-all hover:bg-blue-700 active:scale-90 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
             >
-              <PaperPlaneRight size={14} weight="bold" />
+              <PaperPlaneRight size={15} weight="bold" />
             </button>
           </form>
         ) : (
-          <div className="border-t border-hairline bg-slate-50/70 p-2.5 text-center text-[11px] font-medium text-slate-400">
+          <div className="border-t border-slate-100 bg-slate-50/70 p-3 text-center text-[11px] font-medium text-slate-400">
             Gabung ke meja untuk ikut mengobrol
           </div>
         )}

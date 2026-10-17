@@ -105,6 +105,12 @@
 
   --animate-fade-up: home-fade-up 480ms var(--spring-curve) both;
   --animate-fade-up-fast: home-fade-up 320ms var(--spring-curve) both;
+  --animate-float-slow: mobile-float 9s ease-in-out infinite;
+  --animate-float-reverse: mobile-float-reverse 11s ease-in-out infinite;
+  --animate-pulse-glow: mobile-pulse-glow 3s ease-in-out infinite;
+  --animate-shimmer: mobile-shimmer 2.5s ease-in-out infinite;
+  --animate-scale-in: mobile-scale-in 360ms var(--spring-curve) both;
+  --animate-slide-up: mobile-slide-up 400ms var(--spring-curve) both;
 }
 
 @keyframes home-fade-up {
@@ -116,6 +122,106 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes mobile-float {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-12px) scale(1.05);
+  }
+}
+
+@keyframes mobile-float-reverse {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(14px) scale(0.96);
+  }
+}
+
+@keyframes mobile-pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(37, 99, 235, 0);
+  }
+}
+
+@keyframes mobile-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  50%, 100% {
+    transform: translateX(160%);
+  }
+}
+
+@keyframes mobile-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes mobile-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger delay utilities for clean progressive rendering */
+.stagger-1 {
+  animation-delay: 60ms !important;
+}
+.stagger-2 {
+  animation-delay: 120ms !important;
+}
+.stagger-3 {
+  animation-delay: 180ms !important;
+}
+.stagger-4 {
+  animation-delay: 240ms !important;
+}
+.stagger-5 {
+  animation-delay: 300ms !important;
+}
+
+/* Tactile mobile touch response */
+.touch-press {
+  transition: transform 140ms var(--spring-curve), filter 140ms ease;
+  will-change: transform;
+}
+.touch-press:active {
+  transform: scale(0.96);
+}
+
+/* Mobile glassmorphism surfaces */
+.mobile-glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 10px 30px -5px rgba(37, 99, 235, 0.05);
+}
+
+.mobile-glass-bar {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(226, 232, 240, 0.7);
 }
 
 html,
@@ -139,7 +245,7 @@ button {
 }
 
 button:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
 /* Hide scrollbars globally across all elements for authentic native app feel */

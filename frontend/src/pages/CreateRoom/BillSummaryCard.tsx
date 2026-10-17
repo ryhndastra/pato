@@ -86,7 +86,7 @@ export function BillSummaryCard({
                 <span className="block text-sm font-bold text-slate-900">Grand Total</span>
                 <span className="text-xs text-slate-400">Total seluruh tagihan</span>
               </div>
-              <span className="font-mono text-2xl font-black text-blue-600 sm:text-3xl">
+              <span className="font-mono tabular-nums text-2xl font-black text-slate-900 sm:text-3xl">
                 {formatIDR(grandTotal)}
               </span>
             </div>
@@ -95,7 +95,7 @@ export function BillSummaryCard({
 
         {/* Rounding Mode Option */}
         {roundMode && setRoundMode && (
-          <div className="mt-4 rounded-2xl bg-slate-50 p-3.5 border border-slate-100">
+          <div className="mt-4 rounded-2xl bg-slate-50/80 p-3.5 border border-slate-100">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-slate-800">Pembulatan Tagihan</span>
               <span className="text-[10px] text-slate-400 font-medium">Per orang</span>
@@ -112,9 +112,9 @@ export function BillSummaryCard({
                     key={m.id}
                     type="button"
                     onClick={() => setRoundMode(m.id as "none" | "hundred" | "thousand")}
-                    className={`rounded-xl py-2 px-1 text-center transition-all ${
+                    className={`rounded-xl py-2 px-1 text-center transition-all duration-150 active:scale-95 ${
                       active
-                        ? "bg-blue-600 text-white font-bold shadow-2xs"
+                        ? "bg-blue-600 text-white font-bold shadow-[0_2px_8px_rgba(37,99,235,0.25)]"
                         : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-100"
                     }`}
                   >
@@ -145,7 +145,7 @@ export function BillSummaryCard({
         <button
           type="submit"
           disabled={!canSubmit}
-          className="mt-6 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 text-sm font-bold text-white shadow-md shadow-blue-600/20 transition-all hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
+          className="mt-6 flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 text-sm font-bold text-white shadow-[0_6px_20px_rgba(37,99,235,0.28)] transition-all hover:opacity-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-none disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
         >
           {submitting ? (
             <>

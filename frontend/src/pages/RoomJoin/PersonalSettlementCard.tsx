@@ -76,7 +76,7 @@ export function PersonalSettlementCard({
   const hasQris = Boolean(room.qris_image_url);
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-slate-200/70 bg-white p-5 shadow-2xs">
+    <section className="flex flex-col gap-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sm:p-6 animate-fade-up">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
@@ -90,25 +90,25 @@ export function PersonalSettlementCard({
 
         <div>
           {paymentStatus === "VERIFIED" && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-100">
               <CheckCircle size={14} weight="fill" className="text-emerald-600" />
               Lunas
             </span>
           )}
           {paymentStatus === "PENDING" && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 border border-amber-100">
               <Clock size={14} weight="bold" />
               Menunggu Host
             </span>
           )}
           {paymentStatus === "REJECTED" && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700 border border-rose-100">
               <WarningCircle size={14} weight="bold" />
               Bukti Ditolak
             </span>
           )}
           {paymentStatus === "UNPAID" && (
-            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
               Belum Bayar
             </span>
           )}
@@ -116,13 +116,13 @@ export function PersonalSettlementCard({
       </div>
 
       {/* 1. NOMINAL TRANSFER HERO */}
-      <div className="flex flex-col gap-2.5 rounded-xl bg-slate-50 p-4 border border-slate-100">
+      <div className="flex flex-col gap-2.5 rounded-2xl bg-slate-50/80 p-4 border border-slate-100">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               Nominal Pas Transfer
             </span>
-            <p className="font-mono text-2xl sm:text-3xl font-black text-slate-900">
+            <p className="font-mono tabular-nums text-2xl sm:text-3xl font-black text-slate-900">
               {safeIDR(me.share_amount)}
             </p>
             {Boolean(me.raw_share_amount && me.raw_share_amount !== me.share_amount) && (
@@ -135,7 +135,7 @@ export function PersonalSettlementCard({
           <button
             type="button"
             onClick={() => copyNominal(String(me.share_amount))}
-            className="flex items-center gap-1.5 rounded-full bg-slate-900 px-3.5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-black active:scale-95 transition-all"
+            className="flex items-center gap-1.5 rounded-full bg-slate-900 px-3.5 py-2 text-xs font-bold text-white shadow-2xs hover:bg-black active:scale-90 transition-all"
           >
             {copiedNominal ? (
               <>

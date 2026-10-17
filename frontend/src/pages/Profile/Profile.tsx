@@ -199,16 +199,16 @@ export function Profile() {
       {/* 1. Curved Gradient Header (EXACT MATCH to DashboardHero) */}
       <div className="relative w-full">
         <div className="relative overflow-hidden rounded-b-[44px] bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500 px-5 pt-[calc(max(env(safe-area-inset-top,0px),0px)+2.5rem)] pb-24 sm:rounded-b-[56px] sm:px-8 sm:pt-16 sm:pb-32 lg:rounded-b-[68px] lg:px-12 lg:pt-20 lg:pb-38">
-          {/* Ambient glow orbs */}
-          <div className="pointer-events-none absolute -top-16 -right-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-16 left-10 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+          {/* Ambient glow orbs with smooth floating animation */}
+          <div className="pointer-events-none absolute -top-16 -right-16 h-72 w-72 rounded-full bg-white/15 blur-3xl animate-float-slow" />
+          <div className="pointer-events-none absolute -bottom-16 left-10 h-72 w-72 rounded-full bg-white/10 blur-3xl animate-float-reverse" />
 
           <div className="relative z-10 mx-auto flex w-full max-w-[1120px] items-center justify-between">
-            <div>
+            <div className="animate-fade-up">
               <p className="text-xs font-medium text-white/80 sm:text-sm lg:text-base">
                 Profil Akun Kamu
               </p>
-              <h1 className="mt-0.5 text-2xl font-extrabold tracking-tight text-white capitalize sm:text-3xl lg:text-4xl">
+              <h1 className="mt-0.5 text-2xl font-black tracking-tight text-white capitalize sm:text-3xl lg:text-4xl">
                 {displayName}
               </h1>
             </div>
@@ -218,7 +218,7 @@ export function Profile() {
               type="button"
               onClick={() => setIsEditingProfile(true)}
               title="Ubah Foto & Profil"
-              className="group relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-[2.5px] border-white/80 bg-white/20 text-sm font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 sm:h-14 sm:w-14 lg:h-16 lg:w-16"
+              className="group relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-[2.5px] border-white/80 bg-white/20 text-sm font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 sm:h-14 sm:w-14 lg:h-16 lg:w-16 animate-fade-up"
             >
               {user?.avatarUrl ? (
                 <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
@@ -233,7 +233,7 @@ export function Profile() {
         </div>
 
         {/* 2. Floating Overlapping Card (EXACT MATCH to Dashboard floating layout) */}
-        <div className="relative z-10 mx-auto -mt-12 w-full max-w-[1120px] px-4 sm:-mt-16 sm:px-6 lg:-mt-20 lg:px-8">
+        <div className="relative z-10 mx-auto -mt-12 w-full max-w-[1120px] px-4 sm:-mt-16 sm:px-6 lg:-mt-20 lg:px-8 animate-fade-up stagger-1">
           <div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-[0_16px_40px_rgba(37,99,235,0.09)] sm:p-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
               <div>
@@ -322,7 +322,7 @@ export function Profile() {
       {/* 3. Main Bento Settings Grid */}
       <main className="mx-auto flex w-full max-w-[1120px] flex-col gap-4 px-4 sm:px-6 lg:px-8">
         {/* Section: Rekening Payout Default */}
-        <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-xs sm:p-6">
+        <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sm:p-6 animate-fade-up stagger-2">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
             <div className="flex items-center gap-2.5">
               <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
@@ -487,7 +487,7 @@ export function Profile() {
         </section>
 
         {/* Section: Preferensi Pembagian & Kalkulasi */}
-        <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-xs sm:p-6">
+        <section className="rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sm:p-6 animate-fade-up stagger-3">
           <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-purple-50 text-purple-600">
               <CurrencyCircleDollar size={18} weight="bold" />
@@ -631,8 +631,8 @@ export function Profile() {
         </section>
 
         {/* Section: Maskot PaTo Info Card */}
-        <section className="flex flex-col sm:flex-row items-center gap-4 rounded-3xl border border-blue-100 bg-gradient-to-r from-blue-50/80 to-indigo-50/60 p-5 shadow-2xs">
-          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-white shadow-xs ring-2 ring-blue-100">
+        <section className="flex flex-col sm:flex-row items-center gap-4 rounded-3xl border border-blue-100 bg-gradient-to-r from-blue-50/80 to-indigo-50/60 p-5 shadow-2xs animate-fade-up stagger-4">
+          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-white shadow-xs ring-2 ring-blue-100 animate-float-slow">
             <img src={mascotHelper} alt="Pato Mascot" className="h-full w-full object-cover" />
             <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-amber-400 text-slate-900 shadow-xs">
               <Sparkle size={12} weight="fill" />

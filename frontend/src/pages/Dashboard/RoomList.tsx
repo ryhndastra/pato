@@ -28,10 +28,8 @@ export function RoomList({
 
   if (error) {
     return (
-      <div className="rounded-[1.75rem] bg-rose-50/80 p-1.5 ring-1 ring-rose-200 sm:rounded-[2rem]">
-        <div className="rounded-[calc(1.75rem-0.375rem)] bg-white p-5 text-center shadow-xs sm:rounded-[calc(2rem-0.5rem)]">
-          <p className="text-xs font-bold text-rose-700 sm:text-sm">{error}</p>
-        </div>
+      <div className="rounded-3xl border border-rose-100 bg-rose-50/70 p-5 text-center shadow-2xs">
+        <p className="text-xs font-bold text-rose-700 sm:text-sm">{error}</p>
       </div>
     );
   }
@@ -42,9 +40,11 @@ export function RoomList({
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-40 rounded-[1.75rem] bg-slate-200/50 p-1 ring-1 ring-black/5 animate-pulse sm:h-44 sm:rounded-[2rem] sm:p-1.5"
+            className="h-44 rounded-3xl border border-slate-100 bg-white p-5 shadow-2xs animate-pulse"
           >
-            <div className="h-full rounded-[calc(1.75rem-0.25rem)] bg-white sm:rounded-[calc(2rem-0.375rem)]" />
+            <div className="h-4 w-24 rounded-full bg-slate-100" />
+            <div className="mt-4 h-5 w-3/4 rounded-lg bg-slate-100" />
+            <div className="mt-6 h-12 w-full rounded-2xl bg-slate-50" />
           </div>
         ))}
       </div>
@@ -54,46 +54,44 @@ export function RoomList({
   // Empty state when no rooms exist
   if (rooms.length === 0) {
     return (
-      <div className="rounded-[2rem] bg-slate-200/60 p-1.5 ring-1 ring-black/5 sm:rounded-[2.25rem] sm:p-2">
-        <div className="flex flex-col items-center rounded-[calc(2rem-0.375rem)] bg-white px-5 py-8 text-center shadow-xs sm:rounded-[calc(2.25rem-0.5rem)] sm:px-6 sm:py-12">
-          {/* Mascot illustration */}
-          <div className="relative mb-4 rounded-2xl bg-blue-50/80 p-1.5 ring-1 ring-blue-100 shadow-xs sm:mb-5 sm:rounded-[2rem] sm:p-2">
-            <div className="h-24 w-24 overflow-hidden rounded-[calc(1rem-0.25rem)] bg-white p-1 sm:h-28 sm:w-28 sm:rounded-[calc(2rem-0.5rem)]">
-              <img
-                src={mascotCelebrating}
-                alt="Pato Mascot Celebrating"
-                className="h-full w-full object-contain"
-              />
-            </div>
-            <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white shadow-xs sm:h-7 sm:w-7">
-              <Sparkle size={13} weight="fill" />
+      <div className="rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-[0_4px_24px_rgba(0,0,0,0.02)] sm:p-10 animate-fade-up">
+        {/* Mascot illustration with subtle float animation */}
+        <div className="relative mx-auto mb-4 inline-block">
+          <div className="relative h-28 w-28 overflow-hidden rounded-3xl border-2 border-blue-100/80 bg-blue-50/50 p-1.5 shadow-sm sm:h-32 sm:w-32 animate-float-slow">
+            <img
+              src={mascotCelebrating}
+              alt="Pato Mascot Celebrating"
+              className="h-full w-full object-contain"
+            />
+          </div>
+          <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-white shadow-md shadow-blue-600/30">
+            <Sparkle size={14} weight="fill" />
+          </span>
+        </div>
+
+        <h3 className="text-lg font-bold text-slate-900 sm:text-xl">Belum Ada Meja Patungan</h3>
+        <p className="mx-auto mt-1.5 max-w-[42ch] text-xs leading-relaxed text-slate-500 sm:text-sm sm:mt-2">
+          Buat meja patungan pertamamu, upload foto struk kasir atau input menu langsung, lalu bagikan tautan unik ke temanmu.
+        </p>
+
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => navigate("/create")}
+            className="group flex h-11 items-center gap-2 rounded-full bg-blue-600 px-5 text-xs font-bold text-white shadow-[0_4px_14px_rgba(37,99,235,0.25)] transition-all hover:bg-blue-700 active:scale-95 sm:gap-2.5"
+          >
+            <span>Buat Meja Sekarang</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-white transition-transform group-hover:rotate-90">
+              <Plus size={13} weight="bold" />
             </span>
-          </div>
-
-          <h3 className="text-lg font-extrabold text-ink sm:text-xl">Belum Ada Meja Patungan</h3>
-          <p className="mt-1.5 max-w-[40ch] text-xs leading-relaxed text-ink-muted sm:mt-2">
-            Buat meja patungan pertamamu, upload foto struk kasir atau input menu langsung, lalu bagikan tautan unik ke temanmu.
-          </p>
-
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5 sm:mt-6 sm:gap-3">
-            <button
-              type="button"
-              onClick={() => navigate("/create")}
-              className="group flex h-10 items-center gap-2 rounded-full bg-blue-600 px-4 text-xs font-bold text-white shadow-xs transition-all hover:bg-blue-700 active:scale-[0.98] sm:h-11 sm:px-5 sm:gap-2.5"
-            >
-              <span>Buat Meja Sekarang</span>
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-white transition-transform group-hover:rotate-90 sm:h-6 sm:w-6">
-                <Plus size={13} weight="bold" />
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/create?event=Makan+Siang+Kantor")}
-              className="h-10 rounded-full border border-hairline bg-slate-50 px-3.5 text-xs font-bold text-ink transition-all hover:bg-slate-100 sm:h-11 sm:px-4"
-            >
-              Makan Siang Kantor
-            </button>
-          </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/create?event=Makan+Siang+Kantor")}
+            className="h-11 rounded-full border border-slate-200/80 bg-white px-4 text-xs font-bold text-slate-700 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95"
+          >
+            Makan Siang Kantor
+          </button>
         </div>
       </div>
     );
@@ -117,10 +115,10 @@ export function RoomList({
 
       // Status label alias match
       const matchesStatus =
-        (query.includes("selesai") || query.includes("lunas")) && room.status === "CLOSED" ||
-        query.includes("klaim") && room.status === "CLAIMING" ||
-        query.includes("kunci") && room.status === "LOCKED" ||
-        query.includes("draft") && room.status === "DRAFT";
+        ((query.includes("selesai") || query.includes("lunas")) && room.status === "CLOSED") ||
+        (query.includes("klaim") && room.status === "CLAIMING") ||
+        (query.includes("kunci") && room.status === "LOCKED") ||
+        (query.includes("draft") && room.status === "DRAFT");
 
       return matchesTitle || matchesCode || matchesStatus;
     }
@@ -130,33 +128,32 @@ export function RoomList({
   // Empty state when search or filter returns no results
   if (filtered.length === 0) {
     return (
-      <div className="rounded-[1.75rem] bg-slate-200/50 p-1 ring-1 ring-black/5 sm:rounded-[2rem] sm:p-1.5">
-        <div className="flex flex-col items-center rounded-[calc(1.75rem-0.25rem)] bg-white px-5 py-8 text-center shadow-xs sm:rounded-[calc(2rem-0.375rem)] sm:px-6 sm:py-10">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-ink-muted sm:h-12 sm:w-12">
-            <MagnifyingGlass size={22} weight="bold" />
-          </div>
-          <h3 className="mt-3 text-sm font-bold text-ink sm:text-base">Tidak Ada Room Ditemukan</h3>
-          <p className="mt-1 max-w-[32ch] text-xs text-ink-muted">
-            Tidak ada room yang sesuai dengan pencarian &quot;{searchQuery}&quot; atau filter yang dipilih.
-          </p>
-          <button
-            type="button"
-            onClick={onResetFilters}
-            className="mt-3.5 rounded-full bg-slate-100 px-3.5 py-1.5 text-xs font-bold text-blue-600 transition-colors hover:bg-slate-200 sm:mt-4 sm:px-4 sm:py-2"
-          >
-            Reset Pencarian & Filter
-          </button>
+      <div className="rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-[0_4px_24px_rgba(0,0,0,0.02)] sm:p-10 animate-fade-up">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-400">
+          <MagnifyingGlass size={24} weight="bold" />
         </div>
+        <h3 className="mt-3 text-sm font-bold text-slate-900 sm:text-base">Tidak Ada Room Ditemukan</h3>
+        <p className="mx-auto mt-1 max-w-[34ch] text-xs text-slate-400">
+          Tidak ada room yang sesuai dengan pencarian &quot;{searchQuery}&quot; atau filter yang dipilih.
+        </p>
+        <button
+          type="button"
+          onClick={onResetFilters}
+          className="mt-4 rounded-full bg-blue-50 px-4 py-2 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-100 active:scale-95"
+        >
+          Reset Pencarian & Filter
+        </button>
       </div>
     );
   }
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-      {filtered.map((room) => (
+      {filtered.map((room, idx) => (
         <RoomCard
           key={room.room_code}
           room={room}
+          index={idx}
           onOpenNudge={onOpenNudge}
           onDeleted={onDeleted}
         />

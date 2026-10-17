@@ -85,17 +85,17 @@ export function History() {
     <div className="flex flex-1 flex-col gap-6 pb-20 sm:gap-7 lg:gap-8 bg-slate-50/60 min-h-dvh">
       {/* 1. Curved Blue Gradient Header matching Dashboard */}
       <div className="relative w-full">
-        <div className="relative overflow-hidden rounded-b-[44px] bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500 px-5 pt-10 pb-20 sm:rounded-b-[56px] sm:px-8 sm:pt-14 sm:pb-28 lg:rounded-b-[68px] lg:px-12 lg:pt-16 lg:pb-32">
+        <div className="relative overflow-hidden rounded-b-[44px] bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500 px-5 pt-[calc(max(env(safe-area-inset-top,0px),0px)+2rem)] pb-20 sm:rounded-b-[56px] sm:px-8 sm:pt-14 sm:pb-28 lg:rounded-b-[68px] lg:px-12 lg:pt-16 lg:pb-32">
           {/* Ambient glow orbs */}
-          <div className="pointer-events-none absolute -top-16 -right-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-16 left-10 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+          <div className="pointer-events-none absolute -top-16 -right-16 h-72 w-72 rounded-full bg-white/15 blur-3xl animate-float-slow" />
+          <div className="pointer-events-none absolute -bottom-16 left-10 h-72 w-72 rounded-full bg-white/10 blur-3xl animate-float-reverse" />
 
           <div className="relative z-10 mx-auto flex w-full max-w-[1120px] items-center justify-between">
-            <div>
+            <div className="animate-fade-up">
               <p className="text-xs font-medium text-white/80 sm:text-sm lg:text-base">
                 Arsip & Riwayat
               </p>
-              <h1 className="mt-0.5 text-2xl font-extrabold tracking-tight text-white capitalize sm:text-3xl lg:text-4xl">
+              <h1 className="mt-0.5 text-2xl font-black tracking-tight text-white capitalize sm:text-3xl lg:text-4xl">
                 Riwayat Patungan
               </h1>
             </div>
@@ -103,7 +103,7 @@ export function History() {
             <button
               type="button"
               onClick={() => navigate("/dashboard")}
-              className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3.5 py-1.5 text-xs font-bold text-white backdrop-blur-md transition-all hover:bg-white/30 active:scale-95"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3.5 py-1.5 text-xs font-bold text-white backdrop-blur-md transition-all hover:bg-white/30 active:scale-95 animate-fade-up"
             >
               <ArrowLeft size={14} weight="bold" />
               <span>Beranda</span>
@@ -112,15 +112,15 @@ export function History() {
         </div>
 
         {/* Floating Quick Summary Cards overlapping header */}
-        <div className="relative z-10 mx-auto -mt-10 w-full max-w-[1120px] px-4 sm:-mt-14 sm:px-6 lg:px-8">
+        <div className="relative z-10 mx-auto -mt-10 w-full max-w-[1120px] px-4 sm:-mt-14 sm:px-6 lg:px-8 animate-fade-up stagger-1">
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {/* Total Settled */}
             <div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-[0_16px_40px_rgba(37,99,235,0.08)] sm:p-5">
-              <span className="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-ink-muted uppercase tracking-wider sm:text-xs">
+              <span className="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-slate-400 uppercase tracking-wider sm:text-xs">
                 <Coins size={16} weight="bold" className="text-blue-600" />
                 <span>Total Selesai Lunas</span>
               </span>
-              <p className="mt-2 font-mono text-xl font-black text-slate-900 sm:text-2xl">
+              <p className="mt-2 font-mono tabular-nums text-xl font-black text-slate-900 sm:text-2xl">
                 {formatIDR(totalSpentSettled)}
               </p>
               <p className="mt-1 text-[11px] text-slate-400">Semua tagihan tanpa selisih</p>
@@ -128,11 +128,11 @@ export function History() {
 
             {/* Room Count */}
             <div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-[0_16px_40px_rgba(37,99,235,0.08)] sm:p-5">
-              <span className="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-ink-muted uppercase tracking-wider sm:text-xs">
+              <span className="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-slate-400 uppercase tracking-wider sm:text-xs">
                 <Receipt size={16} weight="bold" className="text-emerald-600" />
                 <span>Meja Selesai</span>
               </span>
-              <p className="mt-2 font-mono text-xl font-black text-emerald-600 sm:text-2xl">
+              <p className="mt-2 font-mono tabular-nums text-xl font-black text-emerald-600 sm:text-2xl">
                 {closedRooms.length} <span className="text-xs font-sans font-bold text-slate-400">meja</span>
               </p>
               <p className="mt-1 text-[11px] text-slate-400">dari {rooms?.length ?? 0} total meja</p>

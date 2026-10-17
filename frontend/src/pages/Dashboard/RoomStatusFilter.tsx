@@ -18,17 +18,19 @@ export function RoomStatusFilter({ value, onChange, counts }: RoomStatusFilterPr
             key={filter.id}
             type="button"
             onClick={() => onChange(filter.id)}
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-all active:scale-[0.98] ${
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-all duration-200 active:scale-95 ${
               isActive
-                ? "bg-blue-600 text-white shadow-xs"
-                : "bg-slate-100/90 text-ink-soft hover:bg-slate-200/80 hover:text-ink ring-1 ring-black/5"
+                ? "bg-blue-600 text-white shadow-[0_4px_14px_rgba(37,99,235,0.25)]"
+                : "bg-white text-slate-600 border border-slate-200/80 hover:border-slate-300 hover:text-slate-900 shadow-2xs"
             }`}
           >
             <span>{filter.label}</span>
             {count !== null && count > 0 && (
               <span
-                className={`rounded-full px-1.5 py-0.2 text-[10px] font-extrabold ${
-                  isActive ? "bg-white/20 text-white" : "bg-white text-ink-muted ring-1 ring-black/5"
+                className={`rounded-full px-1.5 py-0.5 text-[10px] font-extrabold leading-none transition-colors ${
+                  isActive
+                    ? "bg-white/20 text-white"
+                    : "bg-slate-100 text-slate-500"
                 }`}
               >
                 {count}

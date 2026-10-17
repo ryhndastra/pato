@@ -72,9 +72,9 @@ export function CreateRoom() {
 
       {/* Floating Main Form Content overlapping header */}
       <main className="relative z-10 mx-auto -mt-10 max-w-[1120px] px-4 sm:-mt-12 sm:px-6 lg:-mt-14 lg:px-8">
-        <form onSubmit={handleSubmit} className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-8">
+        <form onSubmit={handleSubmit} className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-8 animate-fade-up">
           {/* Left Column: Form Details & Items */}
-          <div className="space-y-6 lg:col-span-7 xl:col-span-8">
+          <div className="space-y-5 lg:col-span-7 xl:col-span-8">
             {/* Event Title & Host */}
             <RoomDetailsCard
               title={title}
@@ -129,7 +129,7 @@ export function CreateRoom() {
           </div>
 
           {/* Right Column: Live Bill Summary & Action (Sticky on Desktop) */}
-          <div className="mt-6 lg:sticky lg:top-20 lg:col-span-5 lg:mt-0 xl:col-span-4">
+          <div className="mt-5 lg:sticky lg:top-20 lg:col-span-5 lg:mt-0 xl:col-span-4">
             <BillSummaryCard
               subtotal={subtotal}
               taxAmount={taxAmount}
@@ -145,21 +145,21 @@ export function CreateRoom() {
             />
           </div>
 
-          {/* Mobile Bottom Floating Bar */}
-          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-100 bg-white/95 px-4 py-3 shadow-[0_-8px_20px_rgba(0,0,0,0.06)] backdrop-blur-md lg:hidden">
+          {/* Mobile Bottom Frosted Floating Bar */}
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/70 bg-white/90 px-4 pt-3 pb-[calc(max(env(safe-area-inset-bottom,0px),0px)+0.75rem)] shadow-[0_-8px_25px_rgba(0,0,0,0.06)] backdrop-blur-xl lg:hidden">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <span className="block text-[10px] font-semibold text-slate-400">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Total ({items.length} menu)
                 </span>
-                <span className="truncate font-mono text-base font-extrabold text-blue-600">
+                <span className="truncate font-mono tabular-nums text-lg font-black text-slate-900">
                   {formatIDR(grandTotal)}
                 </span>
               </div>
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-xs font-bold text-white shadow-md shadow-blue-600/20 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
+                className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-5 text-xs font-bold text-white shadow-[0_4px_16px_rgba(37,99,235,0.28)] transition-all active:scale-95 disabled:cursor-not-allowed disabled:bg-none disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
               >
                 {submitting ? (
                   <>
