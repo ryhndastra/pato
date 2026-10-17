@@ -11,7 +11,7 @@ services:
       - .env.docker
     environment:
       POSTGRES_USER: ${DB_USER:-pato_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-pato_secret_db_2026}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME:-pato_db}
     volumes:
       - pato_pg_data:/var/lib/postgresql/data
@@ -36,11 +36,11 @@ services:
       - PORT=4000
       - NODE_ENV=production
       # Otomatis terkoneksi ke container db_pato di atas
-      - DATABASE_URL=postgresql://${DB_USER:-pato_user}:${DB_PASSWORD:-pato_secret_db_2026}@db_pato:5432/${DB_NAME:-pato_db}
-      - FRONTEND_URL=${FRONTEND_URL:-https://pato.ryhndastra.site}
-      - JWT_SECRET=${JWT_SECRET:-16ca4840a273f7b53b98d67d61a95d2249add6df37e34b8aefa2249409819b8f3d97600b47e0a9134f624b28ef528516}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-719565988722-k5ggk4uck65skvn506bhilpi4gv90uc2.apps.googleusercontent.com}
-      - CORS_ORIGIN=*
+      - DATABASE_URL=postgresql://${DB_USER:-pato_user}:${DB_PASSWORD}@db_pato:5432/${DB_NAME:-pato_db}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
     depends_on:
       db_pato:
         condition: service_healthy
@@ -59,7 +59,7 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
       args:
-        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-719565988722-k5ggk4uck65skvn506bhilpi4gv90uc2.apps.googleusercontent.com}
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     container_name: pato_web
     restart: unless-stopped
     ports:

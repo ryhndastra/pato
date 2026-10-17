@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Argumen build Google Client ID jika disuplai via environment
 ARG VITE_GOOGLE_CLIENT_ID
-ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID:-719565988722-k5ggk4uck65skvn506bhilpi4gv90uc2.apps.googleusercontent.com}
+ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
 
 # ─── LAYER CACHE TRICK ──────────────────────────────────────────────
 COPY package.json package-lock.json ./

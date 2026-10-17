@@ -5,7 +5,7 @@ echo "🚀 [1/3] Mengambil kode terbaru dari Git..."
 git pull origin main
 
 echo "🐳 [2/3] Membuild dan merestart container Docker..."
-docker compose up -d --build
+docker compose --env-file .env.docker up -d --build
 
 echo "🧹 [3/3] Membersihkan image lama yang tidak terpakai..."
 docker image prune -f
