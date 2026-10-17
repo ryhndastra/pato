@@ -1,4 +1,5 @@
 import { useState, useId, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   ChatCircleDots,
   CheckCircle,
@@ -89,12 +90,12 @@ export function WhatsAppNudgeModal({
     window.open(waUrl, "_blank", "noopener,noreferrer");
   }
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="nudge-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 animate-fade-in"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 animate-fade-in"
     >
       {/* Backdrop */}
       <div
@@ -281,6 +282,7 @@ export function WhatsAppNudgeModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

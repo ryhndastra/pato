@@ -537,9 +537,9 @@ export function RoomJoin() {
                         type="button"
                         onClick={() => setShowDeleteModal(true)}
                         disabled={deleting}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline disabled:opacity-50"
                       >
-                        <Trash size={13} weight="bold" />
+                        <Trash size={14} weight="bold" />
                         <span>{deleting ? "Menghapus Meja..." : "Hapus Meja Permanen"}</span>
                       </button>
                     </div>
@@ -695,7 +695,7 @@ export function RoomJoin() {
             <RoomSummary room={room} />
 
             {isHost && (
-              <div className="flex flex-col items-center gap-1 pt-2">
+              <div className="flex flex-col items-center gap-1 pt-4 pb-2">
                 {deleteError && (
                   <p className="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">
                     {deleteError}
@@ -705,9 +705,9 @@ export function RoomJoin() {
                   type="button"
                   onClick={() => setShowDeleteModal(true)}
                   disabled={deleting}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline disabled:opacity-50"
                 >
-                  <Trash size={13} weight="bold" />
+                  <Trash size={14} weight="bold" />
                   <span>{deleting ? "Menghapus Meja..." : "Hapus Meja Permanen"}</span>
                 </button>
               </div>

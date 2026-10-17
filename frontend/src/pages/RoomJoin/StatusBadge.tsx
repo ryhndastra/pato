@@ -9,16 +9,16 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   switch (status) {
     case "LOCKED":
       return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/20 px-2.5 py-0.5 text-[11px] font-bold text-amber-100 backdrop-blur-md shadow-2xs">
-          <LockSimple size={12} weight="bold" className="text-amber-300" />
+        <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-800 shadow-2xs">
+          <LockSimple size={12} weight="bold" className="text-amber-600" />
           <span>Tagihan Dikunci</span>
         </span>
       );
 
     case "CLOSED":
       return (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/40 bg-emerald-400/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-100 backdrop-blur-md shadow-2xs">
-          <CheckCircle size={12} weight="bold" className="text-emerald-300" />
+        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800 shadow-2xs">
+          <CheckCircle size={12} weight="bold" className="text-emerald-600" />
           <span>Selesai</span>
         </span>
       );

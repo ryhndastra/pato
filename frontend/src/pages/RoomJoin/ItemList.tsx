@@ -212,21 +212,21 @@ export function ItemList({
             </div>
           )}
 
-          {/* Single clean row of filter pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+          {/* Native segmented filter track */}
+          <div className="flex items-center gap-1 rounded-2xl bg-slate-100/90 p-1 overflow-x-auto no-scrollbar text-xs">
             <button
               type="button"
               onClick={() => setFilterMode("all")}
-              className={`inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-full px-3.5 font-bold transition-all ${
+              className={`flex-1 min-w-[70px] inline-flex h-8 items-center justify-center gap-1.5 rounded-xl px-3 font-bold transition-all ${
                 filterMode === "all"
-                  ? "bg-slate-900 text-white shadow-xs"
-                  : "border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 shadow-2xs"
+                  ? "bg-white text-slate-900 shadow-2xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <span>Semua</span>
               <span
                 className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] font-bold ${
-                  filterMode === "all" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
+                  filterMode === "all" ? "bg-slate-100 text-slate-700" : "text-slate-400"
                 }`}
               >
                 {items.length}
@@ -237,16 +237,16 @@ export function ItemList({
               <button
                 type="button"
                 onClick={() => setFilterMode("unclaimed")}
-                className={`inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-full px-3.5 font-bold transition-all ${
+                className={`flex-1 min-w-[100px] inline-flex h-8 items-center justify-center gap-1.5 rounded-xl px-3 font-bold transition-all ${
                   filterMode === "unclaimed"
-                    ? "bg-slate-900 text-white shadow-xs"
-                    : "border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 shadow-2xs"
+                    ? "bg-white text-slate-900 shadow-2xs font-extrabold"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <span>Belum Lengkap</span>
                 <span
                   className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] font-bold ${
-                    filterMode === "unclaimed" ? "bg-white/20 text-white" : "bg-amber-100 text-amber-800"
+                    filterMode === "unclaimed" ? "bg-amber-100 text-amber-800" : "text-amber-600 font-extrabold"
                   }`}
                 >
                   {unclaimedCount}
@@ -258,16 +258,16 @@ export function ItemList({
               <button
                 type="button"
                 onClick={() => setFilterMode("shared")}
-                className={`inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-full px-3.5 font-bold transition-all ${
+                className={`flex-1 min-w-[95px] inline-flex h-8 items-center justify-center gap-1.5 rounded-xl px-3 font-bold transition-all ${
                   filterMode === "shared"
-                    ? "bg-slate-900 text-white shadow-xs"
-                    : "border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 shadow-2xs"
+                    ? "bg-white text-slate-900 shadow-2xs font-extrabold"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <span>Makan Bareng</span>
                 <span
                   className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] font-bold ${
-                    filterMode === "shared" ? "bg-white/20 text-white" : "bg-indigo-100 text-indigo-800"
+                    filterMode === "shared" ? "bg-indigo-100 text-indigo-800" : "text-indigo-600 font-extrabold"
                   }`}
                 >
                   {sharedCount}
@@ -279,17 +279,17 @@ export function ItemList({
               <button
                 type="button"
                 onClick={() => setFilterMode("mine")}
-                className={`inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-full px-3.5 font-bold transition-all ${
+                className={`flex-1 min-w-[95px] inline-flex h-8 items-center justify-center gap-1.5 rounded-xl px-3 font-bold transition-all ${
                   filterMode === "mine"
-                    ? "bg-blue-600 text-white shadow-[0_2px_10px_rgba(37,99,235,0.25)]"
-                    : "border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 shadow-2xs"
+                    ? "bg-white text-blue-700 shadow-2xs font-extrabold"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <span>Pesanan Saya</span>
                 {myClaimedItems.length > 0 && (
                   <span
                     className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] font-bold ${
-                      filterMode === "mine" ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700"
+                      filterMode === "mine" ? "bg-blue-100 text-blue-700" : "text-blue-600 font-bold"
                     }`}
                   >
                     {myClaimedItems.length}
