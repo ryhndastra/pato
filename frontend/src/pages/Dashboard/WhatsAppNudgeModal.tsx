@@ -108,11 +108,11 @@ export function WhatsAppNudgeModal({
         {/* 1. STICKY HEADER */}
         <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white px-5 py-4">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-tr from-emerald-100 to-blue-50 ring-1 ring-black/5 shadow-xs">
+            <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl bg-white ring-1 ring-slate-100 shadow-xs p-0.5">
               <img
                 src={mascotCelebrating}
                 alt="Pato Mascot"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
               />
             </div>
             <div className="min-w-0">

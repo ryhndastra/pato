@@ -57,7 +57,7 @@ export function RoomList({
       <div className="rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-[0_4px_24px_rgba(0,0,0,0.02)] sm:p-10 animate-fade-up">
         {/* Mascot illustration */}
         <div className="relative mx-auto mb-4 inline-block">
-          <div className="relative h-28 w-28 overflow-hidden rounded-3xl border-2 border-blue-100/80 bg-blue-50/50 p-1.5 shadow-sm sm:h-32 sm:w-32">
+          <div className="relative h-28 w-28 overflow-hidden rounded-3xl border-2 border-blue-100 bg-white p-1.5 shadow-sm sm:h-32 sm:w-32">
             <img
               src={mascotCelebrating}
               alt="Pato Mascot Celebrating"

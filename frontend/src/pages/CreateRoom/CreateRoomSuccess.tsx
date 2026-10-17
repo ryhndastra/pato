@@ -98,7 +98,7 @@ export function CreateRoomSuccess({
                 <img
                   src={patoMascotCelebrating}
                   alt="Pato Mascot Merayakan"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain"
                 />
               </div>
               <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md ring-2 ring-white">

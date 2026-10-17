@@ -16,6 +16,7 @@ import { ApiError } from "../../lib/api";
 
 import mascotHelper from "../../assets/pato_mascot_helper.jpg";
 import mascotCelebrating from "../../assets/pato_mascot_celebrating.jpg";
+import mascotWallet from "../../assets/pato_mascot_wallet.jpg";
 import patoPlain from "../../assets/pato.png";
 
 interface EditProfileModalProps {
@@ -25,9 +26,10 @@ interface EditProfileModalProps {
 }
 
 const AVATAR_PRESETS = [
-  { id: "mascot-helper", label: "Pato Helper", src: mascotHelper },
+  { id: "mascot-wallet", label: "Pato Semangat", src: mascotWallet },
+  { id: "mascot-helper", label: "Pato Pintar", src: mascotHelper },
   { id: "mascot-celebrating", label: "Pato Selebrasi", src: mascotCelebrating },
-  { id: "pato-plain", label: "Pato Klasik", src: patoPlain },
+  { id: "pato-plain", label: "Logo Pato", src: patoPlain },
 ];
 
 export function EditProfileModal({ isOpen, onClose, onSuccess }: EditProfileModalProps) {
@@ -194,7 +196,15 @@ export function EditProfileModal({ isOpen, onClose, onSuccess }: EditProfileModa
             <div className="relative group">
               <div className="flex h-20 w-20 sm:h-24 sm:w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-3 border-blue-600 bg-gradient-to-br from-blue-600 to-indigo-700 text-2xl font-black text-white shadow-md">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    className={`h-full w-full ${
+                      AVATAR_PRESETS.some((p) => p.src === avatarUrl)
+                        ? "object-contain bg-white p-1"
+                        : "object-cover"
+                    }`}
+                  />
                 ) : (
                   <span>{initial}</span>
                 )}
@@ -267,7 +277,7 @@ export function EditProfileModal({ isOpen, onClose, onSuccess }: EditProfileModa
                     }`}
                     title={preset.label}
                   >
-                    <img src={preset.src} alt={preset.label} className="h-full w-full object-cover" />
+                    <img src={preset.src} alt={preset.label} className="h-full w-full object-contain bg-white p-0.5" />
                   </button>
                 ))}
               </div>

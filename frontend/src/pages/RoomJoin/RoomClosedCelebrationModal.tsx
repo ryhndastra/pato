@@ -99,14 +99,16 @@ export function RoomClosedCelebrationModal({
           <X size={16} weight="bold" />
         </button>
 
-        {/* Celebrating Mascot 3D Illustration */}
+        {/* Celebrating Mascot Illustration */}
         <div className="relative mt-1 mb-3">
           <div className="absolute -inset-2 rounded-full bg-gradient-to-tr from-emerald-400/30 to-blue-400/30 blur-md" />
-          <img
-            src={mascotCelebrating}
-            alt="Pato Mascot Celebrating"
-            className="relative h-28 w-28 rounded-2xl object-cover shadow-md ring-4 ring-white"
-          />
+          <div className="relative h-28 w-28 overflow-hidden rounded-2xl bg-white p-1 shadow-md ring-4 ring-white">
+            <img
+              src={mascotCelebrating}
+              alt="Pato Mascot Celebrating"
+              className="h-full w-full object-contain"
+            />
+          </div>
           <span className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-slate-900 shadow-md">
             <Sparkle size={18} weight="fill" />
           </span>

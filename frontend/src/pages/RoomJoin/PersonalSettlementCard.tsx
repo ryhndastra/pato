@@ -278,11 +278,13 @@ export function PersonalSettlementCard({
       {/* 4. FORMULIR UPLOAD BUKTI / STATUS LUNAS */}
       {paymentStatus === "VERIFIED" ? (
         <div className="flex flex-col items-center gap-2 rounded-xl bg-emerald-50/70 p-4 text-center border border-emerald-100">
-          <img
-            src={mascotCelebrating}
-            alt="Pato Celebrating"
-            className="h-16 w-16 rounded-xl object-cover shadow-2xs"
-          />
+          <div className="h-16 w-16 overflow-hidden rounded-2xl bg-white p-1 shadow-2xs border border-emerald-200/60">
+            <img
+              src={mascotCelebrating}
+              alt="Pato Celebrating"
+              className="h-full w-full object-contain"
+            />
+          </div>
           <div>
             <p className="text-xs font-bold text-emerald-900">
               Pembayaran Terverifikasi Lunas!

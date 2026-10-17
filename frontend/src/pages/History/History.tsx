@@ -248,11 +248,11 @@ export function History() {
           </div>
         ) : filteredRooms.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-3xl border border-slate-100 bg-white p-8 text-center shadow-xs sm:p-12">
-            <div className="relative mb-3 h-20 w-20 overflow-hidden rounded-2xl bg-blue-50">
+            <div className="relative mb-3 h-20 w-20 overflow-hidden rounded-2xl bg-white border border-slate-100 p-1 shadow-2xs">
               <img
                 src={mascotCelebrating}
                 alt="Pato Mascot"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
               />
             </div>
             <h3 className="text-base font-extrabold text-slate-900">

@@ -630,8 +630,8 @@ export function Profile() {
 
         {/* Section: Maskot PaTo Info Card */}
         <section className="flex flex-col sm:flex-row items-center gap-4 rounded-3xl border border-blue-100 bg-gradient-to-r from-blue-50/80 to-indigo-50/60 p-5 shadow-2xs animate-fade-up stagger-4">
-          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-white shadow-xs ring-2 ring-blue-100">
-            <img src={mascotHelper} alt="Pato Mascot" className="h-full w-full object-cover" />
+          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-white p-1 shadow-xs ring-2 ring-blue-100">
+            <img src={mascotHelper} alt="Pato Mascot" className="h-full w-full object-contain" />
             <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-amber-400 text-slate-900 shadow-xs">
               <Sparkle size={12} weight="fill" />
             </span>
