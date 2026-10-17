@@ -7,3 +7,4 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS default_bank_account_name VARCHAR(100
 ALTER TABLE users ADD COLUMN IF NOT EXISTS default_round_mode VARCHAR(20) DEFAULT 'hundred';
 
 ALTER TABLE rooms ADD COLUMN IF NOT EXISTS round_mode VARCHAR(20) DEFAULT 'hundred';
+
