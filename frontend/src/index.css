@@ -182,13 +182,68 @@ button:active {
 }
 
 /* =========================================================================
-   Splash Screen Keyframes & Utility Classes (Smooth & Zero Blink)
+   Splash Screen Keyframes & Utility Classes (Expressive, Lively & Zero Blink)
    ========================================================================= */
 
-@keyframes splash-entry {
+@keyframes splash-pop {
   0% {
     opacity: 0;
-    transform: scale(0.84);
+    transform: scale(0.4) translateY(28px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.1) translateY(-6px);
+  }
+  80% {
+    transform: scale(0.97) translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes splash-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.65;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+@keyframes splash-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes splash-letter-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.85);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+@keyframes splash-dot-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.4);
   }
   100% {
     opacity: 1;
@@ -199,7 +254,7 @@ button:active {
 @keyframes splash-fade-up {
   0% {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(14px);
   }
   100% {
     opacity: 1;
@@ -211,32 +266,58 @@ button:active {
   0% {
     width: 0%;
   }
-  40% {
-    width: 65%;
+  35% {
+    width: 45%;
+  }
+  75% {
+    width: 82%;
   }
   100% {
     width: 100%;
   }
 }
 
-.animate-splash-entry {
-  animation: splash-entry 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.animate-splash-pop {
+  animation: splash-pop 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   will-change: transform, opacity;
   transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
-.animate-splash-fade-up {
-  animation: splash-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+.animate-splash-ring-1 {
+  animation: splash-ring 2.6s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
   will-change: transform, opacity;
   transform: translateZ(0);
-  backface-visibility: hidden;
+}
+
+.animate-splash-ring-2 {
+  animation: splash-ring 2.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.8s infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+.animate-splash-float {
+  animation: splash-float 3.2s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-splash-fade-up-1 {
+  animation: splash-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.48s both;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+.animate-splash-fade-up-2 {
+  animation: splash-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.58s both;
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
 
 .animate-splash-progress {
-  animation: splash-progress 1.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: splash-progress 1.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
   will-change: width;
+  transform: translateZ(0);
 }
+
 
 
 
