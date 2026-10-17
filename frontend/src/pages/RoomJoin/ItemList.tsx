@@ -444,7 +444,7 @@ export function ItemList({
 
                 {/* Right: Total Price */}
                 <div className="shrink-0 text-right">
-                  <span className="font-mono text-base font-extrabold text-slate-900 tabular-nums">
+                  <span className="font-mono text-base font-extrabold text-slate-900 tabular-nums whitespace-nowrap">
                     {safeIDR(totalItemPrice)}
                   </span>
                 </div>

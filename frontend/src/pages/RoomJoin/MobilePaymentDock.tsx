@@ -65,10 +65,10 @@ export function MobilePaymentDock({
                 Terkumpul dari Teman
               </span>
               <div className="flex items-baseline gap-1">
-                <span className="font-mono text-lg font-black text-emerald-600 tabular-nums">
+                <span className="font-mono text-lg font-black text-emerald-600 tabular-nums whitespace-nowrap">
                   {safeIDR(verifiedFromFriends)}
                 </span>
-                <span className="font-mono text-[11px] font-semibold text-slate-400 tabular-nums">
+                <span className="font-mono text-[11px] font-semibold text-slate-400 tabular-nums whitespace-nowrap">
                   / {safeIDR(friendsTarget)}
                 </span>
               </div>
@@ -78,7 +78,7 @@ export function MobilePaymentDock({
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Bagian Kamu {myPortionCount > 0 ? `(${myPortionCount} Porsi)` : ""}
               </span>
-              <span className="font-mono text-lg font-black text-slate-900 tabular-nums">
+              <span className="font-mono text-lg font-black text-slate-900 tabular-nums whitespace-nowrap">
                 {safeIDR(me.share_amount)}
               </span>
             </>

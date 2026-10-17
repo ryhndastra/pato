@@ -133,33 +133,32 @@ export function RoomHeroCard({
           <StatusBadge status={room.status} />
         </div>
 
-        {/* Middle row: Room Title & Grand Total */}
-        <div className="relative z-10 mt-4 flex items-baseline justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug truncate drop-shadow-xs">
-              {room.title}
-            </h1>
-            <div className="mt-1 flex items-center gap-3 text-xs text-blue-100/90 font-medium">
-              <span className="inline-flex items-center gap-1">
-                <ForkKnife size={13} weight="bold" />
-                <span>{room.items?.length ?? 0} Menu</span>
-              </span>
-              <span>·</span>
-              <span className="inline-flex items-center gap-1">
-                <UsersThree size={13} weight="bold" />
-                <span>{members.length} Peserta</span>
-              </span>
-            </div>
+        {/* Middle: Room Title & Meta (Full width, never squished!) */}
+        <div className="relative z-10 mt-3.5">
+          <h1 className="text-lg sm:text-xl font-black text-white tracking-tight leading-snug break-words drop-shadow-xs">
+            {room.title}
+          </h1>
+          <div className="mt-1 flex items-center gap-2.5 text-xs text-blue-100/90 font-medium">
+            <span className="inline-flex items-center gap-1">
+              <ForkKnife size={13} weight="bold" />
+              <span>{room.items?.length ?? 0} Menu</span>
+            </span>
+            <span>·</span>
+            <span className="inline-flex items-center gap-1">
+              <UsersThree size={13} weight="bold" />
+              <span>{members.length} Peserta</span>
+            </span>
           </div>
+        </div>
 
-          <div className="text-right shrink-0">
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-blue-200">
-              Total Kasir
-            </span>
-            <span className="font-mono text-2xl font-black text-white tabular-nums drop-shadow-xs">
-              {safeIDR(room.grand_total)}
-            </span>
-          </div>
+        {/* Dedicated Grand Total Kasir Strip (Full width, handles large millions cleanly) */}
+        <div className="relative z-10 mt-3 flex items-center justify-between gap-3 rounded-2xl bg-white/10 backdrop-blur-md px-3.5 py-2.5 border border-white/15 shadow-2xs">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-blue-200 shrink-0">
+            Total Kasir
+          </span>
+          <span className="font-mono text-lg sm:text-xl font-black text-white tabular-nums tracking-tight text-right whitespace-nowrap drop-shadow-xs">
+            {safeIDR(room.grand_total)}
+          </span>
         </div>
 
         {/* Bottom row: Quick action glass pills */}
