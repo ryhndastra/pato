@@ -435,15 +435,15 @@ export function RoomJoin() {
       />
 
       {/* 2. MAIN NATIVE APP CANVAS */}
-      <main className="mx-auto w-full max-w-md sm:max-w-xl lg:max-w-3xl flex-1 px-4 pt-3 pb-32 sm:px-6">
+      <main className="mx-auto w-full max-w-md sm:max-w-xl lg:max-w-3xl flex-1 px-4 pt-3.5 pb-36 sm:px-6">
         {/* Slim native horizontal step progress indicator */}
-        <div className="mb-2">
+        <div className="mb-3">
           <StepProgressCard status={room.status} />
         </div>
 
         {/* F01: Smart duplicate name notification banner */}
         {nameNotice && (
-          <div className="mb-2 flex items-start justify-between gap-3 rounded-2xl bg-amber-50 p-3 text-xs font-semibold text-amber-900 border border-amber-200/90 shadow-2xs">
+          <div className="mb-3 flex items-start justify-between gap-3 rounded-2xl bg-amber-50 p-3 text-xs font-semibold text-amber-900 border border-amber-200/90 shadow-2xs">
             <div className="flex items-start gap-2.5">
               <Info size={18} weight="bold" className="shrink-0 text-amber-600 mt-0.5" />
               <div>
@@ -463,7 +463,7 @@ export function RoomJoin() {
         )}
 
         {/* Room Visual Hub: Struk Kasir, QRIS Host, Foto Barengan */}
-        <div className="mb-2">
+        <div className="mb-3.5">
           <RoomMediaGalleryCard room={room} onPhotoUpdated={fetchRoom} />
         </div>
 
@@ -471,13 +471,13 @@ export function RoomJoin() {
         {/* A. SETTLEMENT STAGE (LOCKED OR CLOSED)                        */}
         {/* ------------------------------------------------------------- */}
         {isSettlement ? (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3.5">
             {/* Native iOS/Android Segmented Control */}
-            <div className="flex w-full rounded-xl bg-slate-100 p-1 border border-slate-200/70 shadow-2xs">
+            <div className="flex w-full rounded-2xl bg-slate-100/90 p-1 border border-slate-200/70 shadow-2xs">
               <button
                 type="button"
                 onClick={() => setActiveTab("settlement")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all ${
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
                   activeTab === "settlement"
                     ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold"
                     : "text-slate-500 hover:text-slate-900"
@@ -495,7 +495,7 @@ export function RoomJoin() {
               <button
                 type="button"
                 onClick={() => setActiveTab("menu")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all ${
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
                   activeTab === "menu"
                     ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold"
                     : "text-slate-500 hover:text-slate-900"
@@ -632,7 +632,7 @@ export function RoomJoin() {
           /* ------------------------------------------------------------- */
           /* B. CLAIMING STAGE (OPEN MEJA)                                 */
           /* ------------------------------------------------------------- */
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-3.5">
             <MemberList
               members={members}
               currentMemberId={currentMemberId}
@@ -662,7 +662,7 @@ export function RoomJoin() {
               />
             )}
 
-            <section className="flex flex-col gap-2.5">
+            <section className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Menu Pesanan ({room.items?.length ?? 0})

@@ -34,20 +34,20 @@ export function StepProgressCard({ status }: StepProgressCardProps) {
   return (
     <nav
       aria-label="Tahapan Meja"
-      className="flex w-full items-center justify-between gap-1 rounded-full border border-slate-200/70 bg-white/80 p-0.5 shadow-2xs backdrop-blur-xs"
+      className="flex w-full items-center justify-between gap-1.5 rounded-2xl border border-slate-200/80 bg-white/90 p-1.5 shadow-xs backdrop-blur-md"
     >
       {steps.map((step) => {
-        let containerStyle = "text-slate-400";
+        let containerStyle = "text-slate-400 bg-transparent border-transparent";
         let badgeStyle = "bg-slate-100 text-slate-400";
-        let indicator = <span className="font-mono text-[9px] font-bold">{step.id}</span>;
+        let indicator = <span className="font-mono text-[10px] font-bold">{step.id}</span>;
 
         if (isClosed) {
-          containerStyle = "text-emerald-900 font-bold";
-          badgeStyle = "bg-emerald-600 text-white";
-          indicator = <Check size={10} weight="bold" />;
+          containerStyle = "text-emerald-900 bg-emerald-50/70 border-emerald-200/60 font-bold shadow-2xs";
+          badgeStyle = "bg-emerald-600 text-white shadow-2xs";
+          indicator = <Check size={11} weight="bold" />;
         } else if (step.isCurrent) {
-          containerStyle = "text-slate-900 bg-white font-extrabold shadow-2xs border border-slate-200/70";
-          badgeStyle = "bg-blue-600 text-white";
+          containerStyle = "text-blue-900 bg-blue-50/70 border-blue-200/60 font-bold shadow-2xs";
+          badgeStyle = "bg-blue-600 text-white shadow-xs";
           indicator = (
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
@@ -55,22 +55,22 @@ export function StepProgressCard({ status }: StepProgressCardProps) {
             </span>
           );
         } else if (step.isDone) {
-          containerStyle = "text-slate-700 font-semibold";
-          badgeStyle = "bg-emerald-100 text-emerald-800";
-          indicator = <Check size={10} weight="bold" />;
+          containerStyle = "text-emerald-800 bg-emerald-50/40 border-emerald-200/40 font-semibold";
+          badgeStyle = "bg-emerald-600 text-white shadow-2xs";
+          indicator = <Check size={11} weight="bold" />;
         }
 
         return (
           <div
             key={step.id}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1 px-1.5 transition-all select-none ${containerStyle}`}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-1.5 px-2 transition-all select-none ${containerStyle}`}
           >
             <span
-              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full transition-colors ${badgeStyle}`}
+              className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full transition-colors ${badgeStyle}`}
             >
               {indicator}
             </span>
-            <span className="text-[10px] sm:text-[11px] truncate tracking-tight">{step.label}</span>
+            <span className="text-[11px] truncate tracking-tight">{step.label}</span>
           </div>
         );
       })}

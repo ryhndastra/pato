@@ -89,20 +89,20 @@ export function RoomMediaGalleryCard({
       />
 
       {/* Minimalist Horizontal Quick Strip */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+      <div className="flex items-center gap-2 overflow-x-auto pb-0.5 no-scrollbar">
         {/* 1. Struk Kasir */}
         {hasReceipt && room.receipt_image_url ? (
           <button
             type="button"
             onClick={() => setActiveModal("receipt")}
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50/80 px-2.5 text-xs font-bold text-blue-700 shadow-2xs hover:bg-blue-100 active:scale-95 transition-all"
+            className="inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-xl border border-blue-200/90 bg-blue-50/90 px-3 text-xs font-bold text-blue-700 shadow-2xs hover:bg-blue-100/90 active:scale-95 transition-all"
           >
             <Receipt size={14} weight="bold" />
             <span>Lihat Struk</span>
             <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-600 text-white text-[8px] font-bold">✓</span>
           </button>
         ) : (
-          <div className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-slate-200/60 bg-white/70 px-2.5 text-xs font-medium text-slate-400">
+          <div className="inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200/70 bg-slate-50/60 px-3 text-xs font-medium text-slate-400">
             <Receipt size={14} weight="regular" />
             <span>Tanpa Struk</span>
           </div>
@@ -113,7 +113,7 @@ export function RoomMediaGalleryCard({
           <button
             type="button"
             onClick={() => setActiveModal("qris")}
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition-all"
+            className="inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-3 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition-all"
           >
             <QrCode size={14} weight="bold" className="text-blue-600" />
             <span>QRIS Host</span>
@@ -122,16 +122,16 @@ export function RoomMediaGalleryCard({
           <button
             type="button"
             onClick={() => setActiveModal("qris")}
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition-all"
+            className="inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-3 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition-all"
           >
-            <Bank size={14} weight="bold" className="text-slate-500" />
-            <span>Rekening</span>
+            <Bank size={14} weight="bold" className="text-blue-600" />
+            <span>Rekening Host</span>
           </button>
         )}
 
         {/* 3. Foto Meja */}
         {isUploadingPhoto ? (
-          <div className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-500">
+          <div className="inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-3 text-xs font-bold text-slate-500">
             <CircleNotch size={14} weight="bold" className="animate-spin text-blue-600" />
             <span>Mengunggah...</span>
           </div>
@@ -139,7 +139,7 @@ export function RoomMediaGalleryCard({
           <button
             type="button"
             onClick={() => setActiveModal("group")}
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-bold text-emerald-800 shadow-2xs hover:bg-emerald-100 active:scale-95 transition-all"
+            className="inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 text-xs font-bold text-emerald-800 shadow-2xs hover:bg-emerald-100 active:scale-95 transition-all"
           >
             <Camera size={14} weight="bold" className="text-emerald-600" />
             <span>Foto Meja</span>
@@ -149,9 +149,9 @@ export function RoomMediaGalleryCard({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-dashed border-slate-300 bg-white px-2.5 text-xs font-bold text-slate-600 hover:border-slate-400 hover:bg-slate-50 active:scale-95 transition-all"
+            className="inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-3 text-xs font-semibold text-slate-600 hover:border-slate-300 hover:bg-slate-50 active:scale-95 transition-all shadow-2xs"
           >
-            <Plus size={13} weight="bold" />
+            <Plus size={13} weight="bold" className="text-slate-500" />
             <span>Foto Meja</span>
           </button>
         )}

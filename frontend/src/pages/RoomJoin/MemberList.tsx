@@ -33,10 +33,10 @@ export function MemberList({
   const isSettlement = roomStatus === "LOCKED" || roomStatus === "CLOSED";
 
   return (
-    <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar">
+    <div className="flex items-center gap-2 overflow-x-auto py-1 no-scrollbar">
       {/* Small participant count indicator */}
-      <div className="inline-flex h-7.5 shrink-0 items-center gap-1 rounded-full bg-slate-200/70 px-2.5 text-[11px] font-bold text-slate-700">
-        <UsersThree size={13} weight="bold" />
+      <div className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-slate-200/80 bg-white px-3 text-[11px] font-bold text-slate-700 shadow-2xs">
+        <UsersThree size={14} weight="bold" className="text-slate-500" />
         <span>{members.length}</span>
       </div>
 
@@ -44,10 +44,10 @@ export function MemberList({
         <button
           type="button"
           onClick={() => onSelectMember(null)}
-          className="inline-flex h-7.5 shrink-0 items-center gap-1 rounded-full bg-blue-600 px-2.5 text-[11px] font-bold text-white shadow-2xs hover:bg-blue-700 active:scale-95 transition-all"
+          className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-blue-600 px-3 text-[11px] font-bold text-white shadow-2xs hover:bg-blue-700 active:scale-95 transition-all"
         >
           <span>Semua</span>
-          <X size={11} weight="bold" />
+          <X size={12} weight="bold" />
         </button>
       )}
 
@@ -72,39 +72,43 @@ export function MemberList({
             title={
               onSelectMember && !isSettlement
                 ? isSelected
-                  ? "Hapus filter pesanan"
-                  : `Lihat menu ${member.display_name}`
+                ? "Hapus filter pesanan"
+                : `Lihat menu ${member.display_name}`
                 : undefined
             }
-            className={`inline-flex h-7.5 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-xs transition-all ${
+            className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs transition-all ${
               onSelectMember && !isSettlement ? "cursor-pointer active:scale-95" : ""
             } ${
               isSelected
                 ? "border-slate-900 bg-slate-900 text-white font-extrabold shadow-xs"
                 : isMe
-                  ? "border-blue-200 bg-blue-50/70 text-slate-900 font-bold"
-                  : "border-slate-200/80 bg-white text-slate-700 font-medium hover:border-slate-300"
+                  ? "border-blue-200 bg-blue-50/70 text-slate-900 font-bold shadow-2xs"
+                  : "border-slate-200/80 bg-white text-slate-700 font-medium hover:border-slate-300 shadow-2xs"
             }`}
           >
             <span
-              className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full font-mono text-[8px] font-bold ${
-                isSelected ? "bg-white/20 text-white" : "bg-slate-100 text-slate-700"
+              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-mono text-[9px] font-bold ${
+                isSelected
+                  ? "bg-white/20 text-white"
+                  : isMe
+                    ? "bg-blue-600 text-white shadow-2xs"
+                    : "bg-slate-100 text-slate-700"
               }`}
             >
               {initials}
             </span>
 
-            <span className="truncate max-w-[100px] text-[11px]">
+            <span className="truncate max-w-[110px] text-[11px]">
               {member.display_name}
             </span>
 
             {member.is_host && (
-              <Crown size={11} weight="fill" className="text-amber-500 shrink-0" />
+              <Crown size={12} weight="fill" className="text-amber-500 shrink-0" />
             )}
 
             {isMe && !member.is_host && (
               <span
-                className={`rounded px-1 py-0.2 text-[9px] font-bold ${
+                className={`rounded px-1.5 py-0.2 text-[9px] font-bold ${
                   isSelected ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700"
                 }`}
               >
@@ -114,8 +118,8 @@ export function MemberList({
 
             {portionCount > 0 && !isSettlement && (
               <span
-                className={`rounded px-1.5 py-0.2 font-mono text-[9px] font-bold tabular-nums ${
-                  isSelected ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"
+                className={`rounded-full px-1.5 py-0.2 font-mono text-[9px] font-bold tabular-nums ${
+                  isSelected ? "bg-white/20 text-white" : "bg-slate-200/80 text-slate-700"
                 }`}
               >
                 {portionCount}

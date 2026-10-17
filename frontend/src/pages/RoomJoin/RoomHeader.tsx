@@ -50,8 +50,12 @@ export function RoomHeader({
   }
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-gradient-to-r from-blue-700 via-blue-600 to-blue-600 text-white shadow-xs">
-      <div className="mx-auto max-w-md sm:max-w-xl lg:max-w-3xl px-4 pt-[max(env(safe-area-inset-top,0px),0.75rem)] pb-3 sm:px-6">
+    <header className="sticky top-0 z-30 w-full overflow-hidden bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white shadow-[0_4px_20px_rgba(29,78,216,0.18)]">
+      {/* Ambient background glow decoration */}
+      <div className="pointer-events-none absolute -top-10 -right-10 h-36 w-36 rounded-full bg-indigo-400/25 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-blue-400/20 blur-2xl" />
+
+      <div className="relative z-10 mx-auto max-w-md sm:max-w-xl lg:max-w-3xl px-4 pt-[max(env(safe-area-inset-top,0px),0.75rem)] pb-3 sm:px-6">
         {/* Top App Bar Navigation Row */}
         <div className="flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -59,7 +63,7 @@ export function RoomHeader({
               type="button"
               onClick={() => navigate("/dashboard")}
               aria-label="Kembali ke Dashboard"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/25 shadow-2xs"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/20 shadow-2xs"
             >
               <ArrowLeft size={18} weight="bold" />
             </button>
@@ -85,7 +89,7 @@ export function RoomHeader({
                 type="button"
                 onClick={onOpenChat}
                 aria-label="Buka Chat Meja"
-                className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/25 shadow-2xs"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/20 shadow-2xs"
               >
                 <ChatCircleDots size={18} weight="bold" />
                 {chatCount > 0 && (
@@ -103,7 +107,7 @@ export function RoomHeader({
                 onClick={onOpenReceiptImage}
                 title="Lihat foto fisik struk kasir"
                 aria-label="Lihat Foto Struk Asli"
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/25 shadow-2xs"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/20 shadow-2xs"
               >
                 <Camera size={18} weight="bold" />
               </button>
@@ -115,7 +119,7 @@ export function RoomHeader({
               onClick={onOpenAestheticReceipt}
               title="Lihat struk rincian patungan"
               aria-label="Lihat Struk Patungan"
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/25 shadow-2xs"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/20 shadow-2xs"
             >
               <Receipt size={18} weight="bold" />
             </button>
@@ -126,7 +130,7 @@ export function RoomHeader({
               onClick={handleShare}
               title="Bagikan tautan meja"
               aria-label="Bagikan Tautan Meja"
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/25 shadow-2xs"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white backdrop-blur-md transition-all active:scale-90 hover:bg-white/20 shadow-2xs"
             >
               {urlCopied ? (
                 <Check size={16} weight="bold" className="text-emerald-300" />
@@ -138,15 +142,15 @@ export function RoomHeader({
         </div>
 
         {/* Micro Sub-Bar: Room Code pill + Status badge */}
-        <div className="mt-2.5 flex items-center justify-between border-t border-white/15 pt-2 text-xs">
+        <div className="mt-2.5 flex items-center justify-between gap-2 text-xs">
           <button
             type="button"
             onClick={() => copyCode(room.room_code)}
             title="Salin kode meja"
-            className="group flex items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1 font-mono text-[11px] font-bold text-white transition-all hover:bg-white/25 active:scale-95 shadow-2xs"
+            className="group inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 font-mono text-[11px] font-bold text-white backdrop-blur-md transition-all hover:bg-white/20 active:scale-95 shadow-2xs"
           >
             <span className="text-blue-200">KODE:</span>
-            <span>{room.room_code}</span>
+            <span className="tracking-wider">{room.room_code}</span>
             {codeCopied ? (
               <Check size={12} weight="bold" className="text-emerald-300" />
             ) : (

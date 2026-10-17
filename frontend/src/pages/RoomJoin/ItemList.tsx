@@ -213,14 +213,14 @@ export function ItemList({
           )}
 
           {/* Single clean row of filter pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+          <div className="flex items-center gap-2 overflow-x-auto pb-0.5 no-scrollbar text-xs">
             <button
               type="button"
               onClick={() => setFilterMode("all")}
-              className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 font-bold transition-all ${
+              className={`inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-full px-3.5 font-bold transition-all ${
                 filterMode === "all"
-                  ? "bg-slate-900 text-white shadow-2xs"
-                  : "border border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50"
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 shadow-2xs"
               }`}
             >
               <span>Semua</span>
@@ -237,10 +237,10 @@ export function ItemList({
               <button
                 type="button"
                 onClick={() => setFilterMode("unclaimed")}
-                className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 font-bold transition-all ${
+                className={`inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-full px-3.5 font-bold transition-all ${
                   filterMode === "unclaimed"
-                    ? "bg-amber-600 text-white shadow-2xs"
-                    : "border border-amber-200/80 bg-amber-50/70 text-amber-900 hover:bg-amber-100/60"
+                    ? "bg-slate-900 text-white shadow-xs"
+                    : "border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 shadow-2xs"
                 }`}
               >
                 <span>Belum Lengkap</span>
@@ -258,10 +258,10 @@ export function ItemList({
               <button
                 type="button"
                 onClick={() => setFilterMode("shared")}
-                className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 font-bold transition-all ${
+                className={`inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-full px-3.5 font-bold transition-all ${
                   filterMode === "shared"
-                    ? "bg-indigo-600 text-white shadow-2xs"
-                    : "border border-indigo-200/80 bg-indigo-50/70 text-indigo-800 hover:bg-indigo-100/60"
+                    ? "bg-slate-900 text-white shadow-xs"
+                    : "border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 shadow-2xs"
                 }`}
               >
                 <span>Makan Bareng</span>
@@ -279,17 +279,17 @@ export function ItemList({
               <button
                 type="button"
                 onClick={() => setFilterMode("mine")}
-                className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 font-bold transition-all ${
+                className={`inline-flex h-8.5 shrink-0 items-center gap-1.5 rounded-full px-3.5 font-bold transition-all ${
                   filterMode === "mine"
-                    ? "bg-blue-600 text-white shadow-xs"
-                    : "border border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50"
+                    ? "bg-blue-600 text-white shadow-[0_2px_10px_rgba(37,99,235,0.25)]"
+                    : "border border-slate-200/80 bg-white text-slate-700 hover:bg-slate-50 shadow-2xs"
                 }`}
               >
                 <span>Pesanan Saya</span>
                 {myClaimedItems.length > 0 && (
                   <span
                     className={`rounded-full px-1.5 py-0.2 font-mono text-[10px] font-bold ${
-                      filterMode === "mine" ? "bg-white/20 text-white" : "bg-blue-50 text-blue-700"
+                      filterMode === "mine" ? "bg-white/20 text-white" : "bg-blue-100 text-blue-700"
                     }`}
                   >
                     {myClaimedItems.length}
@@ -398,18 +398,18 @@ export function ItemList({
           return (
             <div
               key={item.id}
-              className={`flex flex-col gap-2.5 rounded-2xl border p-3.5 transition-all duration-150 ${
+              className={`flex flex-col gap-3 rounded-2xl border p-4 transition-all duration-200 ${
                 myPortions > 0
-                  ? "border-blue-400 bg-blue-50/25 ring-1.5 ring-blue-400/80 shadow-xs"
+                  ? "border-blue-500/80 bg-blue-50/25 ring-1 ring-blue-400/50 shadow-[0_4px_16px_rgba(37,99,235,0.06)]"
                   : isFull
-                    ? "border-slate-200/70 bg-slate-50/70 opacity-90"
+                    ? "border-slate-200/60 bg-slate-50/60 opacity-85"
                     : "border-slate-200/80 bg-white shadow-2xs hover:border-slate-300"
               }`}
             >
               {/* Top Row: Food Name & Pricing */}
-              <div className="flex items-start justify-between gap-2.5">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                  <h3 className="text-[15px] font-bold text-slate-900 leading-snug">
                     {item.name}
                   </h3>
 
@@ -435,7 +435,7 @@ export function ItemList({
                         Sisa {remainingQty} Porsi
                       </span>
                     ) : (
-                      <span className="text-[11px] font-medium text-slate-400">
+                      <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
                         Tersedia {qty} porsi
                       </span>
                     )}
@@ -444,17 +444,17 @@ export function ItemList({
 
                 {/* Right: Total Price */}
                 <div className="shrink-0 text-right">
-                  <span className="font-mono text-sm font-black text-slate-900 tabular-nums">
+                  <span className="font-mono text-base font-extrabold text-slate-900 tabular-nums">
                     {safeIDR(totalItemPrice)}
                   </span>
                 </div>
               </div>
 
-              {/* Middle Row: My Active Claim Summary Banner (Clean, no weird lines!) */}
+              {/* Middle Row: My Active Claim Summary Banner */}
               {myPortions > 0 && (
-                <div className="flex items-center justify-between rounded-lg bg-blue-100/60 px-2.5 py-1 text-xs">
+                <div className="flex items-center justify-between rounded-xl bg-blue-50/90 border border-blue-200/60 px-3 py-1.5 text-xs">
                   <div className="flex items-center gap-1.5 text-blue-900 font-bold text-[11px]">
-                    <Check size={12} weight="bold" className="text-blue-600" />
+                    <Check size={13} weight="bold" className="text-blue-600" />
                     <span>
                       Kamu ambil: {myPortions} porsi {item.is_shared && `(÷ ${totalClaimers} orang)`}
                     </span>
@@ -466,12 +466,12 @@ export function ItemList({
               )}
 
               {/* Bottom Row: Social Claimers (Left) + Thumb Stepper (Right) */}
-              <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
+              <div className="flex items-center justify-between gap-2 border-t border-slate-100/80 pt-3">
                 {/* Left: Who ordered this */}
-                <div className="flex items-center gap-1 min-w-0 flex-1 overflow-x-auto text-[11px]">
+                <div className="flex items-center gap-1 min-w-0 flex-1 overflow-x-auto text-[11px] no-scrollbar">
                   {allClaims.length > 0 ? (
                     <div className="flex items-center gap-1">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-0.5">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">
                         Dipesan:
                       </span>
                       {allClaims.map((claim) => {
@@ -507,7 +507,7 @@ export function ItemList({
                     <button
                       type="button"
                       onClick={onJoinPrompt}
-                      className="inline-flex h-9 items-center gap-1 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white shadow-2xs hover:bg-blue-700 active:scale-95 transition-all"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-3.5 text-xs font-bold text-white shadow-xs hover:opacity-95 active:scale-95 transition-all"
                     >
                       <Plus size={13} weight="bold" />
                       <span>Gabung untuk Klaim</span>
@@ -548,7 +548,7 @@ export function ItemList({
                           onClick={() => handleClaimWithSound(item.id)}
                           aria-label="Tambah 1 porsi"
                           title="Tambah 1 porsi lagi"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:scale-90 transition-all disabled:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:scale-90 transition-all disabled:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed shadow-2xs"
                         >
                           <Plus size={14} weight="bold" />
                         </button>
@@ -560,12 +560,12 @@ export function ItemList({
                       type="button"
                       disabled={!canClaimMore || isPending}
                       onClick={() => handleClaimWithSound(item.id)}
-                      className={`inline-flex h-9 items-center gap-1.5 rounded-xl px-3.5 text-xs font-bold transition-all shadow-2xs active:scale-95 disabled:cursor-not-allowed ${
+                      className={`inline-flex h-9 items-center gap-1.5 rounded-xl px-4 text-xs font-bold transition-all shadow-xs active:scale-95 disabled:cursor-not-allowed ${
                         isFull
                           ? "bg-slate-100 text-slate-400 border border-slate-200"
                           : item.is_shared
-                            ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                            : "bg-blue-600 text-white hover:bg-blue-700"
+                            ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-[0_2px_8px_rgba(79,70,229,0.25)]"
+                            : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-[0_2px_8px_rgba(37,99,235,0.25)]"
                       }`}
                     >
                       {isPending ? (
