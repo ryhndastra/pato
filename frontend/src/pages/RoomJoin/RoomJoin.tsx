@@ -3,10 +3,9 @@ import {
   CreditCard,
   ForkKnife,
   Info,
-  Trash,
   X,
 } from "@phosphor-icons/react";
-import { useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
 import { apiDelete, apiGet, apiPost, ApiError } from "../../lib/api";
 import { useAuth } from "../../auth/useAuth";
 import { RoomHeader } from "./RoomHeader";
@@ -18,7 +17,6 @@ import { HostGodModeCard } from "./HostGodModeCard";
 import { PersonalSettlementCard } from "./PersonalSettlementCard";
 import { HostPaymentTargetCard } from "./HostPaymentTargetCard";
 import { HostPaymentMonitorCard } from "./HostPaymentMonitorCard";
-import { ConfirmModal } from "../../components/ConfirmModal";
 import { StepProgressCard } from "./StepProgressCard";
 import { TippingCard } from "./TippingCard";
 import { ChatDrawer } from "./ChatDrawer";
@@ -34,12 +32,11 @@ import {
   saveJoinedSession,
 } from "./guestToken";
 import { useRoomWebSocket } from "../../hooks/useRoomWebSocket";
-import { RoomMediaGalleryCard } from "./RoomMediaGalleryCard";
+import { RoomHeroCard } from "./RoomHeroCard";
 import { soundFX } from "../../lib/soundFx";
 import type { JoinResult, RoomDetail, RoomMember, RoomEvent } from "./types";
 
 export function RoomJoin() {
-  const navigate = useNavigate();
   const { code: rawCode } = useParams<{ code: string }>();
   const code = rawCode?.trim().toUpperCase() ?? "";
   const { user, token: authToken } = useAuth();
@@ -68,9 +65,6 @@ export function RoomJoin() {
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
   const [closeError, setCloseError] = useState<string | null>(null);
-
-  const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const [receiptImageOpen, setReceiptImageOpen] = useState(false);
   const [aestheticReceiptOpen, setAestheticReceiptOpen] = useState(false);
@@ -359,26 +353,6 @@ export function RoomJoin() {
     await fetchRoom();
   }
 
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-  async function handleConfirmDeleteRoom() {
-    if (!code) return;
-    setDeleting(true);
-    setDeleteError(null);
-    try {
-      await apiDelete(
-        `/api/rooms/${encodeURIComponent(code)}`,
-        { guest_token: getGuestToken(code) },
-        authToken,
-      );
-      setShowDeleteModal(false);
-      navigate("/dashboard", { replace: true });
-    } catch (err) {
-      setDeleteError(err instanceof ApiError ? err.message : "Gagal menghapus room.");
-      setDeleting(false);
-    }
-  }
-
   function scrollToJoin() {
     joinSectionRef.current?.scrollIntoView({ behavior: "smooth" });
   }
@@ -424,7 +398,12 @@ export function RoomJoin() {
   const pendingVerificationCount = friends.filter((m) => m.payment_status === "PENDING").length;
 
   return (
-    <div className="flex min-h-dvh w-full flex-col bg-[#f8fafc]">
+    <div className="relative min-h-dvh w-full overflow-x-hidden bg-slate-50/90 text-slate-900">
+      {/* Ambient background glows */}
+      <div className="pointer-events-none fixed -top-24 left-1/2 -translate-x-1/2 h-96 w-full max-w-2xl bg-[radial-gradient(ellipse_at_top,rgba(37,99,235,0.18),transparent_70%)]" />
+      <div className="pointer-events-none fixed top-48 -right-20 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl" />
+      <div className="pointer-events-none fixed top-96 -left-20 h-64 w-64 rounded-full bg-blue-400/10 blur-3xl" />
+
       {/* 1. NATIVE TOP NAVIGATION BAR & HERO */}
       <RoomHeader
         room={room}
@@ -435,9 +414,21 @@ export function RoomJoin() {
       />
 
       {/* 2. MAIN NATIVE APP CANVAS */}
-      <main className="mx-auto w-full max-w-md sm:max-w-xl lg:max-w-3xl flex-1 px-4 pt-3.5 pb-36 sm:px-6">
+      <main className="relative z-10 mx-auto w-full max-w-md sm:max-w-xl lg:max-w-3xl flex-1 px-4 pt-3.5 pb-36 sm:px-6">
+        {/* Hero Room Bill Pass Card (Deep vibrant brand identity) */}
+        <div className="mb-3.5">
+          <RoomHeroCard
+            room={room}
+            members={members}
+            onOpenReceiptImage={room.receipt_image_url ? () => setReceiptImageOpen(true) : undefined}
+            onOpenPaymentInfo={() => setShowPaymentInfoModal(true)}
+            onOpenAestheticReceipt={() => setAestheticReceiptOpen(true)}
+            onPhotoUpdated={fetchRoom}
+          />
+        </div>
+
         {/* Slim native horizontal step progress indicator */}
-        <div className="mb-3">
+        <div className="mb-3.5">
           <StepProgressCard status={room.status} />
         </div>
 
@@ -462,11 +453,6 @@ export function RoomJoin() {
           </div>
         )}
 
-        {/* Room Visual Hub: Struk Kasir, QRIS Host, Foto Barengan */}
-        <div className="mb-3.5">
-          <RoomMediaGalleryCard room={room} onPhotoUpdated={fetchRoom} />
-        </div>
-
         {/* ------------------------------------------------------------- */}
         {/* A. SETTLEMENT STAGE (LOCKED OR CLOSED)                        */}
         {/* ------------------------------------------------------------- */}
@@ -477,14 +463,14 @@ export function RoomJoin() {
               <button
                 type="button"
                 onClick={() => setActiveTab("settlement")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold whitespace-nowrap transition-all ${
                   activeTab === "settlement"
                     ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold"
                     : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 <CreditCard size={15} weight="bold" />
-                <span>{isHost ? "Kas & Pelunasan" : "Bayar Tagihan"}</span>
+                <span className="whitespace-nowrap">{isHost ? "Kas & Pelunasan" : "Bayar Tagihan"}</span>
                 {isHost && pendingVerificationCount > 0 && (
                   <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 font-mono text-[9px] font-black text-white">
                     {pendingVerificationCount}
@@ -495,14 +481,14 @@ export function RoomJoin() {
               <button
                 type="button"
                 onClick={() => setActiveTab("menu")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold whitespace-nowrap transition-all ${
                   activeTab === "menu"
                     ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold"
                     : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 <ForkKnife size={15} weight="bold" />
-                <span>Menu Pesanan</span>
+                <span className="whitespace-nowrap">Menu Pesanan</span>
               </button>
             </div>
 
@@ -525,24 +511,6 @@ export function RoomJoin() {
                     />
 
                     <TippingCard />
-
-                    {/* Delete room action link */}
-                    <div className="flex flex-col items-center gap-1 pt-3">
-                      {deleteError && (
-                        <p className="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">
-                          {deleteError}
-                        </p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setShowDeleteModal(true)}
-                        disabled={deleting}
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline disabled:opacity-50"
-                      >
-                        <Trash size={14} weight="bold" />
-                        <span>{deleting ? "Menghapus Meja..." : "Hapus Meja Permanen"}</span>
-                      </button>
-                    </div>
                   </>
                 ) : me ? (
                   /* GUEST PAYMENT CARD */
@@ -693,25 +661,6 @@ export function RoomJoin() {
             </section>
 
             <RoomSummary room={room} />
-
-            {isHost && (
-              <div className="flex flex-col items-center gap-1 pt-4 pb-2">
-                {deleteError && (
-                  <p className="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">
-                    {deleteError}
-                  </p>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteModal(true)}
-                  disabled={deleting}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline disabled:opacity-50"
-                >
-                  <Trash size={14} weight="bold" />
-                  <span>{deleting ? "Menghapus Meja..." : "Hapus Meja Permanen"}</span>
-                </button>
-              </div>
-            )}
           </div>
         )}
       </main>
@@ -793,25 +742,6 @@ export function RoomJoin() {
         isOpen={celebrationOpen}
         onClose={() => setCelebrationOpen(false)}
         onOpenReceipt={() => setAestheticReceiptOpen(true)}
-      />
-
-      {/* Delete Room Confirmation Modal */}
-      <ConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => {
-          if (!deleting) setShowDeleteModal(false);
-        }}
-        onConfirm={handleConfirmDeleteRoom}
-        title="Hapus Meja Permanen?"
-        description={
-          <span>
-            Hapus meja <strong className="font-bold text-slate-800">"{room.title}"</strong> ({room.room_code})? Semua klaim dan data pembayaran di dalamnya akan ikut terhapus permanen dan tidak bisa dikembalikan.
-          </span>
-        }
-        confirmText="Hapus Meja"
-        cancelText="Batal"
-        isDestructive
-        isLoading={deleting}
       />
     </div>
   );
