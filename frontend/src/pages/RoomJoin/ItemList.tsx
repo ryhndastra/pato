@@ -214,7 +214,7 @@ export function ItemList({
             className="mt-2 inline-flex h-11 items-center gap-2 rounded-2xl bg-blue-600 px-5 text-xs font-bold text-white shadow-xs hover:bg-blue-700 active:scale-95 transition-all"
           >
             <Plus size={16} weight="bold" />
-            <span>+ Tambah Struk Pertama</span>
+            <span>Tambah Struk Pertama</span>
           </button>
         )}
       </div>
@@ -366,7 +366,7 @@ export function ItemList({
                 title="Tambah Struk Tempat Baru"
               >
                 <Plus size={14} weight="bold" />
-                <span>+ Struk</span>
+                <span>Tambah Struk</span>
               </button>
             )}
           </div>
@@ -511,7 +511,7 @@ export function ItemList({
             className="inline-flex items-center gap-1.5 rounded-2xl border border-dashed border-slate-300 bg-white/70 hover:bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-blue-600 hover:border-blue-300 shadow-2xs transition-all active:scale-95"
           >
             <Plus size={14} weight="bold" />
-            <span>Pindah spot nongkrong? + Tambah Struk Baru</span>
+            <span>Pindah spot nongkrong? Tambah Struk Baru</span>
           </button>
         </div>
       )}

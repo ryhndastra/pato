@@ -125,7 +125,7 @@ export function RoomClosedCelebrationModal({
           id="celebration-modal-title"
           className="text-xl font-black text-slate-900 leading-tight"
         >
-          Hore! Patungan Selesai 🎉
+          Patungan Selesai & Lunas
         </h2>
         <p className="mt-1 text-xs text-slate-500 leading-relaxed max-w-[280px]">
           Semua tagihan di meja <strong className="text-slate-800">{room.title}</strong> telah

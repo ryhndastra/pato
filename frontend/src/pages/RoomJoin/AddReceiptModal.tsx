@@ -490,7 +490,8 @@ export function AddReceiptModal({
                   </>
                 ) : (
                   <>
-                    <span>+ Atur Rekening</span>
+                    <Plus size={12} weight="bold" />
+                    <span>Atur Rekening</span>
                     <CaretDown size={12} weight="bold" />
                   </>
                 )}
@@ -714,7 +715,8 @@ export function AddReceiptModal({
                   </>
                 ) : (
                   <>
-                    <span>+ Atur Pajak</span>
+                    <Plus size={12} weight="bold" />
+                    <span>Atur Pajak</span>
                     <CaretDown size={12} weight="bold" />
                   </>
                 )}

@@ -63,11 +63,14 @@ export function RoomHeader({
               <ArrowLeft size={18} weight="bold" />
             </button>
 
-            <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-extrabold text-slate-900 leading-tight truncate">
-                {room.title}
-              </h1>
-              <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <h1 className="text-sm sm:text-base font-extrabold text-slate-900 leading-tight truncate">
+                  {room.title}
+                </h1>
+                <StatusBadge status={room.status} />
+              </div>
+              <div className="flex items-center mt-0.5">
                 <button
                   type="button"
                   onClick={() => copyCode(room.room_code)}
@@ -82,13 +85,12 @@ export function RoomHeader({
                     <Copy size={10} weight="bold" className="text-blue-500 group-hover:text-blue-700 transition-colors" />
                   )}
                 </button>
-                <StatusBadge status={room.status} />
               </div>
             </div>
           </div>
 
           {/* Header Action Icons */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-1.5">
             {/* Live Chat Icon Button with Unread Badge */}
             {onOpenChat && (
               <button
