@@ -86,7 +86,7 @@ export function RoomClosedCelebrationModal({
       onClick={onClose}
     >
       <div
-        className="relative flex w-full max-w-sm flex-col items-center overflow-hidden rounded-3xl bg-white p-6 text-center shadow-2xl ring-1 ring-slate-900/10 animate-modal-spring"
+        className="relative flex w-full max-w-sm flex-col items-center overflow-hidden rounded-3xl bg-white p-6 text-center shadow-2xl ring-1 ring-slate-900/10 animate-dialog-pop"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}

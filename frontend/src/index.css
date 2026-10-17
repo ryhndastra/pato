@@ -103,24 +103,28 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
 
-  --animate-fade-up: home-fade-up 480ms var(--spring-curve) both;
-  --animate-fade-up-fast: home-fade-up 320ms var(--spring-curve) both;
+  --animate-fade-up: home-fade-up 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-up-fast: home-fade-up 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-float-slow: mobile-float 9s ease-in-out infinite;
   --animate-float-reverse: mobile-float-reverse 11s ease-in-out infinite;
   --animate-pulse-glow: mobile-pulse-glow 3s ease-in-out infinite;
   --animate-shimmer: mobile-shimmer 2.5s ease-in-out infinite;
-  --animate-scale-in: mobile-scale-in 360ms var(--spring-curve) both;
-  --animate-slide-up: mobile-slide-up 400ms var(--spring-curve) both;
+  --animate-scale-in: mobile-scale-in 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-slide-up: sheet-spring-up 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes home-fade-up {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(18px) scale(0.985);
   }
-  to {
+  70% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(-2px) scale(1.003);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -264,11 +268,60 @@ button:active:not(:disabled),
 [role="button"]:active:not(:disabled),
 .touch-press:active,
 a[class*="rounded"]:active {
-  transform: scale(0.955) translateZ(0);
-  filter: brightness(0.94);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important;
-  transition-duration: 45ms;
+  transform: scale(0.92) translateZ(0);
+  filter: brightness(0.93);
+  box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.25) !important;
+  transition-duration: 40ms;
   transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* JavaScript Universal Native Touch Engine Classes */
+.pato-pressed {
+  transform: scale(0.92) translateZ(0) !important;
+  filter: brightness(0.93) !important;
+  box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.25) !important;
+  transition: transform 50ms cubic-bezier(0.2, 0, 0, 1),
+              filter 50ms ease,
+              box-shadow 50ms ease !important;
+}
+
+.pato-released {
+  animation: pato-spring-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+}
+
+@keyframes pato-spring-pop {
+  0% { transform: scale(0.92); }
+  55% { transform: scale(1.035); }
+  100% { transform: scale(1); }
+}
+
+/* Fluid Native Ink Ripple */
+.pato-ripple-surface {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.pato-ripple-wave {
+  position: absolute;
+  border-radius: 9999px;
+  transform: translate(-50%, -50%) scale(0);
+  animation: pato-ripple-expand 420ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes pato-ripple-expand {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.4);
+    opacity: 0;
+  }
 }
 
 /* Atmospheric halos tailored to button color themes */
@@ -385,11 +438,55 @@ input[type="checkbox"]:checked {
   animation: number-bump 220ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
+/* Native Mobile Sheet Slide Up (Authentic Bottom-Sheet Gliding from Offscreen) */
+@keyframes sheet-spring-up {
+  0% {
+    opacity: 0.5;
+    transform: translateY(100%);
+  }
+  75% {
+    opacity: 1;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-sheet-up {
+  animation: sheet-spring-up 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* iOS/Android Dialog Spring Pop */
+@keyframes dialog-spring-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.84) translateY(14px);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.025) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-dialog-pop {
+  animation: dialog-spring-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
 /* Modal Spring In */
 @keyframes modal-spring-in {
   0% {
     opacity: 0;
-    transform: scale(0.93) translateY(12px);
+    transform: scale(0.88) translateY(16px);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.02) translateY(-2px);
   }
   100% {
     opacity: 1;
@@ -398,7 +495,53 @@ input[type="checkbox"]:checked {
 }
 
 .animate-modal-spring {
-  animation: modal-spring-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: modal-spring-in 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Snappy Native Screen Enter */
+@keyframes screen-spring-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.985);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.003);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-screen-enter {
+  animation: screen-spring-enter 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Segmented Control Active Tab Pop & Content Slide */
+@keyframes tab-active-pop {
+  0% { transform: scale(0.94); }
+  60% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+.animate-tab-active {
+  animation: tab-active-pop 200ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes tab-content-slide {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-tab-content {
+  animation: tab-content-slide 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Backdrop Fade */

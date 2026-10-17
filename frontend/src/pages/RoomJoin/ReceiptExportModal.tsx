@@ -318,7 +318,7 @@ export function ReceiptExportModal({ room, onClose }: ReceiptExportModalProps) {
       onClick={onClose}
     >
       <div
-        className="relative flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-shell shadow-2xl animate-modal-spring"
+        className="relative flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-shell shadow-2xl animate-dialog-pop"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-hairline px-5 py-4">

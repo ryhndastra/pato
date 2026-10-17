@@ -154,8 +154,8 @@ export function EditProfileModal({ isOpen, onClose, onSuccess }: EditProfileModa
         }}
       />
 
-      {/* Modal Dialog Card */}
-      <div className="relative z-10 w-full max-w-md max-h-[92dvh] overflow-y-auto rounded-t-[32px] sm:rounded-3xl bg-white p-5 sm:p-6 shadow-2xl ring-1 ring-slate-900/10 animate-modal-spring">
+      {/* Modal Dialog Card (Bottom sheet on mobile, dialog on desktop) */}
+      <div className="relative z-10 w-full max-w-md max-h-[92dvh] overflow-y-auto rounded-t-[32px] sm:rounded-3xl bg-white p-5 sm:p-6 shadow-2xl ring-1 ring-slate-900/10 animate-sheet-up sm:animate-dialog-pop">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
           <div className="flex items-center gap-2">

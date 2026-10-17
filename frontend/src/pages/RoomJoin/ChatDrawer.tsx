@@ -152,7 +152,7 @@ export function ChatDrawer({
       />
 
       {/* Drawer Container: Bottom sheet on mobile, floating card on desktop */}
-      <div className="relative z-10 flex h-[520px] max-h-[85vh] w-full flex-col overflow-hidden rounded-t-[32px] border border-slate-200/80 bg-white shadow-2xl sm:w-[380px] sm:rounded-3xl animate-modal-spring">
+      <div className="relative z-10 flex h-[520px] max-h-[85vh] w-full flex-col overflow-hidden rounded-t-[32px] border border-slate-200/80 bg-white shadow-2xl sm:w-[380px] sm:rounded-3xl animate-sheet-up">
         {/* Mobile drag handle */}
         <div className="flex items-center justify-center pt-2.5 pb-1 sm:hidden">
           <div className="h-1.5 w-12 rounded-full bg-slate-300" />

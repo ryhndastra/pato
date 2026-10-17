@@ -26,7 +26,7 @@ export function ReceiptImageModal({ imageUrl, onClose }: ReceiptImageModalProps)
       onClick={onClose}
     >
       <div
-        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-shell shadow-2xl animate-modal-spring"
+        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-shell shadow-2xl animate-dialog-pop"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-hairline px-5 py-3.5">

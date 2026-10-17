@@ -465,7 +465,7 @@ export function RoomJoin() {
                 onClick={() => setActiveTab("settlement")}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold whitespace-nowrap transition-all ${
                   activeTab === "settlement"
-                    ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold"
+                    ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold animate-tab-active"
                     : "text-slate-500 hover:text-slate-900"
                 }`}
               >
@@ -483,7 +483,7 @@ export function RoomJoin() {
                 onClick={() => setActiveTab("menu")}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold whitespace-nowrap transition-all ${
                   activeTab === "menu"
-                    ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold"
+                    ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold animate-tab-active"
                     : "text-slate-500 hover:text-slate-900"
                 }`}
               >
@@ -494,7 +494,7 @@ export function RoomJoin() {
 
             {/* TAB 1: KAS & PELUNASAN / BAYAR KE HOST */}
             {activeTab === "settlement" && (
-              <div className="flex flex-col gap-3.5">
+              <div className="flex flex-col gap-3.5 animate-tab-content">
                 {isHost ? (
                   /* HOST COMMAND CENTER (Unified single screen: hero stats + friends list + host food disclosure) */
                   <>
@@ -541,7 +541,7 @@ export function RoomJoin() {
 
             {/* TAB 2: MENU PESANAN & STRUK KASIR */}
             {activeTab === "menu" && (
-              <div className="flex flex-col gap-3.5">
+              <div className="flex flex-col gap-3.5 animate-tab-content">
                 {isHost && room.status === "LOCKED" && (
                   <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200/80 bg-amber-50/90 p-3 shadow-2xs">
                     <div>

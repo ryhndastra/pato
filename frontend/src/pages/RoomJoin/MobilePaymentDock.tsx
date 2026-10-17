@@ -38,7 +38,7 @@ export function MobilePaymentDock({
 }: MobilePaymentDockProps) {
   if (!me) {
     return (
-      <div className="fixed bottom-0 inset-x-0 z-30 border-t border-slate-200/70 bg-white/90 px-4 pt-3 pb-[max(env(safe-area-inset-bottom,0px),0.75rem)] shadow-[0_-8px_25px_rgba(0,0,0,0.06)] backdrop-blur-xl lg:hidden">
+      <div className="fixed bottom-0 inset-x-0 z-30 border-t border-slate-200/70 bg-white/90 px-4 pt-3 pb-[max(env(safe-area-inset-bottom,0px),0.75rem)] shadow-[0_-8px_25px_rgba(0,0,0,0.06)] backdrop-blur-xl lg:hidden animate-sheet-up">
         <button
           type="button"
           onClick={onJoinClick}
@@ -55,7 +55,7 @@ export function MobilePaymentDock({
   const allFriendsPaid = friendsTarget > 0 && verifiedFromFriends >= friendsTarget;
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200/80 bg-white/95 px-4 pt-3 pb-[calc(max(env(safe-area-inset-bottom,0px),0px)+0.75rem)] shadow-[0_-8px_25px_rgba(0,0,0,0.06)] backdrop-blur-xl lg:hidden">
+    <div className="fixed bottom-0 inset-x-0 z-40 border-t border-slate-200/80 bg-white/95 px-4 pt-3 pb-[calc(max(env(safe-area-inset-bottom,0px),0px)+0.75rem)] shadow-[0_-8px_25px_rgba(0,0,0,0.06)] backdrop-blur-xl lg:hidden animate-sheet-up">
       <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
         {/* Left: Financial indicator */}
         <div className="flex flex-col min-w-0">

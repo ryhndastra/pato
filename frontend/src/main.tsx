@@ -4,6 +4,10 @@ import { BrowserRouter } from 'react-router'
 import './index.css'
 import { AuthProvider } from './auth/AuthContext.tsx'
 import App from './App.tsx'
+import { initNativeTouchFeedback } from './lib/nativeTouch.ts'
+
+// Initialize native mobile touch & click physics (ripple, spring-pop, haptics)
+initNativeTouchFeedback();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

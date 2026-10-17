@@ -54,7 +54,7 @@ export function ConfirmModal({
       />
 
       {/* Modal Card */}
-      <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-900/10 animate-modal-spring">
+      <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-slate-900/10 animate-dialog-pop">
         <button
           type="button"
           onClick={onClose}

@@ -72,7 +72,7 @@ export function CreateRoom() {
 
       {/* Floating Main Form Content overlapping header */}
       <main className="relative z-10 mx-auto -mt-10 max-w-[1120px] px-4 sm:-mt-12 sm:px-6 lg:-mt-14 lg:px-8">
-        <form id="create-room-form" onSubmit={handleSubmit} className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-8 animate-fade-up">
+        <form id="create-room-form" onSubmit={handleSubmit} className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-8 animate-screen-enter">
           {/* Left Column: Form Details & Items */}
           <div className="space-y-5 lg:col-span-7 xl:col-span-8">
             {/* Event Title & Host */}
@@ -148,7 +148,7 @@ export function CreateRoom() {
       </main>
 
       {/* Mobile Bottom Frosted Floating Bar (Strictly fixed to browser viewport, outside transform) */}
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200/80 bg-white/95 px-4 pt-3 pb-[calc(max(env(safe-area-inset-bottom,0px),0px)+0.75rem)] shadow-[0_-8px_25px_rgba(0,0,0,0.08)] backdrop-blur-xl lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200/80 bg-white/95 px-4 pt-3 pb-[calc(max(env(safe-area-inset-bottom,0px),0px)+0.75rem)] shadow-[0_-8px_25px_rgba(0,0,0,0.08)] backdrop-blur-xl lg:hidden animate-sheet-up">
         <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
           <div className="min-w-0">
             <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
