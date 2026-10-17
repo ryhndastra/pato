@@ -634,6 +634,7 @@ export function RoomJoin() {
         onCloseRoom={handleClose}
         onJoinClick={scrollToJoin}
         onLockClick={handleLock}
+        locking={locking}
       />
 
       {/* In-Room Live Chat Slide-over Drawer / Bottom Sheet */}

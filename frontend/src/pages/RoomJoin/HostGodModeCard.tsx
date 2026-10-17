@@ -1,5 +1,7 @@
 import { useState } from "react";
 import {
+  CircleNotch,
+  LockSimple,
   MagicWand,
   WarningCircle,
 } from "@phosphor-icons/react";
@@ -15,7 +17,9 @@ interface HostGodModeCardProps {
 
 export function HostGodModeCard({
   room,
+  onLock,
   onSplitUnclaimed,
+  locking,
   lockError,
 }: HostGodModeCardProps) {
   const [splitting, setSplitting] = useState(false);
@@ -73,7 +77,7 @@ export function HostGodModeCard({
         <button
           type="button"
           onClick={handleSplitUnclaimed}
-          disabled={splitting}
+          disabled={splitting || locking}
           className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-500 px-3.5 py-2 text-xs font-bold text-white shadow-[0_2px_10px_rgba(217,119,6,0.25)] transition-all hover:brightness-105 active:scale-95 disabled:opacity-60"
         >
           <MagicWand size={13} weight="bold" />
@@ -83,5 +87,30 @@ export function HostGodModeCard({
     );
   }
 
-  return null;
+  // Desktop-only prompt when all items are claimed
+  return (
+    <div className="hidden lg:flex items-center justify-between gap-3 rounded-2xl border border-blue-200/80 bg-blue-50/60 p-3.5 shadow-2xs">
+      <p className="text-xs font-semibold text-blue-950">
+        Semua menu sudah diklaim! Kunci meja untuk membuat tagihan final.
+      </p>
+      <button
+        type="button"
+        onClick={onLock}
+        disabled={locking}
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-black active:scale-95 transition-all disabled:opacity-60"
+      >
+        {locking ? (
+          <>
+            <CircleNotch size={14} weight="bold" className="animate-spin text-white" />
+            <span>Mengunci...</span>
+          </>
+        ) : (
+          <>
+            <LockSimple size={14} weight="bold" />
+            <span>Kunci Meja</span>
+          </>
+        )}
+      </button>
+    </div>
+  );
 }

@@ -1,5 +1,6 @@
 import {
   CheckCircle,
+  CircleNotch,
   Clock,
   CreditCard,
   LockSimple,
@@ -20,6 +21,7 @@ interface MobilePaymentDockProps {
   onCloseRoom?: () => void;
   onJoinClick?: () => void;
   onLockClick?: () => void;
+  locking?: boolean;
 }
 
 export function MobilePaymentDock({
@@ -35,6 +37,7 @@ export function MobilePaymentDock({
   onCloseRoom,
   onJoinClick,
   onLockClick,
+  locking = false,
 }: MobilePaymentDockProps) {
   if (!me) {
     return (
@@ -147,10 +150,20 @@ export function MobilePaymentDock({
               <button
                 type="button"
                 onClick={onLockClick || onScrollToClaim}
-                className="flex h-12 items-center gap-2 rounded-2xl bg-slate-900 px-5 text-xs font-bold text-white shadow-[0_4px_16px_rgba(15,23,42,0.25)] hover:bg-black active:scale-95 transition-all"
+                disabled={locking}
+                className="flex h-12 items-center gap-2 rounded-2xl bg-slate-900 px-5 text-xs font-bold text-white shadow-[0_4px_16px_rgba(15,23,42,0.25)] hover:bg-black active:scale-95 transition-all disabled:opacity-60"
               >
-                <LockSimple size={18} weight="bold" />
-                <span>Kunci Meja</span>
+                {locking ? (
+                  <>
+                    <CircleNotch size={18} weight="bold" className="animate-spin text-white" />
+                    <span>Mengunci...</span>
+                  </>
+                ) : (
+                  <>
+                    <LockSimple size={18} weight="bold" />
+                    <span>Kunci Meja</span>
+                  </>
+                )}
               </button>
             ) : (
               <button
