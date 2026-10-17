@@ -15,16 +15,12 @@ import { RoomSummary } from "./RoomSummary";
 import { JoinForm } from "./JoinForm";
 import { HostGodModeCard } from "./HostGodModeCard";
 import { PersonalSettlementCard } from "./PersonalSettlementCard";
-import { HostPaymentTargetCard } from "./HostPaymentTargetCard";
 import { HostPaymentMonitorCard } from "./HostPaymentMonitorCard";
 import { StepProgressCard } from "./StepProgressCard";
 import { TippingCard } from "./TippingCard";
 import { ChatDrawer } from "./ChatDrawer";
-import { ReceiptExportModal } from "./ReceiptExportModal";
-import { ReceiptImageModal } from "./ReceiptImageModal";
-import { RoomClosedCelebrationModal } from "./RoomClosedCelebrationModal";
+import { RoomModals } from "./RoomModals";
 import { MobilePaymentDock } from "./MobilePaymentDock";
-import { AddReceiptModal } from "./AddReceiptModal";
 import { RoomStates } from "./RoomStates";
 import {
   getGuestToken,
@@ -457,156 +453,109 @@ export function RoomJoin() {
         )}
 
         {/* ------------------------------------------------------------- */}
-        {/* A. SETTLEMENT STAGE (LOCKED OR CLOSED)                        */}
+        {/* A. SEGMENTED TABS & MAIN CONTENT AREA                         */}
         {/* ------------------------------------------------------------- */}
-        {isSettlement ? (
-          <div className="flex flex-col gap-3.5">
-            {/* Native iOS/Android Segmented Control */}
-            <div className="flex w-full rounded-2xl bg-slate-100/90 p-1 border border-slate-200/70 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setActiveTab("settlement")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold whitespace-nowrap transition-all ${
-                  activeTab === "settlement"
-                    ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold animate-tab-active"
-                    : "text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                <CreditCard size={15} weight="bold" />
-                <span className="whitespace-nowrap">{isHost ? "Kas & Pelunasan" : "Bayar Tagihan"}</span>
-                {isHost && pendingVerificationCount > 0 && (
-                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 font-mono text-[9px] font-black text-white">
-                    {pendingVerificationCount}
-                  </span>
-                )}
-              </button>
+        {isSettlement && (
+          <div className="flex w-full rounded-2xl bg-slate-100/90 p-1 border border-slate-200/70 shadow-2xs mb-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab("settlement")}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold whitespace-nowrap transition-all ${
+                activeTab === "settlement"
+                  ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold animate-tab-active"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              <CreditCard size={15} weight="bold" />
+              <span className="whitespace-nowrap">{isHost ? "Kas & Pelunasan" : "Bayar Tagihan"}</span>
+              {isHost && pendingVerificationCount > 0 && (
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 font-mono text-[9px] font-black text-white">
+                  {pendingVerificationCount}
+                </span>
+              )}
+            </button>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab("menu")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold whitespace-nowrap transition-all ${
-                  activeTab === "menu"
-                    ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold animate-tab-active"
-                    : "text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                <ForkKnife size={15} weight="bold" />
-                <span className="whitespace-nowrap">Menu Pesanan</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab("menu")}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold whitespace-nowrap transition-all ${
+                activeTab === "menu"
+                  ? "bg-white text-slate-900 shadow-2xs border border-slate-200/60 font-extrabold animate-tab-active"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              <ForkKnife size={15} weight="bold" />
+              <span className="whitespace-nowrap">Menu Pesanan</span>
+            </button>
+          </div>
+        )}
 
-            {/* TAB 1: KAS & PELUNASAN / BAYAR KE HOST */}
-            {activeTab === "settlement" && (
-              <div className="flex flex-col gap-3.5 animate-tab-content">
-                {isHost ? (
-                  /* HOST COMMAND CENTER (Unified single screen: hero stats + friends list + host food disclosure) */
-                  <>
-                    <HostPaymentMonitorCard
-                      room={room}
-                      onVerifyPayment={handleVerifyPayment}
-                      onRejectPayment={handleRejectPayment}
-                      onUnlockRoom={handleUnlock}
-                      onCloseRoom={handleClose}
-                      unlocking={unlocking}
-                      closing={closing}
-                      unlockError={unlockError}
-                      closeError={closeError}
-                    />
-
-                    <TippingCard />
-                  </>
-                ) : me ? (
-                  /* GUEST PAYMENT CARD */
-                  <div className="flex flex-col gap-3.5">
-                    <PersonalSettlementCard
-                      room={room}
-                      me={me}
-                      onSubmitProof={handleSubmitProof}
-                    />
-                    <TippingCard />
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-6 text-center shadow-2xs">
-                    <p className="text-xs font-semibold text-slate-600">
-                      Kamu belum bergabung dalam meja ini.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("menu")}
-                      className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-blue-700 active:scale-95 transition-all"
-                    >
-                      Buka Tab Menu untuk Gabung
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* TAB 2: MENU PESANAN & STRUK KASIR */}
-            {activeTab === "menu" && (
-              <div className="flex flex-col gap-3.5 animate-tab-content">
-                {isHost && room.status === "LOCKED" && (
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200/80 bg-amber-50/90 p-3 shadow-2xs">
-                    <div>
-                      <p className="text-xs font-bold text-amber-900">Tagihan Sedang Dikunci</p>
-                      <p className="text-[11px] text-amber-700">
-                        Buka meja kembali jika ingin mengedit atau menyesuaikan porsi menu.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleUnlock}
-                      disabled={unlocking}
-                      className="shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white shadow-2xs hover:bg-amber-700 active:scale-95 disabled:opacity-50"
-                    >
-                      {unlocking ? "Membuka..." : "Buka Kunci"}
-                    </button>
-                  </div>
-                )}
-                <MemberList
-                  members={members}
-                  currentMemberId={currentMemberId}
-                  roomStatus={room.status}
-                  selectedMemberId={selectedMemberFilter}
-                  onSelectMember={setSelectedMemberFilter}
+        {/* 1. SETTLEMENT VIEW */}
+        {isSettlement && activeTab === "settlement" ? (
+          <div className="flex flex-col gap-3.5 animate-tab-content">
+            {isHost ? (
+              <>
+                <HostPaymentMonitorCard
+                  room={room}
+                  onVerifyPayment={handleVerifyPayment}
+                  onRejectPayment={handleRejectPayment}
+                  onUnlockRoom={handleUnlock}
+                  onCloseRoom={handleClose}
+                  unlocking={unlocking}
+                  closing={closing}
+                  unlockError={unlockError}
+                  closeError={closeError}
                 />
-
-                <section className="flex flex-col gap-2.5">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Menu Pesanan ({room.items?.length ?? 0})
-                    </h2>
-                    <span className="rounded-full bg-slate-200/70 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                      Klaim Dikunci
-                    </span>
-                  </div>
-
-                  <ItemList
-                    items={room.items ?? []}
-                    members={members}
-                    receipts={room.receipts}
-                    currentMemberId={currentMemberId}
-                    roomStatus={room.status}
-                    pendingItemId={pendingItemId}
-                    onClaim={handleClaim}
-                    onUnclaim={handleUnclaim}
-                    onJoinPrompt={scrollToJoin}
-                    selectedMemberId={selectedMemberFilter}
-                    onClearMemberFilter={() => setSelectedMemberFilter(null)}
-                    onAddReceipt={() => setAddReceiptOpen(true)}
-                    onViewReceiptImage={(url) => setActiveReceiptImageUrl(url)}
-                  />
-                </section>
-
-                <RoomSummary room={room} />
+                <TippingCard />
+              </>
+            ) : me ? (
+              <div className="flex flex-col gap-3.5">
+                <PersonalSettlementCard
+                  room={room}
+                  me={me}
+                  onSubmitProof={handleSubmitProof}
+                />
+                <TippingCard />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-6 text-center shadow-2xs">
+                <p className="text-xs font-semibold text-slate-600">
+                  Kamu belum bergabung dalam meja ini.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("menu")}
+                  className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-blue-700 active:scale-95 transition-all"
+                >
+                  Buka Tab Menu untuk Gabung
+                </button>
               </div>
             )}
           </div>
         ) : (
-          /* ------------------------------------------------------------- */
-          /* B. CLAIMING STAGE (OPEN MEJA)                                 */
-          /* ------------------------------------------------------------- */
-          <div className="flex flex-col gap-3.5">
+          /* 2. MENU & MEJA VIEW (Unified for open claiming stage and when menu tab is selected in settlement) */
+          <div className="flex flex-col gap-3.5 animate-tab-content">
+            {/* Host Locked Notice with quick unlock */}
+            {isHost && isSettlement && room.status === "LOCKED" && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200/80 bg-amber-50/90 p-3 shadow-2xs">
+                <div>
+                  <p className="text-xs font-bold text-amber-900">Tagihan Sedang Dikunci</p>
+                  <p className="text-[11px] text-amber-700">
+                    Buka meja kembali jika ingin mengedit atau menyesuaikan porsi menu.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleUnlock}
+                  disabled={unlocking}
+                  className="shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white shadow-2xs hover:bg-amber-700 active:scale-95 disabled:opacity-50"
+                >
+                  {unlocking ? "Membuka..." : "Buka Kunci"}
+                </button>
+              </div>
+            )}
+
+            {/* Member List */}
             <MemberList
               members={members}
               currentMemberId={currentMemberId}
@@ -615,7 +564,8 @@ export function RoomJoin() {
               onSelectMember={setSelectedMemberFilter}
             />
 
-            {!joined && (
+            {/* Guest Join Form (if not joined yet and room is still open) */}
+            {!joined && !isSettlement && (
               <div ref={joinSectionRef}>
                 <JoinForm
                   roomCode={room.room_code}
@@ -626,7 +576,8 @@ export function RoomJoin() {
               </div>
             )}
 
-            {isHost && (
+            {/* Host God Mode Controls (Lock / Split Unclaimed) */}
+            {isHost && !isSettlement && (
               <HostGodModeCard
                 room={room}
                 onLock={handleLock}
@@ -636,13 +587,14 @@ export function RoomJoin() {
               />
             )}
 
+            {/* Items Section */}
             <section className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Menu Pesanan ({room.items?.length ?? 0})
                 </h2>
-                <span className="text-[11px] font-semibold text-blue-600">
-                  Pilih porsi kamu di bawah
+                <span className={isSettlement ? "rounded-full bg-slate-200/70 px-2 py-0.5 text-[10px] font-bold text-slate-600" : "text-[11px] font-semibold text-blue-600"}>
+                  {isSettlement ? "Klaim Dikunci" : "Pilih porsi kamu di bawah"}
                 </span>
               </div>
 
@@ -700,77 +652,28 @@ export function RoomJoin() {
         onResetUnread={handleResetUnread}
       />
 
-      {/* Modal for viewing Bank Account & QRIS preview anytime */}
-      {showPaymentInfoModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setShowPaymentInfoModal(false)}
-        >
-          <div
-            className="relative max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-800">
-                Rekening & QRIS Host
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowPaymentInfoModal(false)}
-                className="rounded-full bg-slate-100 p-1 text-slate-400 hover:text-slate-800"
-              >
-                ✕
-              </button>
-            </div>
-            <HostPaymentTargetCard room={room} />
-          </div>
-        </div>
-      )}
-
-      {/* Modal for viewing original restaurant receipt photo */}
-      {receiptImageOpen && room.receipt_image_url && (
-        <ReceiptImageModal
-          imageUrl={room.receipt_image_url}
-          onClose={() => setReceiptImageOpen(false)}
-        />
-      )}
-
-      {activeReceiptImageUrl && (
-        <ReceiptImageModal
-          imageUrl={activeReceiptImageUrl}
-          onClose={() => setActiveReceiptImageUrl(null)}
-        />
-      )}
-
-      {/* Modal for adding multi-receipt from another spot */}
-      <AddReceiptModal
-        isOpen={addReceiptOpen}
-        onClose={() => setAddReceiptOpen(false)}
-        roomCode={room.room_code}
+      {/* Encapsulated Room Modals */}
+      <RoomModals
+        room={room}
         members={members}
-        currentMember={me}
+        me={me}
+        showPaymentInfoModal={showPaymentInfoModal}
+        onClosePaymentInfoModal={() => setShowPaymentInfoModal(false)}
+        receiptImageOpen={receiptImageOpen}
+        onCloseReceiptImageModal={() => setReceiptImageOpen(false)}
+        activeReceiptImageUrl={activeReceiptImageUrl}
+        onCloseActiveReceiptImageUrl={() => setActiveReceiptImageUrl(null)}
+        addReceiptOpen={addReceiptOpen}
+        onCloseAddReceipt={() => setAddReceiptOpen(false)}
         onReceiptAdded={() => {
           fetchRoom();
           soundFX.playCelebration();
         }}
-      />
-
-      {/* Modal for viewing aesthetic digital split bill receipt */}
-      {aestheticReceiptOpen && (
-        <ReceiptExportModal
-          room={room}
-          onClose={() => setAestheticReceiptOpen(false)}
-        />
-      )}
-
-      {/* Modal for celebrating closed room completion */}
-      <RoomClosedCelebrationModal
-        room={room}
-        isOpen={celebrationOpen}
-        onClose={() => setCelebrationOpen(false)}
-        onOpenReceipt={() => setAestheticReceiptOpen(true)}
+        aestheticReceiptOpen={aestheticReceiptOpen}
+        onCloseAestheticReceipt={() => setAestheticReceiptOpen(false)}
+        celebrationOpen={celebrationOpen}
+        onCloseCelebration={() => setCelebrationOpen(false)}
+        onOpenAestheticReceipt={() => setAestheticReceiptOpen(true)}
       />
     </div>
   );
