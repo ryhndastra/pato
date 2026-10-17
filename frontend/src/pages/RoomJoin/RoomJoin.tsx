@@ -1,14 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ArrowsClockwise,
-  CheckCircle,
-  CreditCard,
-  ForkKnife,
-  Info,
-  X,
-} from "@phosphor-icons/react";
+import { CreditCard, ForkKnife, Info, X } from "@phosphor-icons/react";
 import { useParams } from "react-router";
-import { apiDelete, apiGet, apiPost, ApiError } from "../../lib/api";
+import { apiGet, apiPost, ApiError } from "../../lib/api";
 import { useAuth } from "../../auth/useAuth";
 import { RoomHeader } from "./RoomHeader";
 import { MemberList } from "./MemberList";
@@ -23,6 +16,10 @@ import { ChatDrawer } from "./ChatDrawer";
 import { RoomModals } from "./RoomModals";
 import { MobilePaymentDock } from "./MobilePaymentDock";
 import { RoomStates } from "./RoomStates";
+import { RoomHeroCard } from "./RoomHeroCard";
+import { RoomConnectionBanner } from "./RoomConnectionBanner";
+import { InAppToast } from "../../components/InAppToast";
+import { NotificationPrimerModal } from "./NotificationPrimerModal";
 import {
   getGuestToken,
   hasGuestToken,
@@ -30,13 +27,11 @@ import {
   saveJoinedSession,
 } from "./guestToken";
 import { useRoomWebSocket } from "../../hooks/useRoomWebSocket";
-import { RoomHeroCard } from "./RoomHeroCard";
+import { useRoomNotifications } from "./useRoomNotifications";
+import { useRoomActions } from "./useRoomActions";
 import { soundFX } from "../../lib/soundFx";
 import { haptic } from "../../lib/haptic";
-import { InAppToast, type InAppToastPayload, type ToastType } from "../../components/InAppToast";
-import { NotificationPrimerModal } from "./NotificationPrimerModal";
-import { getNotificationPermissionState, sendBrowserNotification } from "../../lib/notifications";
-import type { JoinResult, RoomDetail, RoomMember, RoomEvent } from "./types";
+import type { JoinResult, RoomDetail, RoomEvent } from "./types";
 
 export function RoomJoin() {
   const { code: rawCode } = useParams<{ code: string }>();
@@ -48,8 +43,6 @@ export function RoomJoin() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
 
-  const [joining, setJoining] = useState(false);
-  const [joinError, setJoinError] = useState<string | null>(null);
   const [joined, setJoined] = useState<JoinResult | null>(() => {
     if (!code) return null;
     return getJoinedSession(code);
@@ -57,17 +50,7 @@ export function RoomJoin() {
   const [selectedMemberFilter, setSelectedMemberFilter] = useState<string | null>(null);
   const [nameNotice, setNameNotice] = useState<string | null>(null);
 
-  const [pendingItemId, setPendingItemId] = useState<string | null>(null);
-  const [claimError, setClaimError] = useState<string | null>(null);
-
-  const [locking, setLocking] = useState(false);
-  const [lockError, setLockError] = useState<string | null>(null);
-
-  const [unlocking, setUnlocking] = useState(false);
-  const [unlockError, setUnlockError] = useState<string | null>(null);
-  const [closing, setClosing] = useState(false);
-  const [closeError, setCloseError] = useState<string | null>(null);
-
+  // Modal visibility states
   const [receiptImageOpen, setReceiptImageOpen] = useState(false);
   const [activeReceiptImageUrl, setActiveReceiptImageUrl] = useState<string | null>(null);
   const [addReceiptOpen, setAddReceiptOpen] = useState(false);
@@ -78,143 +61,80 @@ export function RoomJoin() {
   const [unreadMessageIds, setUnreadMessageIds] = useState<string[]>([]);
   const unreadChatCount = unreadMessageIds.length;
 
-  const handleOpenChat = useCallback(() => {
-    setChatOpen(true);
-    setUnreadMessageIds([]);
-  }, []);
-
-  const handleNewChatActivity = useCallback((ev: RoomEvent) => {
-    if (!ev || !ev.id) return;
-    setChatOpen((open) => {
-      if (!open) {
-        setUnreadMessageIds((prev) => (prev.includes(ev.id) ? prev : [...prev, ev.id]));
-      }
-      return open;
-    });
-  }, []);
-
-  const handleResetUnread = useCallback(() => {
-    setUnreadMessageIds([]);
-  }, []);
-
-  // Native Segmented Control state: settlement vs menu
+  // Segmented Control state: settlement vs menu
   const [activeTab, setActiveTab] = useState<"settlement" | "menu">("settlement");
-
   const joinSectionRef = useRef<HTMLDivElement | null>(null);
 
-  const [showNotificationPrimer, setShowNotificationPrimer] = useState(false);
-  const [activeToast, setActiveToast] = useState<InAppToastPayload | null>(null);
-  const prevRoomRef = useRef<RoomDetail | null>(null);
-  const myMemberIdRef = useRef<string | null>(joined?.member_id ?? null);
-  myMemberIdRef.current = joined?.member_id ?? null;
+  const members = room?.members ?? [];
+  const currentMemberId = joined?.member_id ?? null;
+  const me = members.find((m) => m.id === currentMemberId) ?? null;
+  const isHost =
+    Boolean(joined?.is_host) ||
+    Boolean(me?.is_host) ||
+    Boolean(user?.id && room?.host_user_id && user.id === room.host_user_id);
+  const isSettlement = room?.status === "LOCKED" || room?.status === "CLOSED";
 
-  const showNotification = useCallback((type: ToastType, title: string, message: string) => {
-    setActiveToast({
-      id: Math.random().toString(),
-      type,
-      title,
-      message,
-    });
-    soundFX.playNotification();
-    haptic.medium();
-
-    if (typeof document !== "undefined" && document.visibilityState === "hidden") {
-      sendBrowserNotification({
-        title,
-        body: message,
-        url: window.location.pathname,
-      });
-    }
-  }, []);
-
-  // Show notification primer modal when appropriate
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const dismissedKey = "pato_notif_primer_dismissed";
-    const dismissed = sessionStorage.getItem(dismissedKey);
-    const perm = getNotificationPermissionState();
-
-    if (perm === "default" && !dismissed && (joined || room)) {
-      const timer = window.setTimeout(() => {
-        setShowNotificationPrimer(true);
-      }, 2500);
-      return () => clearTimeout(timer);
-    }
-  }, [joined, Boolean(room)]);
+  // Hook 1: In-App & Background Notifications
+  const {
+    showNotificationPrimer,
+    setShowNotificationPrimer,
+    activeToast,
+    setActiveToast,
+    showNotification,
+    handleRoomDiff,
+  } = useRoomNotifications({
+    room,
+    joinedMemberId: currentMemberId,
+    isHost,
+  });
 
   const fetchRoom = useCallback(() => {
-    if (!code) return;
+    if (!code) return Promise.resolve(undefined);
     return apiGet<RoomDetail>(`/api/rooms/${encodeURIComponent(code)}`).then((res) => {
-      const prev = prevRoomRef.current;
-      if (prev && prev.room_code === res.room_code) {
-        // 1. Room status transitions
-        if (prev.status !== res.status) {
-          if (res.status === "LOCKED") {
-            showNotification(
-              "lock",
-              "Meja Telah Dikunci!",
-              "Host telah mengunci pesanan. Silakan periksa rincian tagihan kamu.",
-            );
-          } else if (res.status === "CLOSED") {
-            showNotification(
-              "success",
-              "Meja Selesai!",
-              "Semua tagihan telah diselesaikan. Terima kasih sudah patungan!",
-            );
-          } else if (prev.status === "LOCKED" && res.status === "CLAIMING") {
-            showNotification(
-              "info",
-              "Meja Dibuka Kembali",
-              "Host membuka kembali meja untuk perubahan pesanan.",
-            );
-          }
-        }
-
-        // 2. Personal payment verification status
-        const myId = myMemberIdRef.current;
-        if (myId) {
-          const prevMe = prev.members?.find((m) => m.id === myId);
-          const newMe = res.members?.find((m) => m.id === myId);
-          if (prevMe && newMe && prevMe.payment_status !== newMe.payment_status) {
-            if (newMe.payment_status === "VERIFIED") {
-              showNotification(
-                "success",
-                "Pembayaran Terverifikasi! 🎉",
-                "Host telah mengonfirmasi pembayaran kamu lunas. Terima kasih!",
-              );
-            } else if (newMe.payment_status === "REJECTED") {
-              showNotification(
-                "warning",
-                "Bukti Pembayaran Ditolak",
-                `Host meminta upload ulang: "${newMe.rejection_reason || "Nominal tidak sesuai"}"`,
-              );
-            }
-          }
-        }
-
-        // 3. For Host: New pending proof uploaded by friends
-        const isCurrentHost =
-          Boolean(joined?.is_host) ||
-          Boolean(user?.id && res.host_user_id && user.id === res.host_user_id);
-
-        if (isCurrentHost) {
-          const prevPending = prev.members?.filter((m) => !m.is_host && m.payment_status === "PENDING").length || 0;
-          const newPending = res.members?.filter((m) => !m.is_host && m.payment_status === "PENDING").length || 0;
-          if (newPending > prevPending) {
-            showNotification(
-              "info",
-              "Bukti Transfer Baru!",
-              "Ada teman meja yang baru saja mengunggah bukti transfer untuk dicek.",
-            );
-          }
-        }
-      }
-
-      prevRoomRef.current = res;
+      handleRoomDiff(res);
       setRoom(res);
       return res;
     });
-  }, [code, showNotification, joined?.is_host, user?.id]);
+  }, [code, handleRoomDiff]);
+
+  // Hook 2: Room Mutation Actions (Join, Claim, Lock, Close, Verify, etc.)
+  const {
+    joining,
+    joinError,
+    pendingItemId,
+    claimError,
+    locking,
+    lockError,
+    unlocking,
+    unlockError,
+    closing,
+    closeError,
+    handleJoin,
+    handleClaim,
+    handleUnclaim,
+    handleLock,
+    handleUnlock,
+    handleClose,
+    handleSplitUnclaimed,
+    handleSubmitProof,
+    handleVerifyPayment,
+    handleRejectPayment,
+  } = useRoomActions({
+    code,
+    authToken,
+    fetchRoom,
+    setRoom,
+    setJoined,
+    setNameNotice,
+    setActiveTab,
+    setCelebrationOpen,
+  });
+
+  // Hook 3: Real-Time WebSocket Connection & Reconnection Status
+  const { isReconnecting, justReconnected } = useRoomWebSocket({
+    roomCode: code,
+    onRoomUpdated: fetchRoom,
+  });
 
   // Auto-celebration for ALL members when room is officially CLOSED
   useEffect(() => {
@@ -229,11 +149,7 @@ export function RoomJoin() {
     }
   }, [room?.status, code]);
 
-  const { isReconnecting, justReconnected } = useRoomWebSocket({
-    roomCode: code,
-    onRoomUpdated: fetchRoom,
-  });
-
+  // Initial Room & Session Load
   useEffect(() => {
     if (!code) return;
     let cancelled = false;
@@ -258,12 +174,10 @@ export function RoomJoin() {
         setNotFound(false);
         setLoadError(null);
 
-        // Validasi dan simpan sesi aktif
         if (joinRes) {
           saveJoinedSession(code, joinRes);
           setJoined(joinRes);
         } else {
-          // Jika reconnect API mengembalikan null, cek apakah sesi lokal masih valid di dalam room.members
           const savedSession = getJoinedSession(code);
           if (savedSession && roomRes.members.some((m) => m.id === savedSession.member_id)) {
             setJoined(savedSession);
@@ -287,185 +201,24 @@ export function RoomJoin() {
     };
   }, [code, authToken]);
 
-  async function handleJoin(displayName: string) {
-    if (!code) return;
-    setJoining(true);
-    setJoinError(null);
-    try {
-      const res = await apiPost<JoinResult>(`/api/rooms/${encodeURIComponent(code)}/join`, {
-        guest_token: getGuestToken(code),
-        display_name: displayName,
-      });
+  const handleOpenChat = useCallback(() => {
+    setChatOpen(true);
+    setUnreadMessageIds([]);
+  }, []);
 
-      // 1. Simpan sesi permanen ke localStorage
-      saveJoinedSession(code, res);
-      setJoined(res);
-
-      // 2. Optimistic update: langsung masukkan nama ke daftar room.members seketika (0ms delay!)
-      setRoom((prev) => {
-        if (!prev) return prev;
-        if (prev.members.some((m) => m.id === res.member_id)) return prev;
-        const newMember: RoomMember = {
-          id: res.member_id,
-          display_name: res.display_name,
-          is_host: res.is_host,
-          subtotal_share: 0,
-          share_amount: 0,
-          claimed_item_ids: [],
-          payment_status: "UNPAID",
-        };
-        return {
-          ...prev,
-          members: [...prev.members, newMember],
-        };
-      });
-
-      if (res.display_name.trim().toLowerCase() !== displayName.trim().toLowerCase()) {
-        setNameNotice(
-          `Nama "${displayName}" sudah ada di meja ini. Kamu otomatis dinamai "${res.display_name}" agar pesanan & tagihan tidak tertukar.`,
-        );
+  const handleNewChatActivity = useCallback((ev: RoomEvent) => {
+    if (!ev || !ev.id) return;
+    setChatOpen((open) => {
+      if (!open) {
+        setUnreadMessageIds((prev) => (prev.includes(ev.id) ? prev : [...prev, ev.id]));
       }
-      await fetchRoom();
-    } catch (err) {
-      setJoinError(err instanceof ApiError ? err.message : "Gagal gabung ke meja.");
-    } finally {
-      setJoining(false);
-    }
-  }
-
-  async function handleClaim(itemId: string) {
-    if (!code) return;
-    setPendingItemId(itemId);
-    setClaimError(null);
-    try {
-      await apiPost(`/api/rooms/${encodeURIComponent(code)}/items/${itemId}/claim`, {
-        guest_token: getGuestToken(code),
-      });
-      await fetchRoom();
-    } catch (err) {
-      setClaimError(err instanceof ApiError ? err.message : "Gagal klaim item.");
-    } finally {
-      setPendingItemId(null);
-    }
-  }
-
-  async function handleUnclaim(itemId: string) {
-    if (!code) return;
-    setPendingItemId(itemId);
-    setClaimError(null);
-    try {
-      await apiDelete(`/api/rooms/${encodeURIComponent(code)}/items/${itemId}/claim`, {
-        guest_token: getGuestToken(code),
-      });
-      await fetchRoom();
-    } catch (err) {
-      setClaimError(err instanceof ApiError ? err.message : "Gagal batal klaim.");
-    } finally {
-      setPendingItemId(null);
-    }
-  }
-
-  async function handleLock() {
-    if (!code) return;
-    setLocking(true);
-    setLockError(null);
-    try {
-      await apiPost(
-        `/api/rooms/${encodeURIComponent(code)}/lock`,
-        { guest_token: getGuestToken(code) },
-        authToken,
-      );
-      haptic.success();
-      setActiveTab("settlement");
-      await fetchRoom();
-    } catch (err) {
-      setLockError(err instanceof ApiError ? err.message : "Gagal mengunci room.");
-    } finally {
-      setLocking(false);
-    }
-  }
-
-  async function handleUnlock() {
-    if (!code) return;
-    setUnlocking(true);
-    setUnlockError(null);
-    try {
-      await apiPost(
-        `/api/rooms/${encodeURIComponent(code)}/unlock`,
-        { guest_token: getGuestToken(code) },
-        authToken,
-      );
-      haptic.medium();
-      setActiveTab("menu");
-      await fetchRoom();
-    } catch (err) {
-      setUnlockError(err instanceof ApiError ? err.message : "Gagal membuka meja kembali.");
-    } finally {
-      setUnlocking(false);
-    }
-  }
-
-  async function handleClose() {
-    if (!code) return;
-    setClosing(true);
-    setCloseError(null);
-    try {
-      await apiPost(
-        `/api/rooms/${encodeURIComponent(code)}/close`,
-        { guest_token: getGuestToken(code) },
-        authToken,
-      );
-      await fetchRoom();
-      const celebratedKey = `pato_celebrated_${code}`;
-      sessionStorage.setItem(celebratedKey, "true");
-      setCelebrationOpen(true);
-      soundFX.playCelebration();
-      haptic.celebrate();
-    } catch (err) {
-      setCloseError(err instanceof ApiError ? err.message : "Gagal menutup meja.");
-    } finally {
-      setClosing(false);
-    }
-  }
-
-  async function handleSplitUnclaimed() {
-    if (!code) return;
-    await apiPost(
-      `/api/rooms/${encodeURIComponent(code)}/split-unclaimed`,
-      { guest_token: getGuestToken(code) },
-      authToken,
-    );
-    await fetchRoom();
-  }
-
-  async function handleSubmitProof(proofBase64: string) {
-    if (!code) return;
-    await apiPost(`/api/rooms/${encodeURIComponent(code)}/payments/proof`, {
-      guest_token: getGuestToken(code),
-      proof_image_url: proofBase64,
+      return open;
     });
-    await fetchRoom();
-  }
+  }, []);
 
-  async function handleVerifyPayment(memberId: string) {
-    if (!code) return;
-    await apiPost(
-      `/api/rooms/${encodeURIComponent(code)}/payments/${memberId}/verify`,
-      { guest_token: getGuestToken(code) },
-      authToken,
-    );
-    await fetchRoom();
-  }
-
-  async function handleRejectPayment(memberId: string, reason: string) {
-    if (!code) return;
-    await apiPost(
-      `/api/rooms/${encodeURIComponent(code)}/payments/${memberId}/reject`,
-      { reason, guest_token: getGuestToken(code) },
-      authToken,
-    );
-    await fetchRoom();
-  }
+  const handleResetUnread = useCallback(() => {
+    setUnreadMessageIds([]);
+  }, []);
 
   function scrollToJoin() {
     joinSectionRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -490,15 +243,6 @@ export function RoomJoin() {
       </div>
     );
   }
-
-  const members = room.members ?? [];
-  const currentMemberId = joined?.member_id ?? null;
-  const me = members.find((m) => m.id === currentMemberId) ?? null;
-  const isHost =
-    Boolean(joined?.is_host) ||
-    Boolean(me?.is_host) ||
-    Boolean(user?.id && room.host_user_id && user.id === room.host_user_id);
-  const isSettlement = room.status === "LOCKED" || room.status === "CLOSED";
 
   const hostMember = members.find((m) => m.is_host);
   const friends = members.filter((m) => !m.is_host);
@@ -528,18 +272,10 @@ export function RoomJoin() {
       />
 
       {/* Reconnecting / Reconnected Banner */}
-      {isReconnecting && (
-        <div className="sticky top-[53px] z-20 flex items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all duration-300">
-          <ArrowsClockwise size={14} weight="bold" className="animate-spin shrink-0" />
-          <span>Koneksi terputus. Mencoba menghubungkan kembali...</span>
-        </div>
-      )}
-      {justReconnected && (
-        <div className="sticky top-[53px] z-20 flex items-center justify-center gap-2 bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all duration-300">
-          <CheckCircle size={14} weight="fill" className="shrink-0" />
-          <span>Terhubung kembali ke meja!</span>
-        </div>
-      )}
+      <RoomConnectionBanner
+        isReconnecting={isReconnecting}
+        justReconnected={justReconnected}
+      />
 
       {/* 2. MAIN NATIVE APP CANVAS */}
       <main className="relative z-10 mx-auto w-full max-w-md sm:max-w-xl lg:max-w-3xl flex-1 px-4 pt-3.5 pb-36 sm:px-6">
@@ -576,9 +312,7 @@ export function RoomJoin() {
           </div>
         )}
 
-        {/* ------------------------------------------------------------- */}
-        {/* A. SEGMENTED TABS & MAIN CONTENT AREA                         */}
-        {/* ------------------------------------------------------------- */}
+        {/* Segmented Tabs & Main Content Area */}
         {isSettlement && (
           <div className="flex w-full rounded-2xl bg-slate-100/90 p-1 border border-slate-200/70 shadow-2xs mb-1">
             <button
@@ -648,60 +382,18 @@ export function RoomJoin() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => setActiveTab("menu")}
+                  onClick={scrollToJoin}
                   className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-blue-700 active:scale-95 transition-all"
                 >
-                  Buka Tab Menu untuk Gabung
+                  Gabung Sekarang
                 </button>
               </div>
             )}
           </div>
         ) : (
-          /* 2. MENU & MEJA VIEW (Unified for open claiming stage and when menu tab is selected in settlement) */
+          /* 2. ORDER / MENU CLAIMING VIEW */
           <div className="flex flex-col gap-3.5 animate-tab-content">
-            {/* Host Locked Notice with quick unlock */}
-            {isHost && isSettlement && room.status === "LOCKED" && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200/80 bg-amber-50/90 p-3 shadow-2xs">
-                <div>
-                  <p className="text-xs font-bold text-amber-900">Tagihan Sedang Dikunci</p>
-                  <p className="text-[11px] text-amber-700">
-                    Buka meja kembali jika ingin mengedit atau menyesuaikan porsi menu.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleUnlock}
-                  disabled={unlocking}
-                  className="shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white shadow-2xs hover:bg-amber-700 active:scale-95 disabled:opacity-50"
-                >
-                  {unlocking ? "Membuka..." : "Buka Kunci"}
-                </button>
-              </div>
-            )}
-
-            {/* Member List */}
-            <MemberList
-              members={members}
-              currentMemberId={currentMemberId}
-              roomStatus={room.status}
-              selectedMemberId={selectedMemberFilter}
-              onSelectMember={setSelectedMemberFilter}
-            />
-
-            {/* Guest Join Form (if not joined yet and room is still open) */}
-            {!joined && !isSettlement && (
-              <div ref={joinSectionRef}>
-                <JoinForm
-                  roomCode={room.room_code}
-                  submitting={joining}
-                  error={joinError}
-                  onSubmit={handleJoin}
-                />
-              </div>
-            )}
-
-            {/* Host God Mode Controls (Lock / Split Unclaimed) */}
-            {isHost && !isSettlement && (
+            {isHost && (
               <HostGodModeCard
                 room={room}
                 onLock={handleLock}
@@ -711,41 +403,56 @@ export function RoomJoin() {
               />
             )}
 
-            {/* Items Section */}
-            <section className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Menu Pesanan ({room.items?.length ?? 0})
-                </h2>
-                <span className={isSettlement ? "rounded-full bg-slate-200/70 px-2 py-0.5 text-[10px] font-bold text-slate-600" : "text-[11px] font-semibold text-blue-600"}>
-                  {isSettlement ? "Klaim Dikunci" : "Pilih porsi kamu di bawah"}
-                </span>
+            {claimError && (
+              <div className="rounded-2xl bg-rose-50 p-3 text-xs font-semibold text-rose-700 border border-rose-100 shadow-2xs">
+                {claimError}
               </div>
+            )}
 
-              {claimError && (
-                <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 border border-rose-100">
-                  {claimError}
-                </p>
-              )}
-
-              <ItemList
-                items={room.items ?? []}
-                members={members}
-                receipts={room.receipts}
-                currentMemberId={currentMemberId}
-                roomStatus={room.status}
-                pendingItemId={pendingItemId}
-                onClaim={handleClaim}
-                onUnclaim={handleUnclaim}
-                onJoinPrompt={scrollToJoin}
-                selectedMemberId={selectedMemberFilter}
-                onClearMemberFilter={() => setSelectedMemberFilter(null)}
-                onAddReceipt={() => setAddReceiptOpen(true)}
-                onViewReceiptImage={(url) => setActiveReceiptImageUrl(url)}
-              />
-            </section>
+            <ItemList
+              items={room.items ?? []}
+              members={members}
+              receipts={room.receipts ?? []}
+              currentMemberId={currentMemberId}
+              roomStatus={room.status}
+              pendingItemId={pendingItemId}
+              onClaim={handleClaim}
+              onUnclaim={handleUnclaim}
+              onJoinPrompt={scrollToJoin}
+              selectedMemberId={selectedMemberFilter}
+              onClearMemberFilter={() => setSelectedMemberFilter(null)}
+              onAddReceipt={() => setAddReceiptOpen(true)}
+              onViewReceiptImage={(url) => setActiveReceiptImageUrl(url)}
+            />
 
             <RoomSummary room={room} />
+
+            <div className="space-y-1.5 pt-1">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Anggota Meja ({members.length})
+              </h2>
+              <MemberList
+                members={members}
+                currentMemberId={currentMemberId}
+                roomStatus={room.status}
+                selectedMemberId={selectedMemberFilter}
+                onSelectMember={(mId) => {
+                  setSelectedMemberFilter((prev) => (prev === mId ? null : mId));
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Guest Join Prompt Section */}
+        {!joined && !isHost && (
+          <div ref={joinSectionRef} className="pt-4 scroll-mt-20">
+            <JoinForm
+              roomCode={code ?? ""}
+              submitting={joining}
+              error={joinError}
+              onSubmit={handleJoin}
+            />
           </div>
         )}
       </main>
