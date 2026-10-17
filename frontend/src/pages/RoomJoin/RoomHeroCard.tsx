@@ -1,26 +1,20 @@
 import { useState, useRef } from "react";
 import {
   Camera,
-  Check,
   CircleNotch,
-  Copy,
   DownloadSimple,
-  ForkKnife,
   Plus,
   QrCode,
   Receipt,
   ShareNetwork,
   Trash,
   UploadSimple,
-  UsersThree,
   X,
 } from "@phosphor-icons/react";
 import { safeIDR } from "./money";
-import { StatusBadge } from "./StatusBadge";
 import { compressImageFile } from "../../lib/imageCompression";
 import { apiPost } from "../../lib/api";
 import { ConfirmModal } from "../../components/ConfirmModal";
-import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 import type { RoomDetail, RoomMember } from "./types";
 
 interface RoomHeroCardProps {
@@ -40,7 +34,6 @@ export function RoomHeroCard({
   onOpenAestheticReceipt,
   onPhotoUpdated,
 }: RoomHeroCardProps) {
-  const { copied, copy } = useCopyToClipboard();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [groupPhotoModalOpen, setGroupPhotoModalOpen] = useState(false);
@@ -98,136 +91,93 @@ export function RoomHeroCard({
         }}
       />
 
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-900 p-5 text-white shadow-[0_12px_36px_rgba(37,99,235,0.22)] border border-blue-400/30">
-        {/* Ambient background glow accents */}
-        <div className="pointer-events-none absolute -right-10 -bottom-10 h-44 w-44 rounded-full bg-indigo-400/25 blur-2xl" />
-        <div className="pointer-events-none absolute -left-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-xl" />
-
-        {/* Top row: Live Pill + Room Code Copy Pill + Status Badge */}
-        <div className="relative z-10 flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-blue-100 border border-white/20">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-              </span>
-              <span>Meja Aktif</span>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 p-4 text-white shadow-md border border-blue-400/30">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Left: Total Tagihan Kasir & Count */}
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-200/90 block">
+              Total Kasir
             </span>
-
-            <button
-              type="button"
-              onClick={() => copy(room.room_code)}
-              title="Salin kode meja"
-              className="group inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-2.5 py-1 font-mono text-[11px] font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all shadow-2xs"
-            >
-              <span className="text-blue-200">KODE:</span>
-              <span className="tracking-wide">{room.room_code}</span>
-              {copied ? (
-                <Check size={11} weight="bold" className="text-emerald-300 animate-check-pop" />
-              ) : (
-                <Copy size={11} weight="bold" className="text-blue-200 group-hover:text-white transition-colors" />
-              )}
-            </button>
-          </div>
-
-          <StatusBadge status={room.status} />
-        </div>
-
-        {/* Middle: Room Title & Meta (Full width, never squished!) */}
-        <div className="relative z-10 mt-3.5">
-          <h1 className="text-lg sm:text-xl font-black text-white tracking-tight leading-snug break-words drop-shadow-xs">
-            {room.title}
-          </h1>
-          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-blue-100/90 font-medium">
-            <span className="inline-flex items-center gap-1">
-              <ForkKnife size={13} weight="bold" />
+            <p className="font-mono text-2xl font-black text-white tabular-nums tracking-tight">
+              {safeIDR(room.grand_total)}
+            </p>
+            <div className="mt-0.5 flex items-center gap-1.5 text-xs text-blue-100/80 font-medium">
               <span>{room.items?.length ?? 0} Menu</span>
-            </span>
-            <span>·</span>
-            <span className="inline-flex items-center gap-1">
-              <UsersThree size={13} weight="bold" />
+              <span>·</span>
               <span>{members.length} Peserta</span>
-            </span>
-            {Boolean(room.receipts && room.receipts.length > 1) && (
-              <>
-                <span>·</span>
-                <span className="inline-flex items-center gap-1 rounded-md bg-white/20 px-1.5 py-0.5 text-[11px] font-bold text-white">
-                  <Receipt size={12} weight="bold" />
-                  <span>{room.receipts!.length} Spot Struk</span>
-                </span>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Dedicated Grand Total Kasir Strip (Full width, handles large millions cleanly) */}
-        <div className="relative z-10 mt-3.5 flex items-center justify-between gap-3 rounded-2xl bg-white/10 backdrop-blur-md px-4 py-3 border border-white/15 shadow-2xs">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-blue-200 shrink-0">
-            Total Kasir
-          </span>
-          <span className="font-mono text-lg sm:text-xl font-black text-white tabular-nums tracking-tight text-right whitespace-nowrap drop-shadow-xs">
-            {safeIDR(room.grand_total)}
-          </span>
-        </div>
-
-        {/* Bottom row: Quick action glass pills (Mobile-friendly touch height) */}
-        <div className="relative z-10 mt-4 pt-3.5 border-t border-white/15 flex items-center gap-2 overflow-x-auto no-scrollbar">
-          {hasReceipt && onOpenReceiptImage && (
-            <button
-              type="button"
-              onClick={onOpenReceiptImage}
-              className="inline-flex h-9.5 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3.5 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
-            >
-              <Receipt size={14} weight="bold" />
-              <span>Foto Struk</span>
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-400 text-slate-950 text-[9px] font-black">✓</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={onOpenPaymentInfo}
-            className="inline-flex h-9.5 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3.5 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
-          >
-            <QrCode size={14} weight="bold" />
-            <span>QRIS & Rekening</span>
-          </button>
-
-          {/* Foto Makan Bareng */}
-          {isUploadingPhoto ? (
-            <div className="inline-flex h-9.5 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3.5 text-xs font-bold text-white border border-white/20">
-              <CircleNotch size={14} weight="bold" className="animate-spin text-white" />
-              <span>Mengunggah...</span>
+              {Boolean(room.receipts && room.receipts.length > 1) && (
+                <>
+                  <span>·</span>
+                  <span className="font-bold text-white bg-white/20 px-1.5 py-0.5 rounded text-[10px]">
+                    {room.receipts!.length} Spot
+                  </span>
+                </>
+              )}
             </div>
-          ) : hasGroupPhoto && room.group_photo_url ? (
-            <button
-              type="button"
-              onClick={() => setGroupPhotoModalOpen(true)}
-              className="inline-flex h-9.5 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3.5 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
-            >
-              <Camera size={14} weight="bold" />
-              <span>Foto Meja</span>
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-400 text-slate-950 text-[9px] font-black">✓</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="inline-flex h-9.5 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3.5 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
-            >
-              <Plus size={14} weight="bold" />
-              <span>Foto Meja</span>
-            </button>
-          )}
+          </div>
 
-          <button
-            type="button"
-            onClick={onOpenAestheticReceipt}
-            className="inline-flex h-9.5 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3.5 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
-          >
-            <ShareNetwork size={14} weight="bold" />
-            <span>Struk Patungan</span>
-          </button>
+          {/* Right: Quick Action Buttons */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {hasReceipt && onOpenReceiptImage && (
+              <button
+                type="button"
+                onClick={onOpenReceiptImage}
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-white/15 px-3 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all shadow-2xs"
+                title="Lihat Foto Struk Asli"
+              >
+                <Receipt size={14} weight="bold" />
+                <span>Foto Struk</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onOpenPaymentInfo}
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-white/15 px-3 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all shadow-2xs"
+              title="Rekening & QRIS"
+            >
+              <QrCode size={14} weight="bold" />
+              <span>Rekening</span>
+            </button>
+
+            {/* Foto Makan Bareng */}
+            {isUploadingPhoto ? (
+              <div className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-white/15 px-3 text-xs font-bold text-white border border-white/20">
+                <CircleNotch size={14} weight="bold" className="animate-spin text-white" />
+              </div>
+            ) : hasGroupPhoto && room.group_photo_url ? (
+              <button
+                type="button"
+                onClick={() => setGroupPhotoModalOpen(true)}
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-white/15 px-3 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all shadow-2xs"
+                title="Lihat Foto Meja"
+              >
+                <Camera size={14} weight="bold" />
+                <span>Foto Meja</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-white/15 px-3 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all shadow-2xs"
+                title="Upload Foto Meja"
+              >
+                <Plus size={14} weight="bold" />
+                <span>Foto Meja</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onOpenAestheticReceipt}
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-white/15 px-3 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all shadow-2xs"
+              title="Ekspor Struk Digital"
+            >
+              <ShareNetwork size={14} weight="bold" />
+              <span>Struk</span>
+            </button>
+          </div>
         </div>
 
         {uploadError && (

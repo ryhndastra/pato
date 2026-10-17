@@ -357,6 +357,18 @@ export function ItemList({
                 )}
               </button>
             )}
+
+            {onAddReceipt && !claimsLocked && (
+              <button
+                type="button"
+                onClick={onAddReceipt}
+                className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 shadow-2xs active:scale-95 transition-all"
+                title="Tambah Struk Tempat Baru"
+              >
+                <Plus size={14} weight="bold" />
+                <span>+ Struk</span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -384,34 +396,6 @@ export function ItemList({
               {safeIDR(mySummary.totalSubtotal)}
             </p>
           </div>
-        </div>
-      )}
-
-      {/* 3. MULTI-STRUK ADD BUTTON CTA */}
-      {onAddReceipt && !claimsLocked && (
-        <div className="flex items-center justify-between rounded-2xl border border-dashed border-blue-300 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 p-3.5">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-2xs">
-              <Storefront size={18} weight="bold" />
-            </span>
-            <div>
-              <p className="text-xs font-bold text-slate-900 leading-tight">
-                Pindah nongkrong di tempat lain?
-              </p>
-              <p className="text-[11px] text-slate-500">
-                Upload struk tempat baru tanpa ribet bikin room baru
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onAddReceipt}
-            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 text-xs font-bold text-white shadow-xs hover:bg-blue-700 active:scale-95 transition-all"
-          >
-            <Plus size={14} weight="bold" />
-            <span>+ Tambah Struk</span>
-          </button>
         </div>
       )}
 
@@ -517,6 +501,20 @@ export function ItemList({
           );
         })}
       </div>
+
+      {/* 6. SUBTLE FOOTER CTA */}
+      {onAddReceipt && !claimsLocked && (
+        <div className="pt-2 pb-4 text-center">
+          <button
+            type="button"
+            onClick={onAddReceipt}
+            className="inline-flex items-center gap-1.5 rounded-2xl border border-dashed border-slate-300 bg-white/70 hover:bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-blue-600 hover:border-blue-300 shadow-2xs transition-all active:scale-95"
+          >
+            <Plus size={14} weight="bold" />
+            <span>Pindah spot nongkrong? + Tambah Struk Baru</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

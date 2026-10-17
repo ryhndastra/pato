@@ -16,7 +16,6 @@ import { JoinForm } from "./JoinForm";
 import { HostGodModeCard } from "./HostGodModeCard";
 import { PersonalSettlementCard } from "./PersonalSettlementCard";
 import { HostPaymentMonitorCard } from "./HostPaymentMonitorCard";
-import { StepProgressCard } from "./StepProgressCard";
 import { TippingCard } from "./TippingCard";
 import { ChatDrawer } from "./ChatDrawer";
 import { RoomModals } from "./RoomModals";
@@ -424,11 +423,6 @@ export function RoomJoin() {
             onOpenAestheticReceipt={() => setAestheticReceiptOpen(true)}
             onPhotoUpdated={fetchRoom}
           />
-        </div>
-
-        {/* Slim native horizontal step progress indicator */}
-        <div className="mb-3.5">
-          <StepProgressCard status={room.status} />
         </div>
 
         {/* F01: Smart duplicate name notification banner */}
