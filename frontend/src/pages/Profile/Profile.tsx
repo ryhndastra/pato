@@ -22,6 +22,7 @@ import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 import { formatIDR } from "../../lib/format";
 import mascotHelper from "../../assets/pato_mascot_helper.jpg";
 import { EditProfileModal } from "./EditProfileModal";
+import { SplashScreen } from "../../components/SplashScreen";
 
 const PAYOUT_STORAGE_KEY = "pato_default_payout_info";
 const PREFS_STORAGE_KEY = "pato_user_app_preferences";
@@ -48,6 +49,7 @@ export function Profile() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileSuccessMessage, setProfileSuccessMessage] = useState<string | null>(null);
+  const [previewSplash, setPreviewSplash] = useState(false);
   const [isEditingPayout, setIsEditingPayout] = useState(false);
   const [payoutSaved, setPayoutSaved] = useState(false);
 
@@ -537,6 +539,15 @@ export function Profile() {
               <Heart size={11} weight="fill" className="text-rose-500" />
               <span>Dibuat dengan cinta untuk anak nongkrong</span>
             </p>
+
+            <button
+              type="button"
+              onClick={() => setPreviewSplash(true)}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-blue-200/90 bg-white/95 px-3 py-1.5 text-xs font-bold text-blue-600 shadow-2xs hover:bg-blue-50 active:scale-95 transition-all"
+            >
+              <Sparkle size={13} weight="bold" />
+              <span>Lihat Animasi Splash Screen</span>
+            </button>
           </div>
         </section>
       </main>
@@ -591,6 +602,11 @@ export function Profile() {
           setTimeout(() => setProfileSuccessMessage(null), 3500);
         }}
       />
+
+      {/* 5. Splash Screen Preview */}
+      {previewSplash && (
+        <SplashScreen onFinish={() => setPreviewSplash(false)} />
+      )}
     </div>
   );
 }
