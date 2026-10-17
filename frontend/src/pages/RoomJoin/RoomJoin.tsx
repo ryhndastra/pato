@@ -24,6 +24,7 @@ import { ReceiptExportModal } from "./ReceiptExportModal";
 import { ReceiptImageModal } from "./ReceiptImageModal";
 import { RoomClosedCelebrationModal } from "./RoomClosedCelebrationModal";
 import { MobilePaymentDock } from "./MobilePaymentDock";
+import { AddReceiptModal } from "./AddReceiptModal";
 import { RoomStates } from "./RoomStates";
 import {
   getGuestToken,
@@ -67,6 +68,8 @@ export function RoomJoin() {
   const [closeError, setCloseError] = useState<string | null>(null);
 
   const [receiptImageOpen, setReceiptImageOpen] = useState(false);
+  const [activeReceiptImageUrl, setActiveReceiptImageUrl] = useState<string | null>(null);
+  const [addReceiptOpen, setAddReceiptOpen] = useState(false);
   const [aestheticReceiptOpen, setAestheticReceiptOpen] = useState(false);
   const [celebrationOpen, setCelebrationOpen] = useState(false);
   const [showPaymentInfoModal, setShowPaymentInfoModal] = useState(false);
@@ -581,6 +584,7 @@ export function RoomJoin() {
                   <ItemList
                     items={room.items ?? []}
                     members={members}
+                    receipts={room.receipts}
                     currentMemberId={currentMemberId}
                     roomStatus={room.status}
                     pendingItemId={pendingItemId}
@@ -589,6 +593,8 @@ export function RoomJoin() {
                     onJoinPrompt={scrollToJoin}
                     selectedMemberId={selectedMemberFilter}
                     onClearMemberFilter={() => setSelectedMemberFilter(null)}
+                    onAddReceipt={() => setAddReceiptOpen(true)}
+                    onViewReceiptImage={(url) => setActiveReceiptImageUrl(url)}
                   />
                 </section>
 
@@ -649,6 +655,7 @@ export function RoomJoin() {
               <ItemList
                 items={room.items ?? []}
                 members={members}
+                receipts={room.receipts}
                 currentMemberId={currentMemberId}
                 roomStatus={room.status}
                 pendingItemId={pendingItemId}
@@ -657,6 +664,8 @@ export function RoomJoin() {
                 onJoinPrompt={scrollToJoin}
                 selectedMemberId={selectedMemberFilter}
                 onClearMemberFilter={() => setSelectedMemberFilter(null)}
+                onAddReceipt={() => setAddReceiptOpen(true)}
+                onViewReceiptImage={(url) => setActiveReceiptImageUrl(url)}
               />
             </section>
 
@@ -727,6 +736,26 @@ export function RoomJoin() {
           onClose={() => setReceiptImageOpen(false)}
         />
       )}
+
+      {activeReceiptImageUrl && (
+        <ReceiptImageModal
+          imageUrl={activeReceiptImageUrl}
+          onClose={() => setActiveReceiptImageUrl(null)}
+        />
+      )}
+
+      {/* Modal for adding multi-receipt from another spot */}
+      <AddReceiptModal
+        isOpen={addReceiptOpen}
+        onClose={() => setAddReceiptOpen(false)}
+        roomCode={room.room_code}
+        members={members}
+        currentMember={me}
+        onReceiptAdded={() => {
+          fetchRoom();
+          soundFX.playCelebration();
+        }}
+      />
 
       {/* Modal for viewing aesthetic digital split bill receipt */}
       {aestheticReceiptOpen && (

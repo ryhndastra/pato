@@ -52,18 +52,46 @@ export async function createRoom(input) {
                 roundMode,
             ]);
             const roomId = roomRows[0].id;
-            await client.query(`INSERT INTO members (room_id, user_id, guest_token, display_name, is_host)
-         VALUES ($1, $2, $3, $4, TRUE)`, [roomId, input.hostUserId ?? null, hostToken, input.hostName]);
+            const { rows: memberRows } = await client.query(`INSERT INTO members (room_id, user_id, guest_token, display_name, is_host)
+         VALUES ($1, $2, $3, $4, TRUE)
+         RETURNING id`, [roomId, input.hostUserId ?? null, hostToken, input.hostName]);
+            const hostMemberId = memberRows[0]?.id;
+            // Insert primary receipt record
+            const { rows: receiptRows } = await client.query(`INSERT INTO receipts (
+           room_id, payer_member_id, payer_name, title, receipt_image_url,
+           subtotal, tax_amount, service_amount, discount_amount, grand_total,
+           bank_name, bank_account_no, bank_account_name, qris_image_url,
+           created_by_member_id, sort_order
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 0)
+         RETURNING id`, [
+                roomId,
+                hostMemberId ?? null,
+                input.hostName,
+                input.title,
+                input.receiptImageUrl ?? null,
+                subtotal,
+                input.taxAmount,
+                input.serviceAmount,
+                input.discountAmount,
+                grandTotal,
+                input.bankName ?? null,
+                input.bankAccountNo ?? null,
+                input.bankAccountName ?? null,
+                input.qrisImageUrl ?? null,
+                hostMemberId ?? null,
+            ]);
+            const primaryReceiptId = receiptRows[0]?.id ?? null;
             if (input.items.length > 0) {
                 const itemValues = [];
                 const placeholders = [];
                 for (let i = 0; i < input.items.length; i++) {
                     const item = input.items[i];
-                    const offset = i * 5;
-                    placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`);
-                    itemValues.push(roomId, item.name, item.unitPrice, item.quantity, i);
+                    const offset = i * 6;
+                    placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`);
+                    itemValues.push(roomId, item.name, item.unitPrice, item.quantity, i, primaryReceiptId);
                 }
-                await client.query(`INSERT INTO items (room_id, name, unit_price, quantity, sort_order)
+                await client.query(`INSERT INTO items (room_id, name, unit_price, quantity, sort_order, receipt_id)
            VALUES ${placeholders.join(", ")}`, itemValues);
             }
             await client.query("COMMIT");
@@ -200,9 +228,90 @@ export function applyRounding(amount, roundMode = "hundred") {
     return Math.ceil(amount / 100) * 100;
 }
 /** Hitung berapa rupiah tiap member nanggung, proporsional ke porsi yang
- *  benar-benar diklaim - bukan dibagi rata. Item non-shared dibagi per unit
- *  (price-per-unit x porsi), item shared dibagi rata ke semua yang klaim. */
-function computeMemberShares(members, claims, room) {
+ *  benar-benar diklaim - akurat per struk jika ada multi-struk. */
+function computeMemberShares(members, claims, receipts, room) {
+    const host = members.find((m) => m.is_host);
+    // Jika ada multi-receipt: hitung proporsional per struk
+    if (receipts && receipts.length > 0) {
+        const claimsByItem = new Map();
+        for (const claim of claims) {
+            const list = claimsByItem.get(claim.item_id) ?? [];
+            list.push(claim);
+            claimsByItem.set(claim.item_id, list);
+        }
+        const receiptMemberSubtotals = new Map();
+        for (const rc of receipts) {
+            receiptMemberSubtotals.set(rc.id, new Map());
+        }
+        const defaultReceiptId = receipts[0]?.id;
+        for (const itemClaims of claimsByItem.values()) {
+            const first = itemClaims[0];
+            const itemTotal = Number(first.unit_price) * first.quantity;
+            const targetReceiptId = first.receipt_id || defaultReceiptId;
+            const memberSubMap = receiptMemberSubtotals.get(targetReceiptId) ?? receiptMemberSubtotals.get(defaultReceiptId);
+            if (memberSubMap) {
+                if (first.is_shared) {
+                    const perClaimer = itemTotal / itemClaims.length;
+                    for (const claim of itemClaims) {
+                        memberSubMap.set(claim.member_id, (memberSubMap.get(claim.member_id) ?? 0) + perClaimer);
+                    }
+                }
+                else {
+                    const pricePerUnit = first.quantity > 0 ? itemTotal / first.quantity : 0;
+                    for (const claim of itemClaims) {
+                        memberSubMap.set(claim.member_id, (memberSubMap.get(claim.member_id) ?? 0) +
+                            pricePerUnit * Number(claim.portion_quantity));
+                    }
+                }
+            }
+        }
+        return members.map((member) => {
+            const breakdown = [];
+            let totalRawShare = 0;
+            let totalSubtotalShare = 0;
+            for (const rc of receipts) {
+                const memberSubMap = receiptMemberSubtotals.get(rc.id);
+                const itemSub = memberSubMap?.get(member.id) ?? 0;
+                const rcSub = Number(rc.subtotal);
+                const ratio = rcSub > 0 ? itemSub / rcSub : 0;
+                const taxShare = Number(rc.tax_amount) * ratio;
+                const svcShare = Number(rc.service_amount) * ratio;
+                const discShare = Number(rc.discount_amount) * ratio;
+                const rawReceiptShare = Math.max(0, itemSub + taxShare + svcShare - discShare);
+                const roundedReceiptShare = applyRounding(rawReceiptShare, room.roundMode ?? "hundred");
+                totalSubtotalShare += itemSub;
+                totalRawShare += rawReceiptShare;
+                if (roundedReceiptShare > 0 || itemSub > 0) {
+                    breakdown.push({
+                        receiptId: rc.id,
+                        title: rc.title,
+                        payerMemberId: rc.payer_member_id,
+                        payerName: rc.payer_name || "Host",
+                        amount: roundedReceiptShare,
+                        bankName: rc.bank_name || room.bankName,
+                        bankAccountNo: rc.bank_account_no || room.bankAccountNo,
+                        bankAccountName: rc.bank_account_name || room.bankAccountName,
+                        qrisImageUrl: rc.qris_image_url || room.qrisImageUrl,
+                    });
+                }
+            }
+            const totalShareAmount = breakdown.reduce((sum, b) => sum + b.amount, 0);
+            return {
+                id: member.id,
+                userId: member.user_id,
+                displayName: member.display_name,
+                isHost: member.is_host,
+                subtotalShare: Math.round(totalSubtotalShare),
+                rawShareAmount: Math.round(totalRawShare),
+                shareAmount: totalShareAmount,
+                receiptBreakdown: breakdown,
+                claimedItemIds: claims
+                    .filter((c) => c.member_id === member.id)
+                    .map((c) => c.item_id),
+            };
+        });
+    }
+    // Fallback untuk room lama tanpa tabel receipts
     const claimsByItem = new Map();
     for (const claim of claims) {
         const list = claimsByItem.get(claim.item_id) ?? [];
@@ -243,6 +352,19 @@ function computeMemberShares(members, claims, room) {
             subtotalShare: Math.round(itemSubtotal),
             rawShareAmount: Math.round(rawShare),
             shareAmount,
+            receiptBreakdown: [
+                {
+                    receiptId: "primary",
+                    title: room.title,
+                    payerMemberId: host?.id ?? null,
+                    payerName: host?.display_name ?? "Host",
+                    amount: shareAmount,
+                    bankName: room.bankName,
+                    bankAccountNo: room.bankAccountNo,
+                    bankAccountName: room.bankAccountName,
+                    qrisImageUrl: room.qrisImageUrl,
+                },
+            ],
             claimedItemIds: claims
                 .filter((c) => c.member_id === member.id)
                 .map((c) => c.item_id),
@@ -256,11 +378,35 @@ export async function getRoomByCode(roomCode) {
        r.qris_image_url, r.receipt_image_url, r.group_photo_url, r.round_mode,
        (
          SELECT COALESCE(json_agg(json_build_object(
+           'id', rc.id,
+           'title', rc.title,
+           'payer_member_id', rc.payer_member_id,
+           'payer_name', rc.payer_name,
+           'subtotal', rc.subtotal,
+           'tax_amount', rc.tax_amount,
+           'service_amount', rc.service_amount,
+           'discount_amount', rc.discount_amount,
+           'grand_total', rc.grand_total,
+           'bank_name', rc.bank_name,
+           'bank_account_no', rc.bank_account_no,
+           'bank_account_name', rc.bank_account_name,
+           'qris_image_url', rc.qris_image_url,
+           'receipt_image_url', rc.receipt_image_url,
+           'created_by_member_id', rc.created_by_member_id,
+           'sort_order', rc.sort_order,
+           'created_at', rc.created_at
+         ) ORDER BY rc.sort_order ASC, rc.created_at ASC), '[]'::json)
+         FROM receipts rc
+         WHERE rc.room_id = r.id
+       ) AS receipts,
+       (
+         SELECT COALESCE(json_agg(json_build_object(
            'id', i.id,
            'name', i.name,
            'unit_price', i.unit_price,
            'quantity', i.quantity,
-           'is_shared', i.is_shared
+           'is_shared', i.is_shared,
+           'receipt_id', i.receipt_id
          ) ORDER BY i.sort_order ASC, i.created_at ASC), '[]'::json)
          FROM items i
          WHERE i.room_id = r.id
@@ -282,7 +428,8 @@ export async function getRoomByCode(roomCode) {
            'portion_quantity', ic.portion_quantity,
            'unit_price', i.unit_price,
            'quantity', i.quantity,
-           'is_shared', i.is_shared
+           'is_shared', i.is_shared,
+           'receipt_id', i.receipt_id
          )), '[]'::json)
          FROM item_claims ic
          JOIN items i ON i.id = ic.item_id
@@ -307,18 +454,25 @@ export async function getRoomByCode(roomCode) {
     const memberRows = room.members || [];
     const claimRows = room.claims || [];
     const paymentRows = room.payments || [];
+    const receiptRows = room.receipts || [];
     const paymentsByMember = new Map();
     for (const p of paymentRows) {
         paymentsByMember.set(p.member_id, p);
     }
     const roomTotals = {
+        title: room.title,
         subtotal: Number(room.subtotal),
         taxAmount: Number(room.tax_amount),
         serviceAmount: Number(room.service_amount),
         discountAmount: Number(room.discount_amount),
+        grandTotal: Number(room.grand_total),
+        bankName: room.bank_name,
+        bankAccountNo: room.bank_account_no,
+        bankAccountName: room.bank_account_name,
+        qrisImageUrl: room.qris_image_url,
         roundMode: room.round_mode ?? "hundred",
     };
-    const rawMembers = computeMemberShares(memberRows, claimRows, roomTotals);
+    const rawMembers = computeMemberShares(memberRows, claimRows, receiptRows, roomTotals);
     const members = rawMembers.map((m) => {
         const payment = paymentsByMember.get(m.id);
         return {
@@ -353,6 +507,25 @@ export async function getRoomByCode(roomCode) {
         receiptImageUrl: room.receipt_image_url,
         groupPhotoUrl: room.group_photo_url,
         roundMode: room.round_mode ?? "hundred",
+        receipts: receiptRows.map((rc) => ({
+            id: rc.id,
+            title: rc.title,
+            payerMemberId: rc.payer_member_id,
+            payerName: rc.payer_name || "Host",
+            subtotal: Number(rc.subtotal),
+            taxAmount: Number(rc.tax_amount),
+            serviceAmount: Number(rc.service_amount),
+            discountAmount: Number(rc.discount_amount),
+            grandTotal: Number(rc.grand_total),
+            bankName: rc.bank_name,
+            bankAccountNo: rc.bank_account_no,
+            bankAccountName: rc.bank_account_name,
+            qrisImageUrl: rc.qris_image_url,
+            receiptImageUrl: rc.receipt_image_url,
+            createdByMemberId: rc.created_by_member_id,
+            sortOrder: rc.sort_order,
+            createdAt: rc.created_at,
+        })),
         items: itemRows.map((item) => {
             const itemClaims = claimsByItem.get(item.id) ?? [];
             return {
@@ -361,6 +534,7 @@ export async function getRoomByCode(roomCode) {
                 unitPrice: Number(item.unit_price),
                 quantity: item.quantity,
                 isShared: item.is_shared,
+                receiptId: item.receipt_id ?? null,
                 claimedQuantity: itemClaims.reduce((sum, c) => sum + Number(c.portion_quantity), 0),
                 claimedByMemberIds: itemClaims.map((c) => c.member_id),
                 claims: itemClaims.map((c) => ({
@@ -748,5 +922,148 @@ export async function updateRoomGroupPhoto(roomCode, groupPhotoUrl) {
         throw new RoomNotFoundError(`Room ${roomCode} tidak ditemukan.`);
     await pool.query("UPDATE rooms SET group_photo_url = $1, updated_at = NOW() WHERE id = $2", [groupPhotoUrl, room.id]);
     return { groupPhotoUrl };
+}
+export async function addReceiptToRoom(roomCode, input, callerGuestToken, callerUserId) {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+        const { rows: roomRows } = await client.query("SELECT id, status, round_mode FROM rooms WHERE room_code = $1 FOR UPDATE", [roomCode]);
+        const room = roomRows[0];
+        if (!room)
+            throw new RoomNotFoundError(`Room ${roomCode} tidak ditemukan.`);
+        if (room.status === "CLOSED") {
+            throw new RoomLockedError("Meja ini sudah selesai (closed), tidak bisa menambah struk.");
+        }
+        let callerMemberId = null;
+        let callerName = "Member";
+        if (callerGuestToken) {
+            const { rows: memRows } = await client.query("SELECT id, display_name FROM members WHERE room_id = $1 AND guest_token = $2", [room.id, callerGuestToken]);
+            if (memRows[0]) {
+                callerMemberId = memRows[0].id;
+                callerName = memRows[0].display_name;
+            }
+        }
+        else if (callerUserId) {
+            const { rows: memRows } = await client.query("SELECT id, display_name FROM members WHERE room_id = $1 AND user_id = $2", [room.id, callerUserId]);
+            if (memRows[0]) {
+                callerMemberId = memRows[0].id;
+                callerName = memRows[0].display_name;
+            }
+        }
+        let payerMemberId = input.payerMemberId || callerMemberId;
+        let payerName = input.payerName;
+        if (payerMemberId && !payerName) {
+            const { rows: pRows } = await client.query("SELECT display_name FROM members WHERE id = $1", [payerMemberId]);
+            if (pRows[0])
+                payerName = pRows[0].display_name;
+        }
+        if (!payerName)
+            payerName = callerName;
+        const subtotal = input.items.reduce((s, it) => s + it.unitPrice * it.quantity, 0);
+        const grandTotal = Math.max(0, subtotal + input.taxAmount + input.serviceAmount - input.discountAmount);
+        const { rows: sortRows } = await client.query("SELECT MAX(sort_order) AS max_order FROM receipts WHERE room_id = $1", [room.id]);
+        const nextOrder = (sortRows[0]?.max_order ?? 0) + 1;
+        const { rows: newReceiptRows } = await client.query(`INSERT INTO receipts (
+         room_id, payer_member_id, payer_name, title, receipt_image_url,
+         subtotal, tax_amount, service_amount, discount_amount, grand_total,
+         bank_name, bank_account_no, bank_account_name, qris_image_url,
+         created_by_member_id, sort_order
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+       RETURNING id`, [
+            room.id,
+            payerMemberId,
+            payerName,
+            input.title,
+            input.receiptImageUrl ?? null,
+            subtotal,
+            input.taxAmount,
+            input.serviceAmount,
+            input.discountAmount,
+            grandTotal,
+            input.bankName ?? null,
+            input.bankAccountNo ?? null,
+            input.bankAccountName ?? null,
+            input.qrisImageUrl ?? null,
+            callerMemberId,
+            nextOrder,
+        ]);
+        const receiptId = newReceiptRows[0].id;
+        if (input.items.length > 0) {
+            const itemValues = [];
+            const placeholders = [];
+            for (let i = 0; i < input.items.length; i++) {
+                const item = input.items[i];
+                const offset = i * 7;
+                placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7})`);
+                itemValues.push(room.id, item.name, item.unitPrice, item.quantity, item.isShared ?? false, i, receiptId);
+            }
+            await client.query(`INSERT INTO items (room_id, name, unit_price, quantity, is_shared, sort_order, receipt_id)
+         VALUES ${placeholders.join(", ")}`, itemValues);
+        }
+        // Recalculate room totals from all receipts
+        await client.query(`UPDATE rooms r
+       SET subtotal = (SELECT COALESCE(SUM(subtotal), 0) FROM receipts WHERE room_id = r.id),
+           tax_amount = (SELECT COALESCE(SUM(tax_amount), 0) FROM receipts WHERE room_id = r.id),
+           service_amount = (SELECT COALESCE(SUM(service_amount), 0) FROM receipts WHERE room_id = r.id),
+           discount_amount = (SELECT COALESCE(SUM(discount_amount), 0) FROM receipts WHERE room_id = r.id),
+           grand_total = (SELECT COALESCE(SUM(grand_total), 0) FROM receipts WHERE room_id = r.id),
+           updated_at = NOW()
+       WHERE r.id = $1`, [room.id]);
+        // If room was LOCKED, unlock it back to CLAIMING so members can claim new items!
+        if (room.status === "LOCKED") {
+            await client.query("UPDATE rooms SET status = 'CLAIMING', locked_at = NULL WHERE id = $1", [room.id]);
+        }
+        await client.query(`INSERT INTO room_events (room_id, sender_type, message)
+       VALUES ($1, 'SYSTEM', $2)`, [room.id, `${callerName} menambahkan struk baru: ${input.title}`]);
+        await client.query("COMMIT");
+        return await getRoomByCode(roomCode);
+    }
+    catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+    }
+    finally {
+        client.release();
+    }
+}
+export async function deleteReceiptFromRoom(roomCode, receiptId, callerGuestToken, callerUserId) {
+    const client = await pool.connect();
+    try {
+        await client.query("BEGIN");
+        const { rows: roomRows } = await client.query("SELECT id, status, host_user_id FROM rooms WHERE room_code = $1 FOR UPDATE", [roomCode]);
+        const room = roomRows[0];
+        if (!room)
+            throw new RoomNotFoundError(`Room ${roomCode} tidak ditemukan.`);
+        if (room.status === "CLOSED") {
+            throw new RoomLockedError("Meja ini sudah selesai (closed), tidak bisa menghapus struk.");
+        }
+        const { rows: rcRows } = await client.query("SELECT id, title, created_by_member_id FROM receipts WHERE id = $1 AND room_id = $2", [receiptId, room.id]);
+        const rc = rcRows[0];
+        if (!rc)
+            throw new Error("Struk tidak ditemukan.");
+        // Delete receipt (cascade deletes items and claims)
+        await client.query("DELETE FROM receipts WHERE id = $1", [receiptId]);
+        // Recalculate room totals
+        await client.query(`UPDATE rooms r
+       SET subtotal = (SELECT COALESCE(SUM(subtotal), 0) FROM receipts WHERE room_id = r.id),
+           tax_amount = (SELECT COALESCE(SUM(tax_amount), 0) FROM receipts WHERE room_id = r.id),
+           service_amount = (SELECT COALESCE(SUM(service_amount), 0) FROM receipts WHERE room_id = r.id),
+           discount_amount = (SELECT COALESCE(SUM(discount_amount), 0) FROM receipts WHERE room_id = r.id),
+           grand_total = (SELECT COALESCE(SUM(grand_total), 0) FROM receipts WHERE room_id = r.id),
+           updated_at = NOW()
+       WHERE r.id = $1`, [room.id]);
+        await client.query(`INSERT INTO room_events (room_id, sender_type, message)
+       VALUES ($1, 'SYSTEM', $2)`, [room.id, `Struk ${rc.title} telah dihapus`]);
+        await client.query("COMMIT");
+        return await getRoomByCode(roomCode);
+    }
+    catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+    }
+    finally {
+        client.release();
+    }
 }
 //# sourceMappingURL=rooms.service.js.map

@@ -10,9 +10,16 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return data as T;
 }
 
-export async function apiGet<T>(path: string, token?: string | null): Promise<T> {
+export async function apiGet<T>(
+  path: string,
+  token?: string | null,
+  customHeaders?: Record<string, string>,
+): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(customHeaders ?? {}),
+    },
   });
   return handleResponse<T>(res);
 }
@@ -21,12 +28,14 @@ export async function apiPost<T>(
   path: string,
   body: unknown,
   token?: string | null,
+  customHeaders?: Record<string, string>,
 ): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(customHeaders ?? {}),
     },
     body: JSON.stringify(body),
   });
@@ -37,12 +46,14 @@ export async function apiPatch<T>(
   path: string,
   body: unknown,
   token?: string | null,
+  customHeaders?: Record<string, string>,
 ): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(customHeaders ?? {}),
     },
     body: JSON.stringify(body),
   });
@@ -53,12 +64,14 @@ export async function apiDelete<T>(
   path: string,
   body?: unknown,
   token?: string | null,
+  customHeaders?: Record<string, string>,
 ): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(customHeaders ?? {}),
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });

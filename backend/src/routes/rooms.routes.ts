@@ -18,11 +18,16 @@ import {
   postChatHandler,
   scanReceiptOcrHandler,
   updateRoomPhotoHandler,
+  addReceiptHandler,
+  deleteReceiptHandler,
 } from "../controllers/rooms.controller.js";
 import { optionalAuth, requireAuth } from "../middleware/auth.js";
 import { claimLimiter, joinLimiter } from "../middleware/rateLimit.js";
 
 export const roomsRouter = Router();
+
+roomsRouter.post("/:code/receipts", optionalAuth, addReceiptHandler);
+roomsRouter.delete("/:code/receipts/:receiptId", optionalAuth, deleteReceiptHandler);
 
 roomsRouter.post("/ocr", scanReceiptOcrHandler);
 roomsRouter.post("/:code/ocr", scanReceiptOcrHandler);

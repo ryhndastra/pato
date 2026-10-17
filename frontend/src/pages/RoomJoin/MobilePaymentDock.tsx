@@ -91,22 +91,22 @@ export function MobilePaymentDock({
             {isHost ? (
               activeTab === "settlement" ? (
                 roomStatus === "CLOSED" ? (
-                  <span className="inline-flex h-11 items-center gap-1.5 rounded-2xl bg-emerald-600 px-4 text-xs font-black text-white shadow-xs">
-                    <CheckCircle size={16} weight="fill" />
+                  <span className="inline-flex h-12 items-center gap-2 rounded-2xl bg-emerald-600 px-5 text-xs font-black text-white shadow-xs">
+                    <CheckCircle size={18} weight="fill" />
                     <span>Meja Selesai 100%</span>
                   </span>
                 ) : allFriendsPaid && roomStatus === "LOCKED" ? (
                   <button
                     type="button"
                     onClick={onCloseRoom}
-                    className="flex h-11 items-center gap-2 rounded-2xl bg-slate-900 px-5 text-xs font-bold text-white shadow-[0_4px_16px_rgba(15,23,42,0.25)] hover:bg-black active:scale-95 transition-all"
+                    className="flex h-12 items-center gap-2 rounded-2xl bg-slate-900 px-5 text-xs font-bold text-white shadow-[0_4px_16px_rgba(15,23,42,0.25)] hover:bg-black active:scale-95 transition-all"
                   >
-                    <CheckCircle size={16} weight="fill" />
+                    <CheckCircle size={18} weight="fill" />
                     <span>Tutup Meja</span>
                   </button>
                 ) : (
-                  <span className="inline-flex h-11 items-center gap-1.5 rounded-2xl bg-emerald-50 px-4 text-xs font-bold text-emerald-700 border border-emerald-100 shadow-2xs">
-                    <CheckCircle size={15} weight="fill" />
+                  <span className="inline-flex h-12 items-center gap-2 rounded-2xl bg-emerald-50 px-4 text-xs font-bold text-emerald-700 border border-emerald-100 shadow-2xs">
+                    <CheckCircle size={16} weight="fill" />
                     <span>{allFriendsPaid ? "Semua Lunas" : `${pendingCount} Menunggu`}</span>
                   </span>
                 )
@@ -114,29 +114,29 @@ export function MobilePaymentDock({
                 <button
                   type="button"
                   onClick={onScrollToPayment}
-                  className="flex h-11 items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-5 text-xs font-bold text-white shadow-[0_4px_16px_rgba(37,99,235,0.28)] hover:opacity-95 active:scale-95 transition-all"
+                  className="flex h-12 items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-5 text-xs font-bold text-white shadow-[0_4px_16px_rgba(37,99,235,0.28)] hover:opacity-95 active:scale-95 transition-all"
                 >
-                  <CreditCard size={16} weight="bold" />
+                  <CreditCard size={18} weight="bold" />
                   <span>Lihat Kas</span>
                 </button>
               )
             ) : me.payment_status === "VERIFIED" ? (
-              <span className="inline-flex h-11 items-center gap-1.5 rounded-2xl bg-emerald-50 px-4 text-xs font-bold text-emerald-700 border border-emerald-100 shadow-2xs">
-                <CheckCircle size={16} weight="fill" />
+              <span className="inline-flex h-12 items-center gap-2 rounded-2xl bg-emerald-50 px-5 text-xs font-bold text-emerald-700 border border-emerald-100 shadow-2xs">
+                <CheckCircle size={18} weight="fill" />
                 Lunas
               </span>
             ) : me.payment_status === "PENDING" ? (
-              <span className="inline-flex h-11 items-center gap-1.5 rounded-2xl bg-amber-50 px-4 text-xs font-bold text-amber-700 border border-amber-100 shadow-2xs">
-                <Clock size={16} weight="bold" />
+              <span className="inline-flex h-12 items-center gap-2 rounded-2xl bg-amber-50 px-5 text-xs font-bold text-amber-700 border border-amber-100 shadow-2xs">
+                <Clock size={18} weight="bold" />
                 Dicek Host
               </span>
             ) : (
               <button
                 type="button"
                 onClick={onScrollToPayment}
-                className="flex h-11 items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-5 text-xs font-bold text-white shadow-[0_4px_16px_rgba(37,99,235,0.28)] hover:opacity-95 active:scale-95 transition-all"
+                className="flex h-12 items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-5 text-xs font-bold text-white shadow-[0_4px_16px_rgba(37,99,235,0.28)] hover:opacity-95 active:scale-95 transition-all"
               >
-                <CreditCard size={16} weight="bold" />
+                <CreditCard size={18} weight="bold" />
                 <span>Bayar Sekarang</span>
               </button>
             )}
@@ -147,16 +147,16 @@ export function MobilePaymentDock({
               <button
                 type="button"
                 onClick={onLockClick || onScrollToClaim}
-                className="flex h-11 items-center gap-2 rounded-2xl bg-slate-900 px-5 text-xs font-bold text-white shadow-[0_4px_16px_rgba(15,23,42,0.25)] hover:bg-black active:scale-95 transition-all"
+                className="flex h-12 items-center gap-2 rounded-2xl bg-slate-900 px-5 text-xs font-bold text-white shadow-[0_4px_16px_rgba(15,23,42,0.25)] hover:bg-black active:scale-95 transition-all"
               >
-                <LockSimple size={16} weight="bold" />
+                <LockSimple size={18} weight="bold" />
                 <span>Kunci Meja</span>
               </button>
             ) : (
               <button
                 type="button"
                 onClick={onScrollToClaim}
-                className="flex h-11 items-center justify-center rounded-2xl border border-slate-200/90 bg-white px-5 text-xs font-bold text-slate-800 shadow-2xs active:scale-95 transition-all"
+                className="flex h-12 items-center justify-center rounded-2xl border border-slate-200/90 bg-white px-5 text-xs font-bold text-slate-800 shadow-2xs active:scale-95 transition-all"
               >
                 {myPortionCount > 0 ? `${myPortionCount} Porsi Terpilih` : "Pilih Menu"}
               </button>

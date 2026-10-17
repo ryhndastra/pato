@@ -4,9 +4,11 @@ import { env } from "../config.js";
 import { parseReceiptWithGemini } from "../services/ocr.service.js";
 import { broadcastToRoom } from "../websocket.js";
 import {
+  addReceiptToRoom,
   claimItem,
   closeRoom,
   createRoom,
+  deleteReceiptFromRoom,
   deleteRoom,
   ForbiddenError,
   getRoomByCode,
@@ -172,12 +174,32 @@ export async function getRoomHandler(req: Request, res: Response) {
       receipt_image_url: room.receiptImageUrl,
       group_photo_url: room.groupPhotoUrl,
       round_mode: room.roundMode,
+      receipts: (room.receipts || []).map((rc) => ({
+        id: rc.id,
+        title: rc.title,
+        payer_member_id: rc.payerMemberId,
+        payer_name: rc.payerName,
+        subtotal: rc.subtotal,
+        tax_amount: rc.taxAmount,
+        service_amount: rc.serviceAmount,
+        discount_amount: rc.discountAmount,
+        grand_total: rc.grandTotal,
+        bank_name: rc.bankName,
+        bank_account_no: rc.bankAccountNo,
+        bank_account_name: rc.bankAccountName,
+        qris_image_url: rc.qrisImageUrl,
+        receipt_image_url: rc.receiptImageUrl,
+        created_by_member_id: rc.createdByMemberId,
+        sort_order: rc.sortOrder,
+        created_at: rc.createdAt,
+      })),
       items: room.items.map((item) => ({
         id: item.id,
         name: item.name,
         unit_price: item.unitPrice,
         quantity: item.quantity,
         is_shared: item.isShared,
+        receipt_id: item.receiptId,
         claimed_quantity: item.claimedQuantity,
         claimed_by_member_ids: item.claimedByMemberIds,
         claims: item.claims.map((c) => ({
@@ -193,6 +215,17 @@ export async function getRoomHandler(req: Request, res: Response) {
         subtotal_share: member.subtotalShare,
         raw_share_amount: member.rawShareAmount,
         share_amount: member.shareAmount,
+        receipt_breakdown: (member.receiptBreakdown || []).map((rb) => ({
+          receipt_id: rb.receiptId,
+          title: rb.title,
+          payer_member_id: rb.payerMemberId,
+          payer_name: rb.payerName,
+          amount: rb.amount,
+          bank_name: rb.bankName,
+          bank_account_no: rb.bankAccountNo,
+          bank_account_name: rb.bankAccountName,
+          qris_image_url: rb.qrisImageUrl,
+        })),
         claimed_item_ids: member.claimedItemIds,
         payment_status: member.paymentStatus,
         proof_image_url: member.proofImageUrl,
@@ -618,5 +651,105 @@ export async function scanReceiptOcrHandler(req: Request, res: Response) {
     res.status(500).json({
       error: error instanceof Error ? error.message : "Gagal membaca struk kasir dengan AI.",
     });
+  }
+}
+
+const addReceiptSchema = z.object({
+  title: z.string().trim().min(2).max(150),
+  receipt_image_url: z.string().optional(),
+  payer_member_id: z.string().uuid().optional(),
+  payer_name: z.string().trim().max(100).optional(),
+  bank_name: z.string().trim().max(50).optional(),
+  bank_account_no: z.string().trim().max(50).optional(),
+  bank_account_name: z.string().trim().max(100).optional(),
+  qris_image_url: z.string().optional(),
+  tax_amount: z.number().int().nonnegative().default(0),
+  service_amount: z.number().int().nonnegative().default(0),
+  discount_amount: z.number().int().nonnegative().default(0),
+  items: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(150),
+        unit_price: z.number().int().nonnegative(),
+        quantity: z.number().int().positive().max(999),
+        is_shared: z.boolean().optional().default(false),
+      }),
+    )
+    .min(1)
+    .max(100),
+});
+
+export async function addReceiptHandler(req: Request, res: Response) {
+  const parsed = addReceiptSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Data struk tidak valid.", details: parsed.error.flatten() });
+    return;
+  }
+
+  const roomCode = String(req.params.code);
+  const guestToken = req.headers["x-guest-token"] as string | undefined;
+  const userId = req.userId;
+
+  try {
+    const updated = await addReceiptToRoom(
+      roomCode,
+      {
+        title: parsed.data.title,
+        receiptImageUrl: parsed.data.receipt_image_url,
+        payerMemberId: parsed.data.payer_member_id,
+        payerName: parsed.data.payer_name,
+        bankName: parsed.data.bank_name,
+        bankAccountNo: parsed.data.bank_account_no,
+        bankAccountName: parsed.data.bank_account_name,
+        qrisImageUrl: parsed.data.qris_image_url,
+        taxAmount: parsed.data.tax_amount,
+        serviceAmount: parsed.data.service_amount,
+        discountAmount: parsed.data.discount_amount,
+        items: parsed.data.items.map((i) => ({
+          name: i.name,
+          unitPrice: i.unit_price,
+          quantity: i.quantity,
+          isShared: i.is_shared,
+        })),
+      },
+      guestToken,
+      userId,
+    );
+
+    broadcastToRoom(roomCode, { type: "ROOM_UPDATED", action: "RECEIPT_ADDED" });
+    res.status(201).json(updated);
+  } catch (error) {
+    if (error instanceof RoomNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    if (error instanceof RoomLockedError) {
+      res.status(409).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+}
+
+export async function deleteReceiptHandler(req: Request, res: Response) {
+  const roomCode = String(req.params.code);
+  const receiptId = String(req.params.receiptId);
+  const guestToken = req.headers["x-guest-token"] as string | undefined;
+  const userId = req.userId;
+
+  try {
+    const updated = await deleteReceiptFromRoom(roomCode, receiptId, guestToken, userId);
+    broadcastToRoom(roomCode, { type: "ROOM_UPDATED", action: "RECEIPT_DELETED" });
+    res.json(updated);
+  } catch (error) {
+    if (error instanceof RoomNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    if (error instanceof RoomLockedError) {
+      res.status(409).json({ error: error.message });
+      return;
+    }
+    throw error;
   }
 }

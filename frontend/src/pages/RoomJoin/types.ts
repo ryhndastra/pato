@@ -5,12 +5,45 @@ export interface ItemClaimPortion {
   portion_quantity: number;
 }
 
+export interface RoomReceipt {
+  id: string;
+  title: string;
+  payer_member_id: string | null;
+  payer_name: string;
+  subtotal: number;
+  tax_amount: number;
+  service_amount: number;
+  discount_amount: number;
+  grand_total: number;
+  bank_name: string | null;
+  bank_account_no: string | null;
+  bank_account_name: string | null;
+  qris_image_url?: string | null;
+  receipt_image_url?: string | null;
+  created_by_member_id: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface ReceiptBreakdownItem {
+  receipt_id: string;
+  title: string;
+  payer_member_id: string | null;
+  payer_name: string;
+  amount: number;
+  bank_name: string | null;
+  bank_account_no: string | null;
+  bank_account_name: string | null;
+  qris_image_url?: string | null;
+}
+
 export interface RoomItem {
   id: string;
   name: string;
   unit_price: number;
   quantity: number;
   is_shared: boolean;
+  receipt_id?: string | null;
   claimed_quantity: number;
   claimed_by_member_ids: string[];
   claims?: ItemClaimPortion[];
@@ -24,6 +57,7 @@ export interface RoomMember {
   subtotal_share: number;
   raw_share_amount?: number;
   share_amount: number;
+  receipt_breakdown?: ReceiptBreakdownItem[];
   claimed_item_ids: string[];
   payment_status?: "UNPAID" | "PENDING" | "VERIFIED" | "REJECTED";
   proof_image_url?: string | null;
@@ -47,6 +81,7 @@ export interface RoomDetail {
   receipt_image_url?: string | null;
   group_photo_url?: string | null;
   round_mode?: string | null;
+  receipts?: RoomReceipt[];
   items: RoomItem[];
   members: RoomMember[];
 }

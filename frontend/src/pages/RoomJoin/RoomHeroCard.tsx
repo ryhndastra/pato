@@ -138,7 +138,7 @@ export function RoomHeroCard({
           <h1 className="text-lg sm:text-xl font-black text-white tracking-tight leading-snug break-words drop-shadow-xs">
             {room.title}
           </h1>
-          <div className="mt-1 flex items-center gap-2.5 text-xs text-blue-100/90 font-medium">
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-blue-100/90 font-medium">
             <span className="inline-flex items-center gap-1">
               <ForkKnife size={13} weight="bold" />
               <span>{room.items?.length ?? 0} Menu</span>
@@ -148,11 +148,20 @@ export function RoomHeroCard({
               <UsersThree size={13} weight="bold" />
               <span>{members.length} Peserta</span>
             </span>
+            {Boolean(room.receipts && room.receipts.length > 1) && (
+              <>
+                <span>·</span>
+                <span className="inline-flex items-center gap-1 rounded-md bg-white/20 px-1.5 py-0.5 text-[11px] font-bold text-white">
+                  <Receipt size={12} weight="bold" />
+                  <span>{room.receipts!.length} Spot Struk</span>
+                </span>
+              </>
+            )}
           </div>
         </div>
 
         {/* Dedicated Grand Total Kasir Strip (Full width, handles large millions cleanly) */}
-        <div className="relative z-10 mt-3 flex items-center justify-between gap-3 rounded-2xl bg-white/10 backdrop-blur-md px-3.5 py-2.5 border border-white/15 shadow-2xs">
+        <div className="relative z-10 mt-3.5 flex items-center justify-between gap-3 rounded-2xl bg-white/10 backdrop-blur-md px-4 py-3 border border-white/15 shadow-2xs">
           <span className="text-[11px] font-bold uppercase tracking-wider text-blue-200 shrink-0">
             Total Kasir
           </span>
@@ -161,52 +170,52 @@ export function RoomHeroCard({
           </span>
         </div>
 
-        {/* Bottom row: Quick action glass pills */}
+        {/* Bottom row: Quick action glass pills (Mobile-friendly touch height) */}
         <div className="relative z-10 mt-4 pt-3.5 border-t border-white/15 flex items-center gap-2 overflow-x-auto no-scrollbar">
           {hasReceipt && onOpenReceiptImage && (
             <button
               type="button"
               onClick={onOpenReceiptImage}
-              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3 text-[11px] font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
+              className="inline-flex h-9.5 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3.5 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
             >
-              <Receipt size={13} weight="bold" />
-              <span>Foto Struk Kasir</span>
-              <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-400 text-slate-950 text-[8px] font-black">✓</span>
+              <Receipt size={14} weight="bold" />
+              <span>Foto Struk</span>
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-400 text-slate-950 text-[9px] font-black">✓</span>
             </button>
           )}
 
           <button
             type="button"
             onClick={onOpenPaymentInfo}
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3 text-[11px] font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
+            className="inline-flex h-9.5 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3.5 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
           >
-            <QrCode size={13} weight="bold" />
+            <QrCode size={14} weight="bold" />
             <span>QRIS & Rekening</span>
           </button>
 
           {/* Foto Makan Bareng */}
           {isUploadingPhoto ? (
-            <div className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3 text-[11px] font-bold text-white border border-white/20">
-              <CircleNotch size={13} weight="bold" className="animate-spin text-white" />
+            <div className="inline-flex h-9.5 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3.5 text-xs font-bold text-white border border-white/20">
+              <CircleNotch size={14} weight="bold" className="animate-spin text-white" />
               <span>Mengunggah...</span>
             </div>
           ) : hasGroupPhoto && room.group_photo_url ? (
             <button
               type="button"
               onClick={() => setGroupPhotoModalOpen(true)}
-              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3 text-[11px] font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
+              className="inline-flex h-9.5 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3.5 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
             >
-              <Camera size={13} weight="bold" />
+              <Camera size={14} weight="bold" />
               <span>Foto Meja</span>
-              <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-400 text-slate-950 text-[8px] font-black">✓</span>
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-400 text-slate-950 text-[9px] font-black">✓</span>
             </button>
           ) : (
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3 text-[11px] font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
+              className="inline-flex h-9.5 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3.5 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
             >
-              <Plus size={13} weight="bold" />
+              <Plus size={14} weight="bold" />
               <span>Foto Meja</span>
             </button>
           )}
@@ -214,9 +223,9 @@ export function RoomHeroCard({
           <button
             type="button"
             onClick={onOpenAestheticReceipt}
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3 text-[11px] font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
+            className="inline-flex h-9.5 shrink-0 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3.5 text-xs font-bold text-white border border-white/20 hover:bg-white/25 active:scale-95 transition-all"
           >
-            <ShareNetwork size={13} weight="bold" />
+            <ShareNetwork size={14} weight="bold" />
             <span>Struk Patungan</span>
           </button>
         </div>
