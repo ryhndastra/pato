@@ -80,21 +80,32 @@ export function TippingCard() {
               20% ({safeIDR(Math.round(selectedTip * 0.2))}) otomatis disisihkan ke yayasan tanggap bencana alam.
             </p>
 
-            <div className="flex flex-col items-center gap-2 rounded-xl border border-hairline bg-slate-50 p-4">
+            <div className="flex flex-col items-center gap-2.5 rounded-2xl border border-slate-200/90 bg-slate-50 p-4 w-full">
               <img
-                src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://saweria.co/patoapp"
-                alt="QRIS Tip Developer"
-                className="h-44 w-44 rounded-lg object-contain"
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("https://tako.id/ryhndastra")}`}
+                alt="QR Tako Developer PaTo"
+                className="h-44 w-44 rounded-xl object-contain bg-white p-2 shadow-2xs border border-slate-200"
               />
-              <span className="font-mono text-[11px] font-bold text-ink-muted">Scan QRIS (GoPay / Shopee / BCA)</span>
+              <span className="text-[11px] font-semibold text-slate-500">
+                Scan via Kamera / E-Wallet (GoPay, OVO, Dana, BCA)
+              </span>
             </div>
+
+            <a
+              href="https://tako.id/ryhndastra"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-md hover:from-blue-700 hover:to-indigo-700 active:scale-95 transition-all"
+            >
+              <span>Buka Halaman Donasi Tako ↗</span>
+            </a>
 
             <button
               type="button"
               onClick={() => setShowQrModal(false)}
-              className="mt-1 flex h-10 w-full items-center justify-center rounded-xl bg-brand text-xs font-bold text-white shadow-sm hover:bg-brand/95"
+              className="flex h-10 w-full items-center justify-center rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 active:scale-95 transition-all"
             >
-              Selesai Traktir
+              Tutup
             </button>
           </div>
         </div>
