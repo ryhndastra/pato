@@ -11,6 +11,7 @@ import {
 import type { RoomItem, RoomMember, RoomReceipt, RoomStatus } from "./types";
 import { safeIDR } from "./money";
 import { soundFX } from "../../lib/soundFx";
+import { haptic } from "../../lib/haptic";
 import { ItemCard } from "./ItemCard";
 
 interface ItemListProps {
@@ -188,11 +189,13 @@ export function ItemList({
 
   function handleClaimWithSound(itemId: string) {
     soundFX.playClaim();
+    haptic.light();
     onClaim(itemId);
   }
 
   function handleUnclaimWithSound(itemId: string) {
     soundFX.playUnclaim();
+    haptic.light();
     onUnclaim(itemId);
   }
 
@@ -246,7 +249,7 @@ export function ItemList({
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
-          {items.length > 5 && (
+          {items.length >= 3 && (
             <div className="relative flex items-center">
               <MagnifyingGlass
                 size={16}
@@ -263,7 +266,10 @@ export function ItemList({
               {searchQuery && (
                 <button
                   type="button"
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => {
+                    setSearchQuery("");
+                    haptic.light();
+                  }}
                   className="absolute right-3 flex h-6 w-6 items-center justify-center rounded-full text-slate-400 hover:text-slate-700"
                 >
                   <X size={12} weight="bold" />
@@ -276,7 +282,10 @@ export function ItemList({
           <div className="flex items-center gap-2 overflow-x-auto py-1 no-scrollbar text-xs">
             <button
               type="button"
-              onClick={() => setFilterMode("all")}
+              onClick={() => {
+                setFilterMode("all");
+                haptic.light();
+              }}
               className={`inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 font-bold whitespace-nowrap transition-all active:scale-95 ${
                 filterMode === "all"
                   ? "bg-slate-900 text-white shadow-xs"
@@ -296,7 +305,10 @@ export function ItemList({
             {unclaimedCount > 0 && (
               <button
                 type="button"
-                onClick={() => setFilterMode("unclaimed")}
+                onClick={() => {
+                  setFilterMode("unclaimed");
+                  haptic.light();
+                }}
                 className={`inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 font-bold whitespace-nowrap transition-all active:scale-95 ${
                   filterMode === "unclaimed"
                     ? "bg-amber-500 text-white shadow-xs"
@@ -317,7 +329,10 @@ export function ItemList({
             {sharedCount > 0 && (
               <button
                 type="button"
-                onClick={() => setFilterMode("shared")}
+                onClick={() => {
+                  setFilterMode("shared");
+                  haptic.light();
+                }}
                 className={`inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 font-bold whitespace-nowrap transition-all active:scale-95 ${
                   filterMode === "shared"
                     ? "bg-indigo-600 text-white shadow-xs"
@@ -338,7 +353,10 @@ export function ItemList({
             {currentMemberId && (
               <button
                 type="button"
-                onClick={() => setFilterMode("mine")}
+                onClick={() => {
+                  setFilterMode("mine");
+                  haptic.light();
+                }}
                 className={`inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 font-bold whitespace-nowrap transition-all active:scale-95 ${
                   filterMode === "mine"
                     ? "bg-blue-600 text-white shadow-xs"
@@ -501,6 +519,37 @@ export function ItemList({
           );
         })}
       </div>
+
+      {/* Empty Search / Filter Results */}
+      {displayedItems.length === 0 && (
+        <div className="flex flex-col items-center justify-center gap-2.5 rounded-3xl border border-dashed border-slate-200 bg-white/70 py-10 px-4 text-center">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+            <MagnifyingGlass size={20} weight="bold" />
+          </span>
+          <div>
+            <p className="text-xs font-bold text-slate-800">
+              {searchQuery ? `Tidak ada menu "${searchQuery}"` : "Tidak ada menu di kategori ini"}
+            </p>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Coba ubah kata kunci atau ganti filter kategori di atas.
+            </p>
+          </div>
+          {(searchQuery || filterMode !== "all") && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery("");
+                setFilterMode("all");
+                haptic.light();
+              }}
+              className="mt-1 inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 active:scale-95 transition-all shadow-2xs"
+            >
+              <X size={12} weight="bold" />
+              <span>Reset Filter & Pencarian</span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* 6. SUBTLE FOOTER CTA */}
       {onAddReceipt && !claimsLocked && (

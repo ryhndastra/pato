@@ -15,6 +15,7 @@ import {
 } from "@phosphor-icons/react";
 import { safeIDR } from "./money";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
+import { haptic } from "../../lib/haptic";
 import type { RoomDetail, RoomMember } from "./types";
 
 interface HostPaymentMonitorCardProps {
@@ -62,13 +63,14 @@ export function HostPaymentMonitorCard({
 
   const { copied: copiedSummary, copy: copySummary } = useCopyToClipboard();
 
-  function handleCopyGroupSummary() {
+  function generateGroupSummaryText(): string {
     const lines = [
-      `🧾 *REKAP TAGIHAN PATO: ${room.title}*`,
+      `🧾 *REKAP PATUNGAN: ${room.title}*`,
+      `Kode Meja: ${room.room_code}`,
       `Total Tagihan: ${safeIDR(room.grand_total)}`,
       `Status: ${verifiedFriendsCount}/${friends.length} Teman Lunas`,
       ``,
-      `*Daftar Patungan Teman:*`,
+      `👥 *Rincian Patungan Teman:*`,
     ];
 
     friends.forEach((f, idx) => {
@@ -77,24 +79,37 @@ export function HostPaymentMonitorCard({
           ? "[LUNAS ✅]"
           : f.payment_status === "PENDING"
             ? "[BUKTI DIKIRIM ⏳]"
-            : "[BELUM BAYAR ⏳]";
+            : "[BELUM BAYAR ❌]";
       lines.push(`${idx + 1}. *${f.display_name}*: ${safeIDR(f.share_amount)} ${statusLabel}`);
     });
 
     if (host) {
-      lines.push(`• *${host.display_name}* (Host): ${safeIDR(hostShare)} [TALANGAN KASIR 👑]`);
+      lines.push(`👑 *${host.display_name}* (Host): ${safeIDR(hostShare)} [TALANGAN KASIR]`);
     }
 
     if (room.bank_account_no) {
       lines.push(``);
-      lines.push(`💳 *Info Transfer Rekening/QRIS Host:*`);
+      lines.push(`💳 *Info Transfer Host:*`);
       lines.push(`${room.bank_name ?? "Bank"} ${room.bank_account_no} a.n. ${room.bank_account_name ?? "Host"}`);
     }
 
     lines.push(``);
-    lines.push(`👉 Cek detail & bukti meja di: ${window.location.href}`);
+    lines.push(`👉 Cek detail & upload bukti di: ${window.location.origin}/room/${room.room_code}`);
+    lines.push(`_Dihitung otomatis via PaTo (Pay Together)_`);
 
-    copySummary(lines.join("\n"));
+    return lines.join("\n");
+  }
+
+  function handleShareGroupWhatsApp() {
+    haptic.medium();
+    const text = generateGroupSummaryText();
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+  }
+
+  function handleCopyGroupSummary() {
+    haptic.medium();
+    const text = generateGroupSummaryText();
+    copySummary(text);
   }
 
   const verifiedFromFriends = friends
@@ -230,20 +245,26 @@ export function HostPaymentMonitorCard({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+            <button
+              type="button"
+              onClick={handleShareGroupWhatsApp}
+              title="Kirim rekap tagihan langsung ke WhatsApp Grup"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-[11px] font-bold text-white shadow-2xs active:scale-95 transition-all"
+            >
+              <WhatsappLogo size={14} weight="fill" />
+              <span>Kirim ke WA</span>
+            </button>
+
             <button
               type="button"
               onClick={handleCopyGroupSummary}
               title="Salin rekap tagihan untuk di-paste ke grup WhatsApp"
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition-all"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 active:scale-95 transition-all"
             >
-              <Copy size={12} weight="bold" />
-              <span>{copiedSummary ? "Tersalin! ✅" : "Salin Rekap Grup"}</span>
+              <Copy size={13} weight="bold" />
+              <span>{copiedSummary ? "Tersalin! ✅" : "Salin Rekap"}</span>
             </button>
-
-            <span className="text-[11px] text-slate-400 hidden sm:inline">
-              {verifiedFriendsCount}/{friends.length} Lunas
-            </span>
           </div>
         </div>
 

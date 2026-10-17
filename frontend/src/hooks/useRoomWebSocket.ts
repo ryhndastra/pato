@@ -12,6 +12,9 @@ export function useRoomWebSocket({
   onChatMessage,
 }: UseRoomWebSocketOptions) {
   const [isConnected, setIsConnected] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [justReconnected, setJustReconnected] = useState(false);
+  const hasConnectedOnceRef = useRef(false);
   const reconnectTimeoutRef = useRef<number | null>(null);
 
   const onRoomUpdatedRef = useRef(onRoomUpdated);
@@ -47,7 +50,13 @@ export function useRoomWebSocket({
             ws?.close();
             return;
           }
+          if (hasConnectedOnceRef.current) {
+            setJustReconnected(true);
+            setTimeout(() => setJustReconnected(false), 2500);
+          }
+          hasConnectedOnceRef.current = true;
           setIsConnected(true);
+          setIsReconnecting(false);
         };
 
         ws.onmessage = (event) => {
@@ -66,6 +75,9 @@ export function useRoomWebSocket({
 
         ws.onclose = () => {
           setIsConnected(false);
+          if (hasConnectedOnceRef.current) {
+            setIsReconnecting(true);
+          }
           if (!isUnmounted) {
             reconnectTimeoutRef.current = window.setTimeout(connect, 3000);
           }
@@ -76,6 +88,9 @@ export function useRoomWebSocket({
         };
       } catch (err) {
         console.error("[WebSocket initialization error]", err);
+        if (hasConnectedOnceRef.current) {
+          setIsReconnecting(true);
+        }
         if (!isUnmounted) {
           reconnectTimeoutRef.current = window.setTimeout(connect, 3000);
         }
@@ -84,12 +99,22 @@ export function useRoomWebSocket({
 
     connect();
 
+    function handleOnline() {
+      if (!isConnected) {
+        if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+        connect();
+      }
+    }
+
+    window.addEventListener("online", handleOnline);
+
     return () => {
       isUnmounted = true;
+      window.removeEventListener("online", handleOnline);
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       ws?.close();
     };
   }, [roomCode]);
 
-  return { isConnected };
+  return { isConnected, isReconnecting, justReconnected };
 }

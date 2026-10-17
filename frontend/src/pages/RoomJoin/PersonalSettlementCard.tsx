@@ -5,6 +5,7 @@ import {
   CheckCircle,
   Clock,
   Copy,
+  DownloadSimple,
   Eye,
   QrCode,
   Storefront,
@@ -14,6 +15,7 @@ import {
 } from "@phosphor-icons/react";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 import { compressImageFile } from "../../lib/imageCompression";
+import { haptic } from "../../lib/haptic";
 import { safeIDR } from "./money";
 import type { RoomDetail, RoomMember } from "./types";
 
@@ -37,6 +39,34 @@ export function PersonalSettlementCard({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [viewingProof, setViewingProof] = useState(false);
   const [zoomQrisUrl, setZoomQrisUrl] = useState<string | null>(null);
+  const [downloadingQris, setDownloadingQris] = useState(false);
+
+  async function handleDownloadQris(url: string) {
+    if (!url) return;
+    haptic.medium();
+    setDownloadingQris(true);
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `QRIS-pato-${room.room_code || "bayar"}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      haptic.success();
+    } catch {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.download = `QRIS-pato-${room.room_code || "bayar"}.png`;
+      a.click();
+    } finally {
+      setDownloadingQris(false);
+    }
+  }
 
   const subtotal = room.subtotal > 0 ? room.subtotal : 1;
   const ratio = me.subtotal_share / subtotal;
@@ -63,6 +93,7 @@ export function PersonalSettlementCard({
     setUploadError(null);
     try {
       await onSubmitProof(previewProof);
+      haptic.success();
       setPreviewProof(null);
     } catch (err: unknown) {
       setUploadError(err instanceof Error ? err.message : "Gagal mengunggah bukti transfer.");
@@ -565,8 +596,22 @@ export function PersonalSettlementCard({
             <img
               src={zoomQrisUrl}
               alt="QRIS Pembayaran"
-              className="max-h-[60vh] w-auto rounded-2xl object-contain border border-slate-200"
+              className="max-h-[50vh] w-auto rounded-2xl object-contain border border-slate-200"
             />
+
+            <button
+              type="button"
+              onClick={() => handleDownloadQris(zoomQrisUrl)}
+              disabled={downloadingQris}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-purple-600 text-xs font-bold text-white shadow-md shadow-purple-600/20 hover:bg-purple-700 active:scale-95 transition-all disabled:opacity-70"
+            >
+              <DownloadSimple size={16} weight="bold" />
+              <span>{downloadingQris ? "Menyimpan..." : "Simpan Gambar QRIS"}</span>
+            </button>
+
+            <p className="text-[11px] text-slate-500 text-center leading-tight">
+              Buka aplikasi m-banking atau e-wallet kamu, lalu gunakan fitur <strong>Scan dari Galeri</strong>.
+            </p>
           </div>
         </div>
       )}

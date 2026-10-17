@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ArrowsClockwise,
+  CheckCircle,
   CreditCard,
   ForkKnife,
   Info,
@@ -30,6 +32,7 @@ import {
 import { useRoomWebSocket } from "../../hooks/useRoomWebSocket";
 import { RoomHeroCard } from "./RoomHeroCard";
 import { soundFX } from "../../lib/soundFx";
+import { haptic } from "../../lib/haptic";
 import type { JoinResult, RoomDetail, RoomMember, RoomEvent } from "./types";
 
 export function RoomJoin() {
@@ -112,11 +115,12 @@ export function RoomJoin() {
         sessionStorage.setItem(celebratedKey, "true");
         setCelebrationOpen(true);
         soundFX.playCelebration();
+        haptic.celebrate();
       }
     }
   }, [room?.status, code]);
 
-  useRoomWebSocket({
+  const { isReconnecting, justReconnected } = useRoomWebSocket({
     roomCode: code,
     onRoomUpdated: fetchRoom,
   });
@@ -262,6 +266,7 @@ export function RoomJoin() {
         { guest_token: getGuestToken(code) },
         authToken,
       );
+      haptic.success();
       setActiveTab("settlement");
       await fetchRoom();
     } catch (err) {
@@ -281,6 +286,7 @@ export function RoomJoin() {
         { guest_token: getGuestToken(code) },
         authToken,
       );
+      haptic.medium();
       setActiveTab("menu");
       await fetchRoom();
     } catch (err) {
@@ -305,6 +311,7 @@ export function RoomJoin() {
       sessionStorage.setItem(celebratedKey, "true");
       setCelebrationOpen(true);
       soundFX.playCelebration();
+      haptic.celebrate();
     } catch (err) {
       setCloseError(err instanceof ApiError ? err.message : "Gagal menutup meja.");
     } finally {
@@ -410,6 +417,20 @@ export function RoomJoin() {
         onOpenReceiptImage={room.receipt_image_url ? () => setReceiptImageOpen(true) : undefined}
         onOpenAestheticReceipt={() => setAestheticReceiptOpen(true)}
       />
+
+      {/* Reconnecting / Reconnected Banner */}
+      {isReconnecting && (
+        <div className="sticky top-[53px] z-20 flex items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all duration-300">
+          <ArrowsClockwise size={14} weight="bold" className="animate-spin shrink-0" />
+          <span>Koneksi terputus. Mencoba menghubungkan kembali...</span>
+        </div>
+      )}
+      {justReconnected && (
+        <div className="sticky top-[53px] z-20 flex items-center justify-center gap-2 bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all duration-300">
+          <CheckCircle size={14} weight="fill" className="shrink-0" />
+          <span>Terhubung kembali ke meja!</span>
+        </div>
+      )}
 
       {/* 2. MAIN NATIVE APP CANVAS */}
       <main className="relative z-10 mx-auto w-full max-w-md sm:max-w-xl lg:max-w-3xl flex-1 px-4 pt-3.5 pb-36 sm:px-6">

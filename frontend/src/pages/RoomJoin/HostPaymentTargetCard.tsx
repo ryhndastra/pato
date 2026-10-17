@@ -3,11 +3,13 @@ import {
   Bank,
   Check,
   Copy,
+  DownloadSimple,
   Eye,
   QrCode,
   X,
 } from "@phosphor-icons/react";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
+import { haptic } from "../../lib/haptic";
 import type { RoomDetail } from "./types";
 
 interface HostPaymentTargetCardProps {
@@ -17,6 +19,34 @@ interface HostPaymentTargetCardProps {
 export function HostPaymentTargetCard({ room }: HostPaymentTargetCardProps) {
   const { copied, copy } = useCopyToClipboard();
   const [zoomQris, setZoomQris] = useState(false);
+  const [downloadingQris, setDownloadingQris] = useState(false);
+
+  async function handleDownloadQris(url: string) {
+    if (!url) return;
+    haptic.medium();
+    setDownloadingQris(true);
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `QRIS-pato-${room.room_code || "bayar"}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      haptic.success();
+    } catch {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.download = `QRIS-pato-${room.room_code || "bayar"}.png`;
+      a.click();
+    } finally {
+      setDownloadingQris(false);
+    }
+  }
 
   const hasQris = Boolean(room.qris_image_url);
   const hasBank = Boolean(room.bank_account_no);
@@ -133,8 +163,22 @@ export function HostPaymentTargetCard({ room }: HostPaymentTargetCardProps) {
             <img
               src={room.qris_image_url}
               alt="QRIS Host"
-              className="max-h-[60vh] w-auto rounded-xl object-contain border border-slate-200"
+              className="max-h-[50vh] w-auto rounded-xl object-contain border border-slate-200"
             />
+
+            <button
+              type="button"
+              onClick={() => handleDownloadQris(room.qris_image_url!)}
+              disabled={downloadingQris}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-purple-600 text-xs font-bold text-white shadow-md shadow-purple-600/20 hover:bg-purple-700 active:scale-95 transition-all disabled:opacity-70"
+            >
+              <DownloadSimple size={16} weight="bold" />
+              <span>{downloadingQris ? "Menyimpan..." : "Simpan Gambar QRIS"}</span>
+            </button>
+
+            <p className="text-[11px] text-slate-500 text-center leading-tight">
+              Buka aplikasi m-banking atau e-wallet kamu, lalu gunakan fitur <strong>Scan dari Galeri</strong>.
+            </p>
           </div>
         </div>
       )}
