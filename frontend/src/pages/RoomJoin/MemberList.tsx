@@ -86,17 +86,25 @@ export function MemberList({
                   : "border-slate-200/80 bg-white text-slate-700 font-medium hover:border-slate-300 shadow-2xs"
             }`}
           >
-            <span
-              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-mono text-[9px] font-bold ${
-                isSelected
-                  ? "bg-white/20 text-white"
-                  : isMe
-                    ? "bg-blue-600 text-white shadow-2xs"
-                    : "bg-slate-100 text-slate-700"
-              }`}
-            >
-              {initials}
-            </span>
+            {member.avatar_url ? (
+              <img
+                src={member.avatar_url}
+                alt=""
+                className="h-5 w-5 rounded-full object-cover shrink-0 ring-1 ring-slate-200"
+              />
+            ) : (
+              <span
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-mono text-[9px] font-bold ${
+                  isSelected
+                    ? "bg-white/20 text-white"
+                    : isMe
+                      ? "bg-blue-600 text-white shadow-2xs"
+                      : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                {initials}
+              </span>
+            )}
 
             <span className="truncate max-w-[110px] text-[11px]">
               {member.display_name}

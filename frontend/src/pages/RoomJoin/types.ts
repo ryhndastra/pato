@@ -53,6 +53,7 @@ export interface RoomMember {
   id: string;
   user_id?: string | null;
   display_name: string;
+  avatar_url?: string | null;
   is_host: boolean;
   subtotal_share: number;
   raw_share_amount?: number;

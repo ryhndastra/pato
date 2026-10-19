@@ -292,9 +292,17 @@ export function HostPaymentMonitorCard({
                 >
                   {/* Left: Avatar & Friend Info */}
                   <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 font-bold text-xs text-blue-700">
-                      {initials}
-                    </span>
+                    {friend.avatar_url ? (
+                      <img
+                        src={friend.avatar_url}
+                        alt=""
+                        className="h-10 w-10 shrink-0 rounded-xl object-cover ring-1 ring-slate-200"
+                      />
+                    ) : (
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 font-bold text-xs text-blue-700">
+                        {initials}
+                      </span>
+                    )}
 
                     <div>
                       <div className="flex items-center gap-1.5">

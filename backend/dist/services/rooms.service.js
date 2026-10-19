@@ -300,6 +300,7 @@ function computeMemberShares(members, claims, receipts, room) {
                 id: member.id,
                 userId: member.user_id,
                 displayName: member.display_name,
+                avatarUrl: member.avatar_url ?? null,
                 isHost: member.is_host,
                 subtotalShare: Math.round(totalSubtotalShare),
                 rawShareAmount: Math.round(totalRawShare),
@@ -348,6 +349,7 @@ function computeMemberShares(members, claims, receipts, room) {
             id: member.id,
             userId: member.user_id,
             displayName: member.display_name,
+            avatarUrl: member.avatar_url ?? null,
             isHost: member.is_host,
             subtotalShare: Math.round(itemSubtotal),
             rawShareAmount: Math.round(rawShare),
@@ -416,9 +418,11 @@ export async function getRoomByCode(roomCode) {
            'id', m.id,
            'user_id', m.user_id,
            'display_name', m.display_name,
-           'is_host', m.is_host
+           'is_host', m.is_host,
+           'avatar_url', u.avatar_url
          ) ORDER BY m.is_host DESC, m.joined_at ASC), '[]'::json)
          FROM members m
+         LEFT JOIN users u ON u.id = m.user_id
          WHERE m.room_id = r.id
        ) AS members,
        (

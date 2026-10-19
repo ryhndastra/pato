@@ -51,7 +51,7 @@ export function InAppToast({ toast, onDismiss }: InAppToastProps) {
 
   return (
     <div
-      className="fixed top-3 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-sm animate-slide-down"
+      className="fixed top-3 inset-x-4 z-[9999] mx-auto w-auto max-w-sm animate-slide-down pointer-events-auto"
       role="alert"
     >
       <div className="flex items-start gap-3 rounded-2xl bg-slate-900/95 p-3.5 text-white shadow-2xl backdrop-blur-xl border border-white/10 ring-1 ring-black/10">

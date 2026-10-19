@@ -2,6 +2,7 @@ import { memo } from "react";
 import {
   Check,
   CheckCircle,
+  Crown,
   Minus,
   Plus,
   Trash,
@@ -19,6 +20,12 @@ interface ItemCardProps {
   onClaim: (itemId: string) => void;
   onUnclaim: (itemId: string) => void;
   onJoinPrompt?: () => void;
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
 export const ItemCard = memo(function ItemCard({
@@ -125,34 +132,70 @@ export const ItemCard = memo(function ItemCard({
       {/* Bottom Row: Social Claimers (Left) + Thumb-Friendly Big Stepper (Right) */}
       <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
         {/* Left: Who ordered this */}
-        <div className="flex items-center gap-1 min-w-0 flex-1 overflow-x-auto text-[11px] no-scrollbar">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-x-auto text-[11px] no-scrollbar py-0.5">
           {allClaims.length > 0 ? (
-            <div className="flex items-center gap-1 flex-wrap">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">
-                Dipesan:
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-0.5">
+                Dimakan oleh:
               </span>
               {allClaims.map((claim) => {
                 const m = membersById.get(claim.member_id);
                 const name = m?.display_name ?? "Tamu";
                 const isThisMe = claim.member_id === currentMemberId;
-                const countText = claim.portion_quantity > 1 ? ` (${claim.portion_quantity})` : "";
+                const isHost = m?.is_host ?? false;
+                const initials = getInitials(name);
 
                 return (
                   <span
                     key={claim.member_id}
-                    className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold whitespace-nowrap ${
+                    title={`${name}${isHost ? " (Host)" : ""}`}
+                    className={`inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 text-[11px] font-semibold whitespace-nowrap border shadow-2xs transition-all ${
                       isThisMe
-                        ? "bg-blue-100 text-blue-800 font-bold"
-                        : "bg-slate-100 text-slate-700"
+                        ? "border-blue-300 bg-blue-50 text-blue-900 font-bold"
+                        : "border-slate-200/90 bg-white text-slate-700"
                     }`}
                   >
-                    <span>{isThisMe ? "Kamu" : name}{countText}</span>
+                    {/* User profile picture or fallback monogram initial */}
+                    {m?.avatar_url ? (
+                      <img
+                        src={m.avatar_url}
+                        alt=""
+                        className="h-4.5 w-4.5 rounded-full object-cover shrink-0 ring-1 ring-slate-200"
+                      />
+                    ) : (
+                      <span
+                        className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold font-mono ${
+                          isThisMe ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-700"
+                        }`}
+                      >
+                        {initials}
+                      </span>
+                    )}
+
+                    <span className="truncate max-w-[80px]">
+                      {isThisMe ? "Kamu" : name}
+                    </span>
+
+                    {/* Host Badge */}
+                    {isHost && (
+                      <span className="inline-flex items-center gap-0.5 rounded bg-amber-100 px-1 py-0.2 text-[8px] font-black text-amber-800">
+                        <Crown size={9} weight="fill" className="text-amber-600" />
+                        Host
+                      </span>
+                    )}
+
+                    {/* Quantity taken if more than 1 */}
+                    {claim.portion_quantity > 1 && (
+                      <span className="rounded-full bg-slate-100 px-1 font-mono text-[9px] font-extrabold text-slate-600">
+                        {claim.portion_quantity}x
+                      </span>
+                    )}
                   </span>
                 );
               })}
             </div>
           ) : (
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-slate-400 italic">
               Belum ada yang memilih
             </span>
           )}

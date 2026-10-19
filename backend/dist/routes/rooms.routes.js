@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { claimItemHandler, closeRoomHandler, createRoomHandler, deleteRoomHandler, getRoomHandler, joinRoomHandler, lockRoomHandler, myRoomsHandler, rejectPaymentHandler, splitUnclaimedHandler, submitPaymentProofHandler, unclaimItemHandler, unlockRoomHandler, verifyPaymentHandler, getRoomEventsHandler, postChatHandler, scanReceiptOcrHandler, updateRoomPhotoHandler, addReceiptHandler, deleteReceiptHandler, } from "../controllers/rooms.controller.js";
+import { claimItemHandler, closeRoomHandler, createRoomHandler, deleteRoomHandler, getRoomHandler, joinRoomHandler, lockRoomHandler, myRoomsHandler, rejectPaymentHandler, splitUnclaimedHandler, submitPaymentProofHandler, unclaimItemHandler, unlockRoomHandler, verifyPaymentHandler, getRoomEventsHandler, postChatHandler, scanReceiptOcrHandler, scanVoiceNoteHandler, updateRoomPhotoHandler, addReceiptHandler, deleteReceiptHandler, } from "../controllers/rooms.controller.js";
 import { optionalAuth, requireAuth } from "../middleware/auth.js";
 import { claimLimiter, joinLimiter } from "../middleware/rateLimit.js";
 export const roomsRouter = Router();
@@ -7,6 +7,8 @@ roomsRouter.post("/:code/receipts", optionalAuth, addReceiptHandler);
 roomsRouter.delete("/:code/receipts/:receiptId", optionalAuth, deleteReceiptHandler);
 roomsRouter.post("/ocr", scanReceiptOcrHandler);
 roomsRouter.post("/:code/ocr", scanReceiptOcrHandler);
+roomsRouter.post("/voice", scanVoiceNoteHandler);
+roomsRouter.post("/:code/voice", scanVoiceNoteHandler);
 roomsRouter.post("/", optionalAuth, createRoomHandler);
 // route statis /mine wajib di atas /:code, kalau tidak /mine ketangkep sebagai code dinamis.
 roomsRouter.get("/mine", requireAuth, myRoomsHandler);

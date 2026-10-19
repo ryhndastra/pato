@@ -611,6 +611,131 @@ async function parseReceiptWithGemini(imageBase64OrDataUrl) {
   }
   throw lastError || new Error("Gagal membaca struk kasir, silakan coba lagi atau input manual.");
 }
+var VOICE_NOTE_PROMPT = `
+Kamu adalah asisten keuangan ahli di Indonesia untuk aplikasi split bill "PaTo".
+Tugasmu adalah mendengarkan rekaman audio pengguna yang sedang memesan atau membacakan menu makanan/minuman santai di restoran/kafe.
+Ekstrak daftar item, kuantitas (quantity), dan harga satuan (unitPrice) jika disebutkan.
+Jika harga tidak disebutkan dalam rekaman suara, isi unitPrice dengan 0 agar pengguna bisa melengkapinya nanti di form.
+
+Aturan Penting:
+1. Normalisasi nama menu ke ejaan yang wajar & jelas (contoh: 'es teh tawar dua' -> name: 'Es Teh Tawar', quantity: 2).
+2. Jika pengguna menyebutkan harga (contoh: "ayam geprek level dua dua porsi satunya dua puluh lima ribu"), masukkan quantity = 2, unitPrice = 25000.
+3. Kuantitas minimal 1.
+4. Pisahkan pajak (PB1/PPN) atau diskon jika disebutkan pengguna.
+5. Buat perkiraan nama restoran/judul acara jika terdengar (misal: "Makan Bareng"), atau default "Pesanan Suara".
+6. Output WAJIB berupa JSON valid murni yang mematuhi skema berikut:
+{
+  "title": string,
+  "items": [
+    {
+      "name": string,
+      "quantity": number,
+      "unitPrice": number,
+      "totalPrice": number
+    }
+  ],
+  "subtotal": number,
+  "taxAmount": number,
+  "serviceAmount": number,
+  "discountAmount": number,
+  "grandTotal": number
+}
+`;
+async function parseVoiceNoteWithGemini(audioBase64OrDataUrl) {
+  const keys = env.geminiApiKeys;
+  if (!keys || keys.length === 0) {
+    throw new Error("GEMINI_API_KEYS belum diatur di environment variable backend!");
+  }
+  let mimeType = "audio/webm";
+  let rawBase64 = audioBase64OrDataUrl;
+  if (audioBase64OrDataUrl.startsWith("data:")) {
+    const match = audioBase64OrDataUrl.match(/^data:([^;]+);base64,(.+)$/);
+    if (match) {
+      mimeType = match[1];
+      rawBase64 = match[2];
+    }
+  }
+  let lastError = null;
+  const totalKeys = keys.length;
+  for (let attempt = 0; attempt < totalKeys; attempt++) {
+    const currentKey = keys[keyRotationIndex % totalKeys];
+    keyRotationIndex = (keyRotationIndex + 1) % totalKeys;
+    for (const model of CANDIDATE_MODELS) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${currentKey}`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  { text: VOICE_NOTE_PROMPT },
+                  {
+                    inlineData: {
+                      mimeType: mimeType || "audio/webm",
+                      data: rawBase64
+                    }
+                  }
+                ]
+              }
+            ],
+            generationConfig: {
+              responseMimeType: "application/json",
+              temperature: 0.1
+            }
+          })
+        });
+        if (!response.ok) {
+          const errBody = await response.text();
+          console.warn(`[Voice Gemini] Model ${model} dengan key ${currentKey.slice(0, 10)}... mengembalikan status ${response.status}:`, errBody);
+          if (response.status === 429 || response.status === 503 || response.status === 404) {
+            continue;
+          }
+          throw new Error(`Gagal menghubungi Gemini API: ${response.statusText}`);
+        }
+        const data = await response.json();
+        const candidate = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!candidate) {
+          throw new Error("Tidak dapat mengenali suara pesanan.");
+        }
+        const parsed = JSON.parse(candidate);
+        const items = Array.isArray(parsed.items) ? parsed.items.map((it) => {
+          const qty = Math.max(1, Math.round(Number(it.quantity) || 1));
+          const unitPrice = Math.max(0, Math.round(Number(it.unitPrice) || Number(it.price) || 0));
+          const name = String(it.name || "Item Menu").trim();
+          return {
+            name,
+            quantity: qty,
+            unitPrice,
+            totalPrice: unitPrice * qty
+          };
+        }).filter((it) => it.name.length > 0) : [];
+        const calculatedSubtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+        const subtotal = Math.max(0, Math.round(Number(parsed.subtotal) || calculatedSubtotal));
+        const taxAmount = Math.max(0, Math.round(Number(parsed.taxAmount) || 0));
+        const serviceAmount = Math.max(0, Math.round(Number(parsed.serviceAmount) || 0));
+        const discountAmount = Math.max(0, Math.round(Number(parsed.discountAmount) || 0));
+        const grandTotal = Math.max(0, Math.round(Number(parsed.grandTotal) || subtotal + taxAmount + serviceAmount - discountAmount));
+        return {
+          title: String(parsed.title || "Pesanan Suara").trim(),
+          items,
+          subtotal,
+          taxAmount,
+          serviceAmount,
+          discountAmount,
+          grandTotal
+        };
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.warn(`[Voice Gemini Attempt Fail] ${lastError.message}`);
+      }
+    }
+  }
+  throw lastError || new Error("Gagal mengenali suara rekaman pesanan, silakan coba lagi.");
+}
 
 // dist/websocket.js
 var import_ws = require("ws");
@@ -999,6 +1124,7 @@ function computeMemberShares(members, claims, receipts, room) {
         id: member.id,
         userId: member.user_id,
         displayName: member.display_name,
+        avatarUrl: member.avatar_url ?? null,
         isHost: member.is_host,
         subtotalShare: Math.round(totalSubtotalShare),
         rawShareAmount: Math.round(totalRawShare),
@@ -1042,6 +1168,7 @@ function computeMemberShares(members, claims, receipts, room) {
       id: member.id,
       userId: member.user_id,
       displayName: member.display_name,
+      avatarUrl: member.avatar_url ?? null,
       isHost: member.is_host,
       subtotalShare: Math.round(itemSubtotal),
       rawShareAmount: Math.round(rawShare),
@@ -1108,9 +1235,11 @@ async function getRoomByCode(roomCode) {
            'id', m.id,
            'user_id', m.user_id,
            'display_name', m.display_name,
-           'is_host', m.is_host
+           'is_host', m.is_host,
+           'avatar_url', u.avatar_url
          ) ORDER BY m.is_host DESC, m.joined_at ASC), '[]'::json)
          FROM members m
+         LEFT JOIN users u ON u.id = m.user_id
          WHERE m.room_id = r.id
        ) AS members,
        (
@@ -1878,6 +2007,7 @@ async function getRoomHandler(req, res) {
         id: member.id,
         user_id: member.userId,
         display_name: member.displayName,
+        avatar_url: member.avatarUrl ?? null,
         is_host: member.isHost,
         subtotal_share: member.subtotalShare,
         raw_share_amount: member.rawShareAmount,
@@ -2246,6 +2376,25 @@ async function scanReceiptOcrHandler(req, res) {
     });
   }
 }
+var voiceNoteSchema = import_zod2.z.object({
+  audio: import_zod2.z.string().min(1, "Audio rekaman suara harus dilampirkan.")
+});
+async function scanVoiceNoteHandler(req, res) {
+  const parsed = voiceNoteSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Rekaman suara harus dilampirkan dalam format base64." });
+    return;
+  }
+  try {
+    const result = await parseVoiceNoteWithGemini(parsed.data.audio);
+    res.json(result);
+  } catch (error) {
+    console.error("[Voice Note Controller Error]", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Gagal membaca rekaman suara dengan AI."
+    });
+  }
+}
 var addReceiptSchema = import_zod2.z.object({
   title: import_zod2.z.string().trim().min(2).max(150),
   receipt_image_url: import_zod2.z.string().optional(),
@@ -2336,6 +2485,8 @@ roomsRouter.post("/:code/receipts", optionalAuth, addReceiptHandler);
 roomsRouter.delete("/:code/receipts/:receiptId", optionalAuth, deleteReceiptHandler);
 roomsRouter.post("/ocr", scanReceiptOcrHandler);
 roomsRouter.post("/:code/ocr", scanReceiptOcrHandler);
+roomsRouter.post("/voice", scanVoiceNoteHandler);
+roomsRouter.post("/:code/voice", scanVoiceNoteHandler);
 roomsRouter.post("/", optionalAuth, createRoomHandler);
 roomsRouter.get("/mine", requireAuth, myRoomsHandler);
 roomsRouter.post("/:code/join", optionalAuth, joinLimiter, joinRoomHandler);

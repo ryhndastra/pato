@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { env } from "../config.js";
-import { parseReceiptWithGemini } from "../services/ocr.service.js";
+import { parseReceiptWithGemini, parseVoiceNoteWithGemini } from "../services/ocr.service.js";
 import { broadcastToRoom } from "../websocket.js";
 import {
   addReceiptToRoom,
@@ -211,6 +211,7 @@ export async function getRoomHandler(req: Request, res: Response) {
         id: member.id,
         user_id: member.userId,
         display_name: member.displayName,
+        avatar_url: member.avatarUrl ?? null,
         is_host: member.isHost,
         subtotal_share: member.subtotalShare,
         raw_share_amount: member.rawShareAmount,
@@ -650,6 +651,28 @@ export async function scanReceiptOcrHandler(req: Request, res: Response) {
     console.error("[OCR Controller Error]", error);
     res.status(500).json({
       error: error instanceof Error ? error.message : "Gagal membaca struk kasir dengan AI.",
+    });
+  }
+}
+
+const voiceNoteSchema = z.object({
+  audio: z.string().min(1, "Audio rekaman suara harus dilampirkan."),
+});
+
+export async function scanVoiceNoteHandler(req: Request, res: Response) {
+  const parsed = voiceNoteSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Rekaman suara harus dilampirkan dalam format base64." });
+    return;
+  }
+
+  try {
+    const result = await parseVoiceNoteWithGemini(parsed.data.audio);
+    res.json(result);
+  } catch (error) {
+    console.error("[Voice Note Controller Error]", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Gagal membaca rekaman suara dengan AI.",
     });
   }
 }
