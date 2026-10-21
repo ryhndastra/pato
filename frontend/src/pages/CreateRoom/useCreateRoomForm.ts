@@ -42,7 +42,7 @@ export function useCreateRoomForm() {
     } catch {
       // ignore
     }
-    return user?.name ?? "";
+    return "";
   });
 
   const [roundMode, setRoundMode] = useState<"none" | "hundred" | "thousand">(() => {

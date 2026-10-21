@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && cp dist/index.html dist/404.html",
+    "build": "tsc -b && vite build",
+    "postbuild": "node -e \"import('fs').then(f=>f.copyFileSync('dist/index.html','dist/404.html'))\"",
     "lint": "oxlint",
     "preview": "vite preview"
   },
@@ -19,14 +20,11 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@rolldown/binding-win32-x64-msvc": "^1.2.7",
-    "@tailwindcss/oxide-win32-x64-msvc": "^4.3.3",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
-    "lightningcss-win32-x64-msvc": "^1.33.0",
     "oxlint": "^1.79.0",
     "typescript": "~6.0.2",
     "vite": "^8.2.2"

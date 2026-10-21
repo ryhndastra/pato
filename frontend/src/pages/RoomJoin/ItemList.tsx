@@ -230,9 +230,17 @@ export function ItemList({
       {selectedMember ? (
         <div className="flex items-center justify-between gap-2 rounded-2xl border border-blue-200 bg-blue-50/80 px-4 py-3 text-xs shadow-2xs">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white font-mono text-[10px] font-bold">
-              {getInitials(selectedMember.display_name)}
-            </span>
+            {selectedMember.avatar_url ? (
+              <img
+                src={selectedMember.avatar_url}
+                alt=""
+                className="h-6 w-6 rounded-lg object-cover shrink-0 ring-1 ring-blue-300"
+              />
+            ) : (
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white font-mono text-[10px] font-bold">
+                {getInitials(selectedMember.display_name)}
+              </span>
+            )}
             <span className="font-bold text-blue-950 truncate">
               Pesanan {selectedMember.display_name} ({displayedItems.length} menu)
             </span>

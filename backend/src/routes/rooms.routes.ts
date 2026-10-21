@@ -17,6 +17,7 @@ import {
   getRoomEventsHandler,
   postChatHandler,
   scanReceiptOcrHandler,
+  scanVoiceNoteHandler,
   updateRoomPhotoHandler,
   addReceiptHandler,
   deleteReceiptHandler,
@@ -31,6 +32,8 @@ roomsRouter.delete("/:code/receipts/:receiptId", optionalAuth, deleteReceiptHand
 
 roomsRouter.post("/ocr", scanReceiptOcrHandler);
 roomsRouter.post("/:code/ocr", scanReceiptOcrHandler);
+roomsRouter.post("/voice", scanVoiceNoteHandler);
+roomsRouter.post("/:code/voice", scanVoiceNoteHandler);
 roomsRouter.post("/", optionalAuth, createRoomHandler);
 // route statis /mine wajib di atas /:code, kalau tidak /mine ketangkep sebagai code dinamis.
 roomsRouter.get("/mine", requireAuth, myRoomsHandler);

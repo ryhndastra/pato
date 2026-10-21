@@ -136,4 +136,132 @@ export async function parseReceiptWithGemini(imageBase64OrDataUrl) {
     }
     throw lastError || new Error("Gagal membaca struk kasir, silakan coba lagi atau input manual.");
 }
+const VOICE_NOTE_PROMPT = `
+Kamu adalah asisten keuangan ahli di Indonesia untuk aplikasi split bill "PaTo".
+Tugasmu adalah mendengarkan rekaman audio pengguna yang sedang memesan atau membacakan menu makanan/minuman santai di restoran/kafe.
+Ekstrak daftar item, kuantitas (quantity), dan harga satuan (unitPrice) jika disebutkan.
+Jika harga tidak disebutkan dalam rekaman suara, isi unitPrice dengan 0 agar pengguna bisa melengkapinya nanti di form.
+
+Aturan Penting:
+1. Normalisasi nama menu ke ejaan yang wajar & jelas (contoh: 'es teh tawar dua' -> name: 'Es Teh Tawar', quantity: 2).
+2. Jika pengguna menyebutkan harga (contoh: "ayam geprek level dua dua porsi satunya dua puluh lima ribu"), masukkan quantity = 2, unitPrice = 25000.
+3. Kuantitas minimal 1.
+4. Pisahkan pajak (PB1/PPN) atau diskon jika disebutkan pengguna.
+5. Buat perkiraan nama restoran/judul acara jika terdengar (misal: "Makan Bareng"), atau default "Pesanan Suara".
+6. Output WAJIB berupa JSON valid murni yang mematuhi skema berikut:
+{
+  "title": string,
+  "items": [
+    {
+      "name": string,
+      "quantity": number,
+      "unitPrice": number,
+      "totalPrice": number
+    }
+  ],
+  "subtotal": number,
+  "taxAmount": number,
+  "serviceAmount": number,
+  "discountAmount": number,
+  "grandTotal": number
+}
+`;
+export async function parseVoiceNoteWithGemini(audioBase64OrDataUrl) {
+    const keys = env.geminiApiKeys;
+    if (!keys || keys.length === 0) {
+        throw new Error("GEMINI_API_KEYS belum diatur di environment variable backend!");
+    }
+    let mimeType = "audio/webm";
+    let rawBase64 = audioBase64OrDataUrl;
+    if (audioBase64OrDataUrl.startsWith("data:")) {
+        const match = audioBase64OrDataUrl.match(/^data:([^;]+);base64,(.+)$/);
+        if (match) {
+            mimeType = match[1];
+            rawBase64 = match[2];
+        }
+    }
+    let lastError = null;
+    const totalKeys = keys.length;
+    for (let attempt = 0; attempt < totalKeys; attempt++) {
+        const currentKey = keys[keyRotationIndex % totalKeys];
+        keyRotationIndex = (keyRotationIndex + 1) % totalKeys;
+        for (const model of CANDIDATE_MODELS) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${currentKey}`;
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        contents: [
+                            {
+                                parts: [
+                                    { text: VOICE_NOTE_PROMPT },
+                                    {
+                                        inlineData: {
+                                            mimeType: mimeType || "audio/webm",
+                                            data: rawBase64,
+                                        },
+                                    },
+                                ],
+                            },
+                        ],
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            temperature: 0.1,
+                        },
+                    }),
+                });
+                if (!response.ok) {
+                    const errBody = await response.text();
+                    console.warn(`[Voice Gemini] Model ${model} dengan key ${currentKey.slice(0, 10)}... mengembalikan status ${response.status}:`, errBody);
+                    if (response.status === 429 || response.status === 503 || response.status === 404) {
+                        continue;
+                    }
+                    throw new Error(`Gagal menghubungi Gemini API: ${response.statusText}`);
+                }
+                const data = (await response.json());
+                const candidate = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!candidate) {
+                    throw new Error("Tidak dapat mengenali suara pesanan.");
+                }
+                const parsed = JSON.parse(candidate);
+                const items = Array.isArray(parsed.items)
+                    ? parsed.items.map((it) => {
+                        const qty = Math.max(1, Math.round(Number(it.quantity) || 1));
+                        const unitPrice = Math.max(0, Math.round(Number(it.unitPrice) || Number(it.price) || 0));
+                        const name = String(it.name || "Item Menu").trim();
+                        return {
+                            name,
+                            quantity: qty,
+                            unitPrice,
+                            totalPrice: unitPrice * qty,
+                        };
+                    }).filter((it) => it.name.length > 0)
+                    : [];
+                const calculatedSubtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+                const subtotal = Math.max(0, Math.round(Number(parsed.subtotal) || calculatedSubtotal));
+                const taxAmount = Math.max(0, Math.round(Number(parsed.taxAmount) || 0));
+                const serviceAmount = Math.max(0, Math.round(Number(parsed.serviceAmount) || 0));
+                const discountAmount = Math.max(0, Math.round(Number(parsed.discountAmount) || 0));
+                const grandTotal = Math.max(0, Math.round(Number(parsed.grandTotal) || (subtotal + taxAmount + serviceAmount - discountAmount)));
+                return {
+                    title: String(parsed.title || "Pesanan Suara").trim(),
+                    items,
+                    subtotal,
+                    taxAmount,
+                    serviceAmount,
+                    discountAmount,
+                    grandTotal,
+                };
+            }
+            catch (err) {
+                lastError = err instanceof Error ? err : new Error(String(err));
+                console.warn(`[Voice Gemini Attempt Fail] ${lastError.message}`);
+            }
+        }
+    }
+    throw lastError || new Error("Gagal mengenali suara rekaman pesanan, silakan coba lagi.");
+}
 //# sourceMappingURL=ocr.service.js.map
