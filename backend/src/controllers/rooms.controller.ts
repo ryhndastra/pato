@@ -152,87 +152,91 @@ export async function joinRoomHandler(req: Request, res: Response) {
   }
 }
 
+export function formatRoomResponse(room: Awaited<ReturnType<typeof getRoomByCode>>) {
+  return {
+    room_code: room.roomCode,
+    title: room.title,
+    status: room.status,
+    host_user_id: room.hostUserId,
+    subtotal: room.subtotal,
+    tax_amount: room.taxAmount,
+    service_amount: room.serviceAmount,
+    discount_amount: room.discountAmount,
+    grand_total: room.grandTotal,
+    bank_name: room.bankName,
+    bank_account_no: room.bankAccountNo,
+    bank_account_name: room.bankAccountName,
+    qris_image_url: room.qrisImageUrl,
+    receipt_image_url: room.receiptImageUrl,
+    group_photo_url: room.groupPhotoUrl,
+    round_mode: room.roundMode,
+    receipts: (room.receipts || []).map((rc) => ({
+      id: rc.id,
+      title: rc.title,
+      payer_member_id: rc.payerMemberId,
+      payer_name: rc.payerName,
+      subtotal: rc.subtotal,
+      tax_amount: rc.taxAmount,
+      service_amount: rc.serviceAmount,
+      discount_amount: rc.discountAmount,
+      grand_total: rc.grandTotal,
+      bank_name: rc.bankName,
+      bank_account_no: rc.bankAccountNo,
+      bank_account_name: rc.bankAccountName,
+      qris_image_url: rc.qrisImageUrl,
+      receipt_image_url: rc.receiptImageUrl,
+      created_by_member_id: rc.createdByMemberId,
+      sort_order: rc.sortOrder,
+      created_at: rc.createdAt,
+    })),
+    items: room.items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      unit_price: item.unitPrice,
+      quantity: item.quantity,
+      is_shared: item.isShared,
+      receipt_id: item.receiptId,
+      claimed_quantity: item.claimedQuantity,
+      claimed_by_member_ids: item.claimedByMemberIds,
+      claims: item.claims.map((c) => ({
+        member_id: c.memberId,
+        portion_quantity: c.portionQuantity,
+      })),
+    })),
+    members: room.members.map((member) => ({
+      id: member.id,
+      user_id: member.userId,
+      display_name: member.displayName,
+      avatar_url: member.avatarUrl ?? null,
+      is_host: member.isHost,
+      subtotal_share: member.subtotalShare,
+      raw_share_amount: member.rawShareAmount,
+      share_amount: member.shareAmount,
+      receipt_breakdown: (member.receiptBreakdown || []).map((rb) => ({
+        receipt_id: rb.receiptId,
+        title: rb.title,
+        payer_member_id: rb.payerMemberId,
+        payer_name: rb.payerName,
+        amount: rb.amount,
+        bank_name: rb.bankName,
+        bank_account_no: rb.bankAccountNo,
+        bank_account_name: rb.bankAccountName,
+        qris_image_url: rb.qrisImageUrl,
+      })),
+      claimed_item_ids: member.claimedItemIds,
+      payment_status: member.paymentStatus,
+      proof_image_url: member.proofImageUrl,
+      rejection_reason: member.rejectionReason,
+    })),
+  };
+}
+
 export async function getRoomHandler(req: Request, res: Response) {
   const roomCode = String(req.params.code).toUpperCase();
 
   try {
     const room = await getRoomByCode(roomCode);
-    res.json({
-      room_code: room.roomCode,
-      title: room.title,
-      status: room.status,
-      host_user_id: room.hostUserId,
-      subtotal: room.subtotal,
-      tax_amount: room.taxAmount,
-      service_amount: room.serviceAmount,
-      discount_amount: room.discountAmount,
-      grand_total: room.grandTotal,
-      bank_name: room.bankName,
-      bank_account_no: room.bankAccountNo,
-      bank_account_name: room.bankAccountName,
-      qris_image_url: room.qrisImageUrl,
-      receipt_image_url: room.receiptImageUrl,
-      group_photo_url: room.groupPhotoUrl,
-      round_mode: room.roundMode,
-      receipts: (room.receipts || []).map((rc) => ({
-        id: rc.id,
-        title: rc.title,
-        payer_member_id: rc.payerMemberId,
-        payer_name: rc.payerName,
-        subtotal: rc.subtotal,
-        tax_amount: rc.taxAmount,
-        service_amount: rc.serviceAmount,
-        discount_amount: rc.discountAmount,
-        grand_total: rc.grandTotal,
-        bank_name: rc.bankName,
-        bank_account_no: rc.bankAccountNo,
-        bank_account_name: rc.bankAccountName,
-        qris_image_url: rc.qrisImageUrl,
-        receipt_image_url: rc.receiptImageUrl,
-        created_by_member_id: rc.createdByMemberId,
-        sort_order: rc.sortOrder,
-        created_at: rc.createdAt,
-      })),
-      items: room.items.map((item) => ({
-        id: item.id,
-        name: item.name,
-        unit_price: item.unitPrice,
-        quantity: item.quantity,
-        is_shared: item.isShared,
-        receipt_id: item.receiptId,
-        claimed_quantity: item.claimedQuantity,
-        claimed_by_member_ids: item.claimedByMemberIds,
-        claims: item.claims.map((c) => ({
-          member_id: c.memberId,
-          portion_quantity: c.portionQuantity,
-        })),
-      })),
-      members: room.members.map((member) => ({
-        id: member.id,
-        user_id: member.userId,
-        display_name: member.displayName,
-        avatar_url: member.avatarUrl ?? null,
-        is_host: member.isHost,
-        subtotal_share: member.subtotalShare,
-        raw_share_amount: member.rawShareAmount,
-        share_amount: member.shareAmount,
-        receipt_breakdown: (member.receiptBreakdown || []).map((rb) => ({
-          receipt_id: rb.receiptId,
-          title: rb.title,
-          payer_member_id: rb.payerMemberId,
-          payer_name: rb.payerName,
-          amount: rb.amount,
-          bank_name: rb.bankName,
-          bank_account_no: rb.bankAccountNo,
-          bank_account_name: rb.bankAccountName,
-          qris_image_url: rb.qrisImageUrl,
-        })),
-        claimed_item_ids: member.claimedItemIds,
-        payment_status: member.paymentStatus,
-        proof_image_url: member.proofImageUrl,
-        rejection_reason: member.rejectionReason,
-      })),
-    });
+    res.json(formatRoomResponse(room));
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
       res.status(404).json({ error: error.message });
@@ -680,20 +684,20 @@ export async function scanVoiceNoteHandler(req: Request, res: Response) {
 const addReceiptSchema = z.object({
   title: z.string().trim().min(2).max(150),
   receipt_image_url: z.string().optional(),
-  payer_member_id: z.string().uuid().optional(),
+  payer_member_id: z.string().uuid().nullish().or(z.literal("")),
   payer_name: z.string().trim().max(100).optional(),
   bank_name: z.string().trim().max(50).optional(),
   bank_account_no: z.string().trim().max(50).optional(),
   bank_account_name: z.string().trim().max(100).optional(),
   qris_image_url: z.string().optional(),
-  tax_amount: z.number().int().nonnegative().default(0),
-  service_amount: z.number().int().nonnegative().default(0),
-  discount_amount: z.number().int().nonnegative().default(0),
+  tax_amount: z.number().nonnegative().default(0),
+  service_amount: z.number().nonnegative().default(0),
+  discount_amount: z.number().nonnegative().default(0),
   items: z
     .array(
       z.object({
         name: z.string().trim().min(1).max(150),
-        unit_price: z.number().int().nonnegative(),
+        unit_price: z.number().nonnegative(),
         quantity: z.number().int().positive().max(999),
         is_shared: z.boolean().optional().default(false),
       }),
@@ -709,7 +713,7 @@ export async function addReceiptHandler(req: Request, res: Response) {
     return;
   }
 
-  const roomCode = String(req.params.code);
+  const roomCode = String(req.params.code).toUpperCase();
   const guestToken = req.headers["x-guest-token"] as string | undefined;
   const userId = req.userId;
 
@@ -719,18 +723,18 @@ export async function addReceiptHandler(req: Request, res: Response) {
       {
         title: parsed.data.title,
         receiptImageUrl: parsed.data.receipt_image_url,
-        payerMemberId: parsed.data.payer_member_id,
+        payerMemberId: parsed.data.payer_member_id ? parsed.data.payer_member_id : undefined,
         payerName: parsed.data.payer_name,
         bankName: parsed.data.bank_name,
         bankAccountNo: parsed.data.bank_account_no,
         bankAccountName: parsed.data.bank_account_name,
         qrisImageUrl: parsed.data.qris_image_url,
-        taxAmount: parsed.data.tax_amount,
-        serviceAmount: parsed.data.service_amount,
-        discountAmount: parsed.data.discount_amount,
+        taxAmount: Math.round(parsed.data.tax_amount),
+        serviceAmount: Math.round(parsed.data.service_amount),
+        discountAmount: Math.round(parsed.data.discount_amount),
         items: parsed.data.items.map((i) => ({
           name: i.name,
-          unitPrice: i.unit_price,
+          unitPrice: Math.round(i.unit_price),
           quantity: i.quantity,
           isShared: i.is_shared,
         })),
@@ -740,7 +744,7 @@ export async function addReceiptHandler(req: Request, res: Response) {
     );
 
     broadcastToRoom(roomCode, { type: "ROOM_UPDATED", action: "RECEIPT_ADDED" });
-    res.status(201).json(updated);
+    res.status(201).json(formatRoomResponse(updated));
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
       res.status(404).json({ error: error.message });
@@ -755,7 +759,7 @@ export async function addReceiptHandler(req: Request, res: Response) {
 }
 
 export async function deleteReceiptHandler(req: Request, res: Response) {
-  const roomCode = String(req.params.code);
+  const roomCode = String(req.params.code).toUpperCase();
   const receiptId = String(req.params.receiptId);
   const guestToken = req.headers["x-guest-token"] as string | undefined;
   const userId = req.userId;
@@ -763,7 +767,7 @@ export async function deleteReceiptHandler(req: Request, res: Response) {
   try {
     const updated = await deleteReceiptFromRoom(roomCode, receiptId, guestToken, userId);
     broadcastToRoom(roomCode, { type: "ROOM_UPDATED", action: "RECEIPT_DELETED" });
-    res.json(updated);
+    res.json(formatRoomResponse(updated));
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
       res.status(404).json({ error: error.message });
@@ -771,6 +775,10 @@ export async function deleteReceiptHandler(req: Request, res: Response) {
     }
     if (error instanceof RoomLockedError) {
       res.status(409).json({ error: error.message });
+      return;
+    }
+    if (error instanceof Error && error.message.includes("tidak ditemukan")) {
+      res.status(404).json({ error: error.message });
       return;
     }
     throw error;

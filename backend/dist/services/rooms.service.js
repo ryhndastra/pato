@@ -947,24 +947,70 @@ export async function addReceiptToRoom(roomCode, input, callerGuestToken, caller
                 callerName = memRows[0].display_name;
             }
         }
-        else if (callerUserId) {
+        if (!callerMemberId && callerUserId) {
             const { rows: memRows } = await client.query("SELECT id, display_name FROM members WHERE room_id = $1 AND user_id = $2", [room.id, callerUserId]);
             if (memRows[0]) {
                 callerMemberId = memRows[0].id;
                 callerName = memRows[0].display_name;
             }
         }
+        // Pastikan room memiliki struk utama jika room dibuat sebelum migrasi multi-struk
+        const { rows: existingRc } = await client.query("SELECT id FROM receipts WHERE room_id = $1 ORDER BY sort_order ASC, created_at ASC LIMIT 1", [room.id]);
+        if (!existingRc[0]) {
+            const { rows: hostRows } = await client.query("SELECT id, display_name FROM members WHERE room_id = $1 AND is_host = TRUE LIMIT 1", [room.id]);
+            const hostMem = hostRows[0];
+            const { rows: roomFullRows } = await client.query(`SELECT title, receipt_image_url, subtotal, tax_amount, service_amount, discount_amount,
+                grand_total, bank_name, bank_account_no, bank_account_name, qris_image_url
+         FROM rooms WHERE id = $1`, [room.id]);
+            const rFull = roomFullRows[0];
+            if (rFull) {
+                const { rows: primaryRcRows } = await client.query(`INSERT INTO receipts (
+             room_id, payer_member_id, payer_name, title, receipt_image_url,
+             subtotal, tax_amount, service_amount, discount_amount, grand_total,
+             bank_name, bank_account_no, bank_account_name, qris_image_url,
+             created_by_member_id, sort_order
+           )
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 0)
+           RETURNING id`, [
+                    room.id,
+                    hostMem?.id ?? null,
+                    hostMem?.display_name ?? "Host",
+                    rFull.title,
+                    rFull.receipt_image_url,
+                    rFull.subtotal,
+                    rFull.tax_amount,
+                    rFull.service_amount,
+                    rFull.discount_amount,
+                    rFull.grand_total,
+                    rFull.bank_name,
+                    rFull.bank_account_no,
+                    rFull.bank_account_name,
+                    rFull.qris_image_url,
+                    hostMem?.id ?? null,
+                ]);
+                const primaryRcId = primaryRcRows[0].id;
+                await client.query("UPDATE items SET receipt_id = $1 WHERE room_id = $2 AND receipt_id IS NULL", [primaryRcId, room.id]);
+            }
+        }
         let payerMemberId = input.payerMemberId || callerMemberId;
         let payerName = input.payerName;
-        if (payerMemberId && !payerName) {
-            const { rows: pRows } = await client.query("SELECT display_name FROM members WHERE id = $1", [payerMemberId]);
-            if (pRows[0])
-                payerName = pRows[0].display_name;
+        if (payerMemberId) {
+            const { rows: pRows } = await client.query("SELECT display_name FROM members WHERE id = $1 AND room_id = $2", [payerMemberId, room.id]);
+            if (pRows[0]) {
+                if (!payerName)
+                    payerName = pRows[0].display_name;
+            }
+            else {
+                payerMemberId = null;
+            }
         }
         if (!payerName)
             payerName = callerName;
-        const subtotal = input.items.reduce((s, it) => s + it.unitPrice * it.quantity, 0);
-        const grandTotal = Math.max(0, subtotal + input.taxAmount + input.serviceAmount - input.discountAmount);
+        const subtotal = input.items.reduce((s, it) => s + Math.round(it.unitPrice) * it.quantity, 0);
+        const taxAmt = Math.round(input.taxAmount);
+        const serviceAmt = Math.round(input.serviceAmount);
+        const discountAmt = Math.round(input.discountAmount);
+        const grandTotal = Math.max(0, subtotal + taxAmt + serviceAmt - discountAmt);
         const { rows: sortRows } = await client.query("SELECT MAX(sort_order) AS max_order FROM receipts WHERE room_id = $1", [room.id]);
         const nextOrder = (sortRows[0]?.max_order ?? 0) + 1;
         const { rows: newReceiptRows } = await client.query(`INSERT INTO receipts (
@@ -976,20 +1022,20 @@ export async function addReceiptToRoom(roomCode, input, callerGuestToken, caller
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
        RETURNING id`, [
             room.id,
-            payerMemberId,
-            payerName,
+            payerMemberId ?? null,
+            payerName ?? "Host",
             input.title,
             input.receiptImageUrl ?? null,
             subtotal,
-            input.taxAmount,
-            input.serviceAmount,
-            input.discountAmount,
+            taxAmt,
+            serviceAmt,
+            discountAmt,
             grandTotal,
             input.bankName ?? null,
             input.bankAccountNo ?? null,
             input.bankAccountName ?? null,
             input.qrisImageUrl ?? null,
-            callerMemberId,
+            callerMemberId ?? null,
             nextOrder,
         ]);
         const receiptId = newReceiptRows[0].id;
@@ -1000,7 +1046,7 @@ export async function addReceiptToRoom(roomCode, input, callerGuestToken, caller
                 const item = input.items[i];
                 const offset = i * 7;
                 placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7})`);
-                itemValues.push(room.id, item.name, item.unitPrice, item.quantity, item.isShared ?? false, i, receiptId);
+                itemValues.push(room.id, item.name, Math.round(item.unitPrice), item.quantity, item.isShared ?? false, i, receiptId);
             }
             await client.query(`INSERT INTO items (room_id, name, unit_price, quantity, is_shared, sort_order, receipt_id)
          VALUES ${placeholders.join(", ")}`, itemValues);
@@ -1018,8 +1064,8 @@ export async function addReceiptToRoom(roomCode, input, callerGuestToken, caller
         if (room.status === "LOCKED") {
             await client.query("UPDATE rooms SET status = 'CLAIMING', locked_at = NULL WHERE id = $1", [room.id]);
         }
-        await client.query(`INSERT INTO room_events (room_id, sender_type, message)
-       VALUES ($1, 'SYSTEM', $2)`, [room.id, `${callerName} menambahkan struk baru: ${input.title}`]);
+        await client.query(`INSERT INTO room_events (room_id, member_id, event_type, sender_type, message, created_at)
+       VALUES ($1, $2, 'RECEIPT_ADDED', 'SYSTEM', $3, NOW())`, [room.id, callerMemberId ?? null, `${callerName} menambahkan struk baru: ${input.title}`]);
         await client.query("COMMIT");
         return await getRoomByCode(roomCode);
     }
@@ -1042,6 +1088,27 @@ export async function deleteReceiptFromRoom(roomCode, receiptId, callerGuestToke
         if (room.status === "CLOSED") {
             throw new RoomLockedError("Meja ini sudah selesai (closed), tidak bisa menghapus struk.");
         }
+        // Pastikan tidak menghapus satu-satunya struk yang ada
+        const { rows: countRows } = await client.query("SELECT COUNT(*) AS count FROM receipts WHERE room_id = $1", [room.id]);
+        if (Number(countRows[0]?.count ?? 0) <= 1) {
+            throw new Error("Struk utama tidak bisa dihapus. Minimal harus ada 1 struk dalam room.");
+        }
+        let callerMemberId = null;
+        let callerName = "Member";
+        if (callerGuestToken) {
+            const { rows: memRows } = await client.query("SELECT id, display_name FROM members WHERE room_id = $1 AND guest_token = $2", [room.id, callerGuestToken]);
+            if (memRows[0]) {
+                callerMemberId = memRows[0].id;
+                callerName = memRows[0].display_name;
+            }
+        }
+        if (!callerMemberId && callerUserId) {
+            const { rows: memRows } = await client.query("SELECT id, display_name FROM members WHERE room_id = $1 AND user_id = $2", [room.id, callerUserId]);
+            if (memRows[0]) {
+                callerMemberId = memRows[0].id;
+                callerName = memRows[0].display_name;
+            }
+        }
         const { rows: rcRows } = await client.query("SELECT id, title, created_by_member_id FROM receipts WHERE id = $1 AND room_id = $2", [receiptId, room.id]);
         const rc = rcRows[0];
         if (!rc)
@@ -1057,8 +1124,8 @@ export async function deleteReceiptFromRoom(roomCode, receiptId, callerGuestToke
            grand_total = (SELECT COALESCE(SUM(grand_total), 0) FROM receipts WHERE room_id = r.id),
            updated_at = NOW()
        WHERE r.id = $1`, [room.id]);
-        await client.query(`INSERT INTO room_events (room_id, sender_type, message)
-       VALUES ($1, 'SYSTEM', $2)`, [room.id, `Struk ${rc.title} telah dihapus`]);
+        await client.query(`INSERT INTO room_events (room_id, member_id, event_type, sender_type, message, created_at)
+       VALUES ($1, $2, 'RECEIPT_DELETED', 'SYSTEM', $3, NOW())`, [room.id, callerMemberId ?? null, `Struk ${rc.title} telah dihapus oleh ${callerName}`]);
         await client.query("COMMIT");
         return await getRoomByCode(roomCode);
     }

@@ -251,26 +251,32 @@ export function AddReceiptModal({
     setIsSubmitting(true);
     try {
       const guestToken = getGuestToken(roomCode);
+      const customHeaders: Record<string, string> = {};
+      if (guestToken) {
+        customHeaders["x-guest-token"] = guestToken;
+      }
+
       await apiPost(
         `/api/rooms/${encodeURIComponent(roomCode)}/receipts`,
         {
           title: cleanTitle,
           receipt_image_url: receiptImageUrl || undefined,
-          payer_member_id: payerMemberId,
+          payer_member_id: payerMemberId || undefined,
           payer_name: payerName,
           bank_name: bankName.trim() || undefined,
           bank_account_no: bankAccountNo.trim() || undefined,
           bank_account_name: bankAccountName.trim() || undefined,
           qris_image_url: qrisImageUrl || undefined,
-          tax_amount: typeof taxAmount === "number" ? taxAmount : 0,
-          service_amount: typeof serviceAmount === "number" ? serviceAmount : 0,
-          discount_amount: typeof discountAmount === "number" ? discountAmount : 0,
-          items: validItems,
+          tax_amount: Math.round(typeof taxAmount === "number" ? taxAmount : 0),
+          service_amount: Math.round(typeof serviceAmount === "number" ? serviceAmount : 0),
+          discount_amount: Math.round(typeof discountAmount === "number" ? discountAmount : 0),
+          items: validItems.map((item) => ({
+            ...item,
+            unit_price: Math.round(item.unit_price),
+          })),
         },
         authToken,
-        {
-          "x-guest-token": guestToken,
-        }
+        Object.keys(customHeaders).length > 0 ? customHeaders : undefined,
       );
 
       soundFX.playCelebration();

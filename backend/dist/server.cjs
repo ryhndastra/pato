@@ -1744,24 +1744,69 @@ async function addReceiptToRoom(roomCode, input, callerGuestToken, callerUserId)
         callerMemberId = memRows[0].id;
         callerName = memRows[0].display_name;
       }
-    } else if (callerUserId) {
+    }
+    if (!callerMemberId && callerUserId) {
       const { rows: memRows } = await client.query("SELECT id, display_name FROM members WHERE room_id = $1 AND user_id = $2", [room.id, callerUserId]);
       if (memRows[0]) {
         callerMemberId = memRows[0].id;
         callerName = memRows[0].display_name;
       }
     }
+    const { rows: existingRc } = await client.query("SELECT id FROM receipts WHERE room_id = $1 ORDER BY sort_order ASC, created_at ASC LIMIT 1", [room.id]);
+    if (!existingRc[0]) {
+      const { rows: hostRows } = await client.query("SELECT id, display_name FROM members WHERE room_id = $1 AND is_host = TRUE LIMIT 1", [room.id]);
+      const hostMem = hostRows[0];
+      const { rows: roomFullRows } = await client.query(`SELECT title, receipt_image_url, subtotal, tax_amount, service_amount, discount_amount,
+                grand_total, bank_name, bank_account_no, bank_account_name, qris_image_url
+         FROM rooms WHERE id = $1`, [room.id]);
+      const rFull = roomFullRows[0];
+      if (rFull) {
+        const { rows: primaryRcRows } = await client.query(`INSERT INTO receipts (
+             room_id, payer_member_id, payer_name, title, receipt_image_url,
+             subtotal, tax_amount, service_amount, discount_amount, grand_total,
+             bank_name, bank_account_no, bank_account_name, qris_image_url,
+             created_by_member_id, sort_order
+           )
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 0)
+           RETURNING id`, [
+          room.id,
+          hostMem?.id ?? null,
+          hostMem?.display_name ?? "Host",
+          rFull.title,
+          rFull.receipt_image_url,
+          rFull.subtotal,
+          rFull.tax_amount,
+          rFull.service_amount,
+          rFull.discount_amount,
+          rFull.grand_total,
+          rFull.bank_name,
+          rFull.bank_account_no,
+          rFull.bank_account_name,
+          rFull.qris_image_url,
+          hostMem?.id ?? null
+        ]);
+        const primaryRcId = primaryRcRows[0].id;
+        await client.query("UPDATE items SET receipt_id = $1 WHERE room_id = $2 AND receipt_id IS NULL", [primaryRcId, room.id]);
+      }
+    }
     let payerMemberId = input.payerMemberId || callerMemberId;
     let payerName = input.payerName;
-    if (payerMemberId && !payerName) {
-      const { rows: pRows } = await client.query("SELECT display_name FROM members WHERE id = $1", [payerMemberId]);
-      if (pRows[0])
-        payerName = pRows[0].display_name;
+    if (payerMemberId) {
+      const { rows: pRows } = await client.query("SELECT display_name FROM members WHERE id = $1 AND room_id = $2", [payerMemberId, room.id]);
+      if (pRows[0]) {
+        if (!payerName)
+          payerName = pRows[0].display_name;
+      } else {
+        payerMemberId = null;
+      }
     }
     if (!payerName)
       payerName = callerName;
-    const subtotal = input.items.reduce((s, it) => s + it.unitPrice * it.quantity, 0);
-    const grandTotal = Math.max(0, subtotal + input.taxAmount + input.serviceAmount - input.discountAmount);
+    const subtotal = input.items.reduce((s, it) => s + Math.round(it.unitPrice) * it.quantity, 0);
+    const taxAmt = Math.round(input.taxAmount);
+    const serviceAmt = Math.round(input.serviceAmount);
+    const discountAmt = Math.round(input.discountAmount);
+    const grandTotal = Math.max(0, subtotal + taxAmt + serviceAmt - discountAmt);
     const { rows: sortRows } = await client.query("SELECT MAX(sort_order) AS max_order FROM receipts WHERE room_id = $1", [room.id]);
     const nextOrder = (sortRows[0]?.max_order ?? 0) + 1;
     const { rows: newReceiptRows } = await client.query(`INSERT INTO receipts (
@@ -1773,20 +1818,20 @@ async function addReceiptToRoom(roomCode, input, callerGuestToken, callerUserId)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
        RETURNING id`, [
       room.id,
-      payerMemberId,
-      payerName,
+      payerMemberId ?? null,
+      payerName ?? "Host",
       input.title,
       input.receiptImageUrl ?? null,
       subtotal,
-      input.taxAmount,
-      input.serviceAmount,
-      input.discountAmount,
+      taxAmt,
+      serviceAmt,
+      discountAmt,
       grandTotal,
       input.bankName ?? null,
       input.bankAccountNo ?? null,
       input.bankAccountName ?? null,
       input.qrisImageUrl ?? null,
-      callerMemberId,
+      callerMemberId ?? null,
       nextOrder
     ]);
     const receiptId = newReceiptRows[0].id;
@@ -1797,7 +1842,7 @@ async function addReceiptToRoom(roomCode, input, callerGuestToken, callerUserId)
         const item = input.items[i];
         const offset = i * 7;
         placeholders.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7})`);
-        itemValues.push(room.id, item.name, item.unitPrice, item.quantity, item.isShared ?? false, i, receiptId);
+        itemValues.push(room.id, item.name, Math.round(item.unitPrice), item.quantity, item.isShared ?? false, i, receiptId);
       }
       await client.query(`INSERT INTO items (room_id, name, unit_price, quantity, is_shared, sort_order, receipt_id)
          VALUES ${placeholders.join(", ")}`, itemValues);
@@ -1813,8 +1858,8 @@ async function addReceiptToRoom(roomCode, input, callerGuestToken, callerUserId)
     if (room.status === "LOCKED") {
       await client.query("UPDATE rooms SET status = 'CLAIMING', locked_at = NULL WHERE id = $1", [room.id]);
     }
-    await client.query(`INSERT INTO room_events (room_id, sender_type, message)
-       VALUES ($1, 'SYSTEM', $2)`, [room.id, `${callerName} menambahkan struk baru: ${input.title}`]);
+    await client.query(`INSERT INTO room_events (room_id, member_id, event_type, sender_type, message, created_at)
+       VALUES ($1, $2, 'RECEIPT_ADDED', 'SYSTEM', $3, NOW())`, [room.id, callerMemberId ?? null, `${callerName} menambahkan struk baru: ${input.title}`]);
     await client.query("COMMIT");
     return await getRoomByCode(roomCode);
   } catch (error) {
@@ -1835,6 +1880,26 @@ async function deleteReceiptFromRoom(roomCode, receiptId, callerGuestToken, call
     if (room.status === "CLOSED") {
       throw new RoomLockedError("Meja ini sudah selesai (closed), tidak bisa menghapus struk.");
     }
+    const { rows: countRows } = await client.query("SELECT COUNT(*) AS count FROM receipts WHERE room_id = $1", [room.id]);
+    if (Number(countRows[0]?.count ?? 0) <= 1) {
+      throw new Error("Struk utama tidak bisa dihapus. Minimal harus ada 1 struk dalam room.");
+    }
+    let callerMemberId = null;
+    let callerName = "Member";
+    if (callerGuestToken) {
+      const { rows: memRows } = await client.query("SELECT id, display_name FROM members WHERE room_id = $1 AND guest_token = $2", [room.id, callerGuestToken]);
+      if (memRows[0]) {
+        callerMemberId = memRows[0].id;
+        callerName = memRows[0].display_name;
+      }
+    }
+    if (!callerMemberId && callerUserId) {
+      const { rows: memRows } = await client.query("SELECT id, display_name FROM members WHERE room_id = $1 AND user_id = $2", [room.id, callerUserId]);
+      if (memRows[0]) {
+        callerMemberId = memRows[0].id;
+        callerName = memRows[0].display_name;
+      }
+    }
     const { rows: rcRows } = await client.query("SELECT id, title, created_by_member_id FROM receipts WHERE id = $1 AND room_id = $2", [receiptId, room.id]);
     const rc = rcRows[0];
     if (!rc)
@@ -1848,8 +1913,8 @@ async function deleteReceiptFromRoom(roomCode, receiptId, callerGuestToken, call
            grand_total = (SELECT COALESCE(SUM(grand_total), 0) FROM receipts WHERE room_id = r.id),
            updated_at = NOW()
        WHERE r.id = $1`, [room.id]);
-    await client.query(`INSERT INTO room_events (room_id, sender_type, message)
-       VALUES ($1, 'SYSTEM', $2)`, [room.id, `Struk ${rc.title} telah dihapus`]);
+    await client.query(`INSERT INTO room_events (room_id, member_id, event_type, sender_type, message, created_at)
+       VALUES ($1, $2, 'RECEIPT_DELETED', 'SYSTEM', $3, NOW())`, [room.id, callerMemberId ?? null, `Struk ${rc.title} telah dihapus oleh ${callerName}`]);
     await client.query("COMMIT");
     return await getRoomByCode(roomCode);
   } catch (error) {
@@ -1949,86 +2014,89 @@ async function joinRoomHandler(req, res) {
     throw error;
   }
 }
+function formatRoomResponse(room) {
+  return {
+    room_code: room.roomCode,
+    title: room.title,
+    status: room.status,
+    host_user_id: room.hostUserId,
+    subtotal: room.subtotal,
+    tax_amount: room.taxAmount,
+    service_amount: room.serviceAmount,
+    discount_amount: room.discountAmount,
+    grand_total: room.grandTotal,
+    bank_name: room.bankName,
+    bank_account_no: room.bankAccountNo,
+    bank_account_name: room.bankAccountName,
+    qris_image_url: room.qrisImageUrl,
+    receipt_image_url: room.receiptImageUrl,
+    group_photo_url: room.groupPhotoUrl,
+    round_mode: room.roundMode,
+    receipts: (room.receipts || []).map((rc) => ({
+      id: rc.id,
+      title: rc.title,
+      payer_member_id: rc.payerMemberId,
+      payer_name: rc.payerName,
+      subtotal: rc.subtotal,
+      tax_amount: rc.taxAmount,
+      service_amount: rc.serviceAmount,
+      discount_amount: rc.discountAmount,
+      grand_total: rc.grandTotal,
+      bank_name: rc.bankName,
+      bank_account_no: rc.bankAccountNo,
+      bank_account_name: rc.bankAccountName,
+      qris_image_url: rc.qrisImageUrl,
+      receipt_image_url: rc.receiptImageUrl,
+      created_by_member_id: rc.createdByMemberId,
+      sort_order: rc.sortOrder,
+      created_at: rc.createdAt
+    })),
+    items: room.items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      unit_price: item.unitPrice,
+      quantity: item.quantity,
+      is_shared: item.isShared,
+      receipt_id: item.receiptId,
+      claimed_quantity: item.claimedQuantity,
+      claimed_by_member_ids: item.claimedByMemberIds,
+      claims: item.claims.map((c) => ({
+        member_id: c.memberId,
+        portion_quantity: c.portionQuantity
+      }))
+    })),
+    members: room.members.map((member) => ({
+      id: member.id,
+      user_id: member.userId,
+      display_name: member.displayName,
+      avatar_url: member.avatarUrl ?? null,
+      is_host: member.isHost,
+      subtotal_share: member.subtotalShare,
+      raw_share_amount: member.rawShareAmount,
+      share_amount: member.shareAmount,
+      receipt_breakdown: (member.receiptBreakdown || []).map((rb) => ({
+        receipt_id: rb.receiptId,
+        title: rb.title,
+        payer_member_id: rb.payerMemberId,
+        payer_name: rb.payerName,
+        amount: rb.amount,
+        bank_name: rb.bankName,
+        bank_account_no: rb.bankAccountNo,
+        bank_account_name: rb.bankAccountName,
+        qris_image_url: rb.qrisImageUrl
+      })),
+      claimed_item_ids: member.claimedItemIds,
+      payment_status: member.paymentStatus,
+      proof_image_url: member.proofImageUrl,
+      rejection_reason: member.rejectionReason
+    }))
+  };
+}
 async function getRoomHandler(req, res) {
   const roomCode = String(req.params.code).toUpperCase();
   try {
     const room = await getRoomByCode(roomCode);
-    res.json({
-      room_code: room.roomCode,
-      title: room.title,
-      status: room.status,
-      host_user_id: room.hostUserId,
-      subtotal: room.subtotal,
-      tax_amount: room.taxAmount,
-      service_amount: room.serviceAmount,
-      discount_amount: room.discountAmount,
-      grand_total: room.grandTotal,
-      bank_name: room.bankName,
-      bank_account_no: room.bankAccountNo,
-      bank_account_name: room.bankAccountName,
-      qris_image_url: room.qrisImageUrl,
-      receipt_image_url: room.receiptImageUrl,
-      group_photo_url: room.groupPhotoUrl,
-      round_mode: room.roundMode,
-      receipts: (room.receipts || []).map((rc) => ({
-        id: rc.id,
-        title: rc.title,
-        payer_member_id: rc.payerMemberId,
-        payer_name: rc.payerName,
-        subtotal: rc.subtotal,
-        tax_amount: rc.taxAmount,
-        service_amount: rc.serviceAmount,
-        discount_amount: rc.discountAmount,
-        grand_total: rc.grandTotal,
-        bank_name: rc.bankName,
-        bank_account_no: rc.bankAccountNo,
-        bank_account_name: rc.bankAccountName,
-        qris_image_url: rc.qrisImageUrl,
-        receipt_image_url: rc.receiptImageUrl,
-        created_by_member_id: rc.createdByMemberId,
-        sort_order: rc.sortOrder,
-        created_at: rc.createdAt
-      })),
-      items: room.items.map((item) => ({
-        id: item.id,
-        name: item.name,
-        unit_price: item.unitPrice,
-        quantity: item.quantity,
-        is_shared: item.isShared,
-        receipt_id: item.receiptId,
-        claimed_quantity: item.claimedQuantity,
-        claimed_by_member_ids: item.claimedByMemberIds,
-        claims: item.claims.map((c) => ({
-          member_id: c.memberId,
-          portion_quantity: c.portionQuantity
-        }))
-      })),
-      members: room.members.map((member) => ({
-        id: member.id,
-        user_id: member.userId,
-        display_name: member.displayName,
-        avatar_url: member.avatarUrl ?? null,
-        is_host: member.isHost,
-        subtotal_share: member.subtotalShare,
-        raw_share_amount: member.rawShareAmount,
-        share_amount: member.shareAmount,
-        receipt_breakdown: (member.receiptBreakdown || []).map((rb) => ({
-          receipt_id: rb.receiptId,
-          title: rb.title,
-          payer_member_id: rb.payerMemberId,
-          payer_name: rb.payerName,
-          amount: rb.amount,
-          bank_name: rb.bankName,
-          bank_account_no: rb.bankAccountNo,
-          bank_account_name: rb.bankAccountName,
-          qris_image_url: rb.qrisImageUrl
-        })),
-        claimed_item_ids: member.claimedItemIds,
-        payment_status: member.paymentStatus,
-        proof_image_url: member.proofImageUrl,
-        rejection_reason: member.rejectionReason
-      }))
-    });
+    res.json(formatRoomResponse(room));
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
       res.status(404).json({ error: error.message });
@@ -2398,18 +2466,18 @@ async function scanVoiceNoteHandler(req, res) {
 var addReceiptSchema = import_zod2.z.object({
   title: import_zod2.z.string().trim().min(2).max(150),
   receipt_image_url: import_zod2.z.string().optional(),
-  payer_member_id: import_zod2.z.string().uuid().optional(),
+  payer_member_id: import_zod2.z.string().uuid().nullish().or(import_zod2.z.literal("")),
   payer_name: import_zod2.z.string().trim().max(100).optional(),
   bank_name: import_zod2.z.string().trim().max(50).optional(),
   bank_account_no: import_zod2.z.string().trim().max(50).optional(),
   bank_account_name: import_zod2.z.string().trim().max(100).optional(),
   qris_image_url: import_zod2.z.string().optional(),
-  tax_amount: import_zod2.z.number().int().nonnegative().default(0),
-  service_amount: import_zod2.z.number().int().nonnegative().default(0),
-  discount_amount: import_zod2.z.number().int().nonnegative().default(0),
+  tax_amount: import_zod2.z.number().nonnegative().default(0),
+  service_amount: import_zod2.z.number().nonnegative().default(0),
+  discount_amount: import_zod2.z.number().nonnegative().default(0),
   items: import_zod2.z.array(import_zod2.z.object({
     name: import_zod2.z.string().trim().min(1).max(150),
-    unit_price: import_zod2.z.number().int().nonnegative(),
+    unit_price: import_zod2.z.number().nonnegative(),
     quantity: import_zod2.z.number().int().positive().max(999),
     is_shared: import_zod2.z.boolean().optional().default(false)
   })).min(1).max(100)
@@ -2420,31 +2488,31 @@ async function addReceiptHandler(req, res) {
     res.status(400).json({ error: "Data struk tidak valid.", details: parsed.error.flatten() });
     return;
   }
-  const roomCode = String(req.params.code);
+  const roomCode = String(req.params.code).toUpperCase();
   const guestToken = req.headers["x-guest-token"];
   const userId = req.userId;
   try {
     const updated = await addReceiptToRoom(roomCode, {
       title: parsed.data.title,
       receiptImageUrl: parsed.data.receipt_image_url,
-      payerMemberId: parsed.data.payer_member_id,
+      payerMemberId: parsed.data.payer_member_id ? parsed.data.payer_member_id : void 0,
       payerName: parsed.data.payer_name,
       bankName: parsed.data.bank_name,
       bankAccountNo: parsed.data.bank_account_no,
       bankAccountName: parsed.data.bank_account_name,
       qrisImageUrl: parsed.data.qris_image_url,
-      taxAmount: parsed.data.tax_amount,
-      serviceAmount: parsed.data.service_amount,
-      discountAmount: parsed.data.discount_amount,
+      taxAmount: Math.round(parsed.data.tax_amount),
+      serviceAmount: Math.round(parsed.data.service_amount),
+      discountAmount: Math.round(parsed.data.discount_amount),
       items: parsed.data.items.map((i) => ({
         name: i.name,
-        unitPrice: i.unit_price,
+        unitPrice: Math.round(i.unit_price),
         quantity: i.quantity,
         isShared: i.is_shared
       }))
     }, guestToken, userId);
     broadcastToRoom(roomCode, { type: "ROOM_UPDATED", action: "RECEIPT_ADDED" });
-    res.status(201).json(updated);
+    res.status(201).json(formatRoomResponse(updated));
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
       res.status(404).json({ error: error.message });
@@ -2458,14 +2526,14 @@ async function addReceiptHandler(req, res) {
   }
 }
 async function deleteReceiptHandler(req, res) {
-  const roomCode = String(req.params.code);
+  const roomCode = String(req.params.code).toUpperCase();
   const receiptId = String(req.params.receiptId);
   const guestToken = req.headers["x-guest-token"];
   const userId = req.userId;
   try {
     const updated = await deleteReceiptFromRoom(roomCode, receiptId, guestToken, userId);
     broadcastToRoom(roomCode, { type: "ROOM_UPDATED", action: "RECEIPT_DELETED" });
-    res.json(updated);
+    res.json(formatRoomResponse(updated));
   } catch (error) {
     if (error instanceof RoomNotFoundError) {
       res.status(404).json({ error: error.message });
@@ -2473,6 +2541,10 @@ async function deleteReceiptHandler(req, res) {
     }
     if (error instanceof RoomLockedError) {
       res.status(409).json({ error: error.message });
+      return;
+    }
+    if (error instanceof Error && error.message.includes("tidak ditemukan")) {
+      res.status(404).json({ error: error.message });
       return;
     }
     throw error;
