@@ -5,6 +5,7 @@ import {
   Camera,
   CheckCircle,
   CircleNotch,
+  Image,
   Plus,
   Receipt,
   Trash,
@@ -56,7 +57,8 @@ export function AddReceiptModal({
   onReceiptAdded,
 }: AddReceiptModalProps) {
   const { token: authToken } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const qrisInputRef = useRef<HTMLInputElement>(null);
 
   const titleInputId = useId();
@@ -346,8 +348,9 @@ export function AddReceiptModal({
               </div>
             </div>
 
+            {/* Input 1: Kamera langsung */}
             <input
-              ref={fileInputRef}
+              ref={cameraInputRef}
               type="file"
               accept="image/*"
               capture="environment"
@@ -355,27 +358,51 @@ export function AddReceiptModal({
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) handleOcrScan(file);
+                e.target.value = "";
               }}
             />
 
-            <button
-              type="button"
-              disabled={isOcrProcessing}
-              onClick={() => fileInputRef.current?.click()}
-              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-white px-3.5 text-xs font-bold text-blue-700 shadow-xs hover:bg-blue-50 active:scale-95 transition-all disabled:opacity-60"
-            >
-              {isOcrProcessing ? (
-                <>
-                  <CircleNotch size={14} weight="bold" className="animate-spin text-blue-600" />
-                  <span>{ocrStep || "Membaca..."}</span>
-                </>
-              ) : (
-                <>
-                  <Camera size={15} weight="bold" />
-                  <span>{receiptImageUrl ? "Ganti Foto" : "Foto Struk"}</span>
-                </>
-              )}
-            </button>
+            {/* Input 2: Import dari Galeri */}
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleOcrScan(file);
+                e.target.value = "";
+              }}
+            />
+
+            {isOcrProcessing ? (
+              <div className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-white/90 px-3 text-xs font-bold text-blue-700 shadow-xs">
+                <CircleNotch size={14} weight="bold" className="animate-spin text-blue-600" />
+                <span className="truncate max-w-[90px]">{ocrStep || "Membaca..."}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  title="Ambil foto struk langsung dengan kamera"
+                  className="inline-flex h-8 sm:h-9 items-center gap-1 rounded-xl bg-white px-2.5 sm:px-3 text-[11px] sm:text-xs font-bold text-blue-700 shadow-2xs hover:bg-blue-50 active:scale-95 transition-all"
+                >
+                  <Camera size={14} weight="bold" />
+                  <span>Kamera</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => galleryInputRef.current?.click()}
+                  title="Pilih foto struk dari galeri HP / file"
+                  className="inline-flex h-8 sm:h-9 items-center gap-1 rounded-xl bg-blue-700/60 border border-white/20 px-2.5 sm:px-3 text-[11px] sm:text-xs font-bold text-white shadow-2xs hover:bg-blue-700/80 active:scale-95 transition-all"
+                >
+                  <Image size={14} weight="bold" />
+                  <span>Galeri</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Error Message if any */}

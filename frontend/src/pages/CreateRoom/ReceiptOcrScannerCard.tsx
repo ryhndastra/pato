@@ -4,10 +4,10 @@ import {
   CheckCircle,
   CircleNotch,
   Eye,
+  Image,
   MagnifyingGlassPlus,
   Receipt,
   Trash,
-  UploadSimple,
   X,
 } from "@phosphor-icons/react";
 import { compressImageFile } from "../../lib/imageCompression";
@@ -31,7 +31,8 @@ export function ReceiptOcrScannerCard({
   onReceiptImageChange,
   onOcrExtracted,
 }: ReceiptOcrScannerCardProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [scanStep, setScanStep] = useState<string | null>(null);
   const [scanSuccess, setScanSuccess] = useState(false);
@@ -78,7 +79,8 @@ export function ReceiptOcrScannerCard({
     setScanSuccess(false);
     setError(null);
     setShowPreviewModal(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
+    if (galleryInputRef.current) galleryInputRef.current.value = "";
   }
 
   return (
@@ -126,8 +128,9 @@ export function ReceiptOcrScannerCard({
       )}
 
       <div className="mt-4">
+        {/* Input 1: Kamera langsung */}
         <input
-          ref={fileInputRef}
+          ref={cameraInputRef}
           type="file"
           accept="image/*"
           capture="environment"
@@ -135,6 +138,20 @@ export function ReceiptOcrScannerCard({
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) handleFileSelected(file);
+            e.target.value = "";
+          }}
+        />
+
+        {/* Input 2: Import dari Galeri / File browser */}
+        <input
+          ref={galleryInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFileSelected(file);
+            e.target.value = "";
           }}
         />
 
@@ -180,52 +197,70 @@ export function ReceiptOcrScannerCard({
               <p className="mt-1 text-xs font-bold text-slate-800">
                 Struk ini akan ditampilkan transparan ke semua teman di room
               </p>
-              <div className="mt-2 flex flex-wrap items-center justify-center sm:justify-start gap-3">
+              <div className="mt-2.5 flex flex-wrap items-center justify-center sm:justify-start gap-2">
                 <button
                   type="button"
                   onClick={() => setShowPreviewModal(true)}
                   className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-blue-600 hover:underline"
                 >
                   <Eye size={13} weight="bold" />
-                  <span>Lihat Foto Struk Penuh</span>
+                  <span>Lihat Foto Penuh</span>
                 </button>
                 <span className="text-slate-300 hidden sm:inline">•</span>
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => cameraInputRef.current?.click()}
                   className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline"
                 >
-                  <UploadSimple size={13} weight="bold" />
-                  <span>Ganti Foto</span>
+                  <Camera size={13} weight="bold" />
+                  <span>Foto Ulang (Kamera)</span>
+                </button>
+                <span className="text-slate-300 hidden sm:inline">•</span>
+                <button
+                  type="button"
+                  onClick={() => galleryInputRef.current?.click()}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:underline"
+                >
+                  <Image size={13} weight="bold" />
+                  <span>Pilih dari Galeri</span>
                 </button>
               </div>
             </div>
           </div>
         ) : (
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="group flex flex-col items-center justify-center gap-2.5 rounded-2xl border-2 border-dashed border-slate-200 bg-white p-6 text-center cursor-pointer transition-all hover:border-blue-500 hover:bg-blue-50/30 active:scale-[0.99]"
-          >
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 transition-transform group-hover:scale-110">
-              <Camera size={24} weight="bold" />
+          <div className="flex flex-col items-center justify-center gap-3.5 rounded-2xl border-2 border-dashed border-slate-200 bg-white p-6 sm:p-7 text-center transition-all hover:border-blue-400">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 shadow-2xs">
+              <Image size={24} weight="bold" />
             </div>
 
             <div>
-              <p className="text-xs font-bold text-slate-900">
-                Ambil Foto atau Upload Struk Kasir
+              <p className="text-xs sm:text-sm font-bold text-slate-900">
+                Pilih Foto Struk Kasir
               </p>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Format JPG/PNG/WebP. Sistem akan otomatis membaca nama pesanan & nominal harga.
+              <p className="text-[11px] text-slate-400 mt-0.5 max-w-sm">
+                Bisa ambil foto langsung dengan kamera atau import foto dari galeri HP / file komputer.
               </p>
             </div>
 
-            <button
-              type="button"
-              className="mt-1 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs group-hover:bg-blue-700"
-            >
-              <UploadSimple size={14} weight="bold" />
-              <span>Pilih Foto Struk</span>
-            </button>
+            <div className="mt-1 flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full max-w-xs">
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 px-4 py-2.5 text-xs font-bold text-white shadow-xs active:scale-95 transition-all"
+              >
+                <Camera size={16} weight="bold" />
+                <span>Buka Kamera</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => galleryInputRef.current?.click()}
+                className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-700 shadow-2xs active:scale-95 transition-all"
+              >
+                <Image size={16} weight="bold" className="text-indigo-600" />
+                <span>Pilih Galeri</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
